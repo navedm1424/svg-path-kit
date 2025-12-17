@@ -48,15 +48,13 @@ const d = pathBuilder.toString();
 
 This creates the path data for a simple square:
 
-<svg width="100" height="100" viewBox="0 0 8 8">
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 8 8">
   <path d="M 7 0 l 0 6 l -6 0 l 0 -6 z" fill="hsl(0, 0%, 50%)"/>
 </svg>
 
 Let's draw the following shape:
 
-<svg width="100" height="100" viewBox="0 0 10 10">
-  <path d="M 7 0 l 0 6 c 0 1.6569 -1.3431 3 -3 3 c -1.6569 0 -3 -1.3431 -3 -3 l 0 -6 z" fill="hsl(0, 0%, 50%)"/>
-</svg>
+![Round-capped Rectangle](assets/examples/roundcapped_rect.svg)
 
 The actual path data for this shape is as follows:
 
