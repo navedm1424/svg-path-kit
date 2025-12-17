@@ -131,7 +131,8 @@ const vector: Vector2D = Vector2D.of(1, 2);
 const unitVector: Vector2D = vector.unit();
 ```
 
-**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector<br/>
+**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector
+
 `enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
 * `CLOCKWISE`
 * `COUNTERCLOCKWISE` (default)
@@ -144,7 +145,7 @@ const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE
 ```
 > Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
 SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.
-Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of ±Math.PI / 2, avoiding this ambiguity.
+Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of `±Math.PI / 2`, avoiding this ambiguity.
 
 **`opposite(): Vector2D`** — returns the negated vector
 ```ts
