@@ -4,7 +4,7 @@ A small, composable TypeScript library for building complex SVG path strings usi
 
 Instead of manually concatenating SVG path commands, you work with `Point2D`, `Vector2D`, Bézier helpers, and a fluent `PathBuilder` that outputs a valid `d` attribute for `<path>` elements.
 
----
+<br/><br/>
 
 ## Installation
 
@@ -18,7 +18,7 @@ pnpm add svg-path-kit
 
 The library is written in TypeScript and ships with type definitions.
 
----
+<br/><br/>
 
 ## Points and Vectors
 
@@ -52,7 +52,7 @@ const point: Point2D = Point2D.of(5, 2);
 ```ts
 const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
 ```
-
+---
 **`toVector(): Vector2D`** — converts the point to a vector from the origin
 ```ts
 const vector: Vector2D = point.toVector();
@@ -67,13 +67,13 @@ const vector: Vector2D = point.toVector();
 ```ts
 const vector: Vector2D = Vector2D.of(2, 3);
 ```
-
+---
 **`static ofAngle(angle: number)`** — creates a unit vector at angle (radians) from the x-axis
 ```ts
 // unit vector at 45 degrees from the x-axis
 const vectorAtAngle: Vector2D = Vector2D.ofAngle(Math.PI / 4);
 ```
-
+---
 **`static from(initial: Point2D, terminal: Point2D)`** — creates a vector from one point to another
 ```ts
 const a = Point2D.of(7, 7);
@@ -101,7 +101,7 @@ const vectorB: Vector2D = Vector2D.of(2, 1);
 // (aX + bX, aY + bY) = (1 + 2, 2 + 1) = (3, 3);
 const vectorC: Vector2D = vectorA.add(vectorB);
 ```
-
+---
 **`subtract(vector: Vector2D): Vector2D`** — performs vector subtraction
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
@@ -109,21 +109,21 @@ const vectorB: Vector2D = Vector2D.of(2, 1);
 // (aX - bX, aY - bY) = (1 - 2, 2 - 1) = (-1, 1);
 const vectorC: Vector2D = vectorA.subtract(vectorB);
 ```
-
+---
 **`multiply(scalar: number): Vector2D`** — performs scalar multiplication
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 // (scalar * x, scalar * y) = (2 * 1, 2 * 2) = (2, 4);
 const scaledVector: Vector2D = vector.multiply(2);
 ```
-
+---
 **`dotProduct(vector: Vector2D): number`** — returns the dot product
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
 const vectorB: Vector2D = Vector2D.of(2, 1);
 const dotProduct: number = vectorA.dotProduct(vectorB);
 ```
-
+---
 **`crossProduct(vector: Vector2D): number`** — returns the scalar Z‑component of the 3D cross product
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
@@ -131,14 +131,14 @@ const vectorB: Vector2D = Vector2D.of(2, 1);
 // scalar z-component
 const crossProduct: number = vectorA.crossProduct(vectorB);
 ```
-
+---
 **`unit(): Vector2D`** — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 // normalized vector (Vector2D.NULL_VECTOR if magnitude is 0)
 const unitVector: Vector2D = vector.unit();
 ```
-
+---
 **`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector
 
 `enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
@@ -154,20 +154,20 @@ const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE
 > Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
 SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.
 Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of `±Math.PI / 2`, avoiding this ambiguity.
-
+---
 **`opposite(): Vector2D`** — returns the negated vector
 ```ts
 const vector: Vector2D = Vector2D.of(5, 6);
 // (-1 * x, -1 * y) = (-1 * 5, -1 * 6) = (-5, -6)
 const oppositeVector: Vector2D = vector.opposite();
 ```
-
+---
 **`clone(): Vector2D`** — returns an identical copy
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 const vectorClone: Vector2D = vector.clone();
 ```
-
+---
 **`toPoint(): Point2D`** — converts the vector to a point relative to the origin
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
@@ -183,6 +183,7 @@ const point: Point2D = vector.toPoint();
 const vector: Vector2D = Vector2D.of(1, 2);
 vector.scale(2); // mutated to (2, 4);
 ```
+---
 **`rotate(angle: number): void`** — rotates the vector by the given angle (radians) around the origin
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
@@ -190,7 +191,7 @@ const vector: Vector2D = Vector2D.of(1, 2);
 vector.rotate(Math.PI / 2); // mutated to (-4, 2)
 ```
 
----
+<br/><br/>
 
 ## Path Model
 
