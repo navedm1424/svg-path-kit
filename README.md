@@ -20,59 +20,165 @@ The library is written in TypeScript and ships with type definitions.
 
 ---
 
-## Core Concepts
+## Points and Vectors
 
-### 1. Points and Vectors
 
 The library models 2D geometry explicitly:
 
 - **`Point2D`**: an absolute position in 2D space
 - **`Vector2D`**: a displacement with direction and magnitude
 
-Key ideas:
+### 2D Point
+Represents an immutable point in 2‑dimensional Cartesian space.
 
-- A `Point2D` can be **translated** by a `Vector2D` to produce a new point.
-- A `Vector2D` can be **added, subtracted, scaled, rotated**, and converted to a unit vector.
-- This lets you build paths using clear geometric operations instead of raw numbers.
+#### Static Factory
+**`static of(x: number, y: number): Point2D`** — creates a 2D point at given coordinates
+```ts
+const point: Point2D = Point2D.of(5, 2);
+```
 
-#### `Point2D`
+#### Properties
 
-- **Factory**: `Point2D.of(x: number, y: number): Point2D`
-- **Methods**:
-  - **`add(vector: Vector2D): Point2D`** – translate the point by a vector.
-  - **`toVector(): Vector2D`** – convert the point to a vector from the origin.
+- `x: number` — X coordinate (read‑only)
+- `y: number` — Y coordinate (read‑only)
 
-#### `Vector2D`
+#### Methods
 
-- **Static factories**:
-  - **`Vector2D.of(x: number, y: number)`** – create a vector from coordinates.
-  - **`Vector2D.ofAngle(angle: number)`** – unit vector at angle (radians) from the x‑axis.
-  - **`Vector2D.from(initial: Point2D, terminal: Point2D)`** – vector from one point to another.
-- **Properties**:
-  - **`x`**, **`y`** – components
-  - **`magnitude`** – vector length
-  - **`slope`** – `y / x`
-- **Static constant**:
-  - **`Vector2D.NULL_VECTOR`** – zero vector `(0, 0)`
-- **Methods (immutable unless noted)**:
-  - **`add(v: Vector2D): Vector2D`** – vector addition.
-  - **`subtract(v: Vector2D): Vector2D`** – vector subtraction.
-  - **`multiply(scalar: number): Vector2D`** – scalar multiplication.
-  - **`dotProduct(v: Vector2D): number`** – dot product.
-  - **`crossProduct(v: Vector2D): number`** – 2D cross product (scalar z‑component).
-  - **`unit(): Vector2D`** – normalized vector (or `NULL_VECTOR` if magnitude is 0).
-  - **`perpendicular(direction?: RotationDirection): Vector2D`** – perpendicular vector, clockwise or counterclockwise.
-  - **`opposite(): Vector2D`** – negated vector.
-  - **`clone(): Vector2D`** – copy.
-  - **`scale(s: number): void`** – in‑place scaling.
-  - **`rotate(angle: number): void`** – in‑place rotation.
-  - **`toPoint(): Point2D`** – interpret as a point from the origin.
+**`add(vector: Vector2D): Point2D`** — translates the point by a 2D vector
+```ts
+const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
+```
 
-- **`RotationDirection` enum**:
-  - **`RotationDirection.CLOCKWISE`**
-  - **`RotationDirection.COUNTERCLOCKWISE`**
+**`toVector(): Vector2D`** — converts the point to a vector from the origin
+```ts
+const vector: Vector2D = point.toVector();
+```
 
-These primitives are the foundation for all higher‑level path operations.
+### 2D Vector
+
+#### Static Factories
+
+**`static of(x: number, y: number)`** — creates a vector from coordinates
+```ts
+const vector: Vector2D = Vector2D.of(2, 3);
+```
+
+**`static ofAngle(angle: number)`** — creates a unit vector at angle (radians) from the x-axis
+```ts
+// unit vector at 45 degrees from the x-axis
+const vectorAtAngle: Vector2D = Vector2D.ofAngle(Math.PI / 4);
+```
+
+**`static from(initial: Point2D, terminal: Point2D)`** — creates a vector from one point to another
+```ts
+const a = Point2D.of(7, 7);
+const b = Point2D.of(8, 8);
+const vectorFromAToB = Vector2D.from(a, b);
+// equivalent to Vector2D.of(1, 1)
+```
+
+#### Properties
+
+- `x: number` — X component
+- `y: number` — Y component
+- `magnitude: number` — Length of the vector — `Math.hypot(x, y)`
+- `slope: number` — `y / x` (⚠ undefined for `x = 0`)
+
+#### Non-mutating Methods
+
+**`add(vector: Vector2D): Vector2D`** — performs vector addition
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// (aX + bX, aY + bY) = (1 + 2, 2 + 1) = (3, 3);
+const vectorC: Vector2D = vectorA.add(vectorB);
+```
+
+**`subtract(vector: Vector2D): Vector2D`** — performs vector subtraction
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// (aX - bX, aY - bY) = (1 - 2, 2 - 1) = (-1, 1);
+const vectorC: Vector2D = vectorA.subtract(vectorB);
+```
+
+**`multiply(scalar: number): Vector2D`** — performs scalar multiplication
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// (scalar * x, scalar * y) = (2 * 1, 2 * 2) = (2, 4);
+const scaledVector: Vector2D = vector.multiply(2);
+```
+
+**`dotProduct(vector: Vector2D): number`** — returns the dot product
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+const dotProduct: number = vectorA.dotProduct(vectorB);
+```
+
+**`crossProduct(vector: Vector2D): number`** — returns the scalar Z‑component of the 3D cross product
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// scalar z-component
+const crossProduct: number = vectorA.crossProduct(vectorB);
+```
+
+**`unit(): Vector2D`** — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// normalized vector (Vector2D.NULL_VECTOR if magnitude is 0)
+const unitVector: Vector2D = vector.unit();
+```
+
+**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector<br/>
+`enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
+* `CLOCKWISE`
+* `COUNTERCLOCKWISE` (default)
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// perpendicular vector, counterclockwise
+const counterClockwisePerp: Vector2D = vector.perpendicular();
+// perpendicular vector, clockwise
+const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE);
+```
+> Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
+SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.
+Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of ±Math.PI / 2, avoiding this ambiguity.
+
+**`opposite(): Vector2D`** — returns the negated vector
+```ts
+const vector: Vector2D = Vector2D.of(5, 6);
+// (-1 * x, -1 * y) = (-1 * 5, -1 * 6) = (-5, -6)
+const oppositeVector: Vector2D = vector.opposite();
+```
+
+**`clone(): Vector2D`** — returns an identical copy
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+const vectorClone: Vector2D = vector.clone();
+```
+
+**`toPoint(): Point2D`** — converts the vector to a point relative to the origin
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// equivalent to Point2D.of(1, 2);
+const point: Point2D = vector.toPoint();
+```
+
+#### Mutating Methods
+
+**`scale(scalar: number): void`** — scales the vector in place and updates magnitude
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+vector.scale(2); // mutated to (2, 4);
+```
+**`rotate(angle: number): void`** — rotates the vector by the given angle (radians) around the origin
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// (x * cos(angle) - y * sin(angle), x * sin(angle) + y * cos(angle))
+vector.rotate(Math.PI / 2); // mutated to (-4, 2)
+```
 
 ---
 
