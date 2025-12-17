@@ -20,234 +20,113 @@ The library is written in TypeScript and ships with type definitions.
 
 <br/><br/>
 
-## Points and Vectors
-
-
-The library models 2D geometry explicitly:
-
-- **`Point2D`**: an absolute position in 2D space
-- **`Vector2D`**: a displacement with direction and magnitude
-
-<br/>
-
-### 2D Point
-
-#### Static Factory
-**`static of(x: number, y: number): Point2D`** — creates a 2D point at given coordinates
-```ts
-const point: Point2D = Point2D.of(5, 2);
-```
-<br/>
-
-#### Properties
-
-- `x: number` — X coordinate (read‑only)
-- `y: number` — Y coordinate (read‑only)
-
-<br/>
-
-#### Methods
-
-**`add(vector: Vector2D): Point2D`** — translates the point by a 2D vector
-```ts
-const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
-```
----
-**`toVector(): Vector2D`** — converts the point to a vector from the origin
-```ts
-const vector: Vector2D = point.toVector();
-```
-<br/>
-
-### 2D Vector
-
-#### Static Factories
-
-**`static of(x: number, y: number)`** — creates a vector from coordinates
-```ts
-const vector: Vector2D = Vector2D.of(2, 3);
-```
----
-**`static ofAngle(angle: number)`** — creates a unit vector at angle (radians) from the x-axis
-```ts
-// unit vector at 45 degrees from the x-axis
-const vectorAtAngle: Vector2D = Vector2D.ofAngle(Math.PI / 4);
-```
----
-**`static from(initial: Point2D, terminal: Point2D)`** — creates a vector from one point to another
-```ts
-const a = Point2D.of(7, 7);
-const b = Point2D.of(8, 8);
-const vectorFromAToB = Vector2D.from(a, b);
-// equivalent to Vector2D.of(1, 1)
-```
-<br/>
-
-#### Properties
-
-- `x: number` — X component
-- `y: number` — Y component
-- `magnitude: number` — Length of the vector — `Math.hypot(x, y)`
-- `slope: number` — `y / x` (⚠ undefined for `x = 0`)
-
-<br/>
-
-#### Non-mutating Methods
-
-**`add(vector: Vector2D): Vector2D`** — performs vector addition
-```ts
-const vectorA: Vector2D = Vector2D.of(1, 2);
-const vectorB: Vector2D = Vector2D.of(2, 1);
-// (aX + bX, aY + bY) = (1 + 2, 2 + 1) = (3, 3);
-const vectorC: Vector2D = vectorA.add(vectorB);
-```
----
-**`subtract(vector: Vector2D): Vector2D`** — performs vector subtraction
-```ts
-const vectorA: Vector2D = Vector2D.of(1, 2);
-const vectorB: Vector2D = Vector2D.of(2, 1);
-// (aX - bX, aY - bY) = (1 - 2, 2 - 1) = (-1, 1);
-const vectorC: Vector2D = vectorA.subtract(vectorB);
-```
----
-**`multiply(scalar: number): Vector2D`** — performs scalar multiplication
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-// (scalar * x, scalar * y) = (2 * 1, 2 * 2) = (2, 4);
-const scaledVector: Vector2D = vector.multiply(2);
-```
----
-**`dotProduct(vector: Vector2D): number`** — returns the dot product
-```ts
-const vectorA: Vector2D = Vector2D.of(1, 2);
-const vectorB: Vector2D = Vector2D.of(2, 1);
-const dotProduct: number = vectorA.dotProduct(vectorB);
-```
----
-**`crossProduct(vector: Vector2D): number`** — returns the scalar Z‑component of the 3D cross product
-```ts
-const vectorA: Vector2D = Vector2D.of(1, 2);
-const vectorB: Vector2D = Vector2D.of(2, 1);
-// scalar z-component
-const crossProduct: number = vectorA.crossProduct(vectorB);
-```
----
-**`unit(): Vector2D`** — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-// normalized vector (Vector2D.NULL_VECTOR if magnitude is 0)
-const unitVector: Vector2D = vector.unit();
-```
----
-**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector
-
-`enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
-* `CLOCKWISE`
-* `COUNTERCLOCKWISE` (default)
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-// perpendicular vector, counterclockwise
-const counterClockwisePerp: Vector2D = vector.perpendicular();
-// perpendicular vector, clockwise
-const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE);
-```
-> Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
-SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.
-Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of `±Math.PI / 2`, avoiding this ambiguity.
----
-**`opposite(): Vector2D`** — returns the negated vector
-```ts
-const vector: Vector2D = Vector2D.of(5, 6);
-// (-1 * x, -1 * y) = (-1 * 5, -1 * 6) = (-5, -6)
-const oppositeVector: Vector2D = vector.opposite();
-```
----
-**`clone(): Vector2D`** — returns an identical copy
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-const vectorClone: Vector2D = vector.clone();
-```
----
-**`toPoint(): Point2D`** — converts the vector to a point relative to the origin
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-// equivalent to Point2D.of(1, 2);
-const point: Point2D = vector.toPoint();
-```
-<br/>
-
-#### Mutating Methods
-
-**`scale(scalar: number): void`** — scales the vector in place and updates magnitude
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-vector.scale(2); // mutated to (2, 4);
-```
----
-**`rotate(angle: number): void`** — rotates the vector by the given angle (radians) around the origin
-```ts
-const vector: Vector2D = Vector2D.of(1, 2);
-// (x * cos(angle) - y * sin(angle), x * sin(angle) + y * cos(angle))
-vector.rotate(Math.PI / 2); // mutated to (-4, 2)
-```
-
-<br/><br/>
-
-## Path Model
-
-### 2. Commands and Paths
-
-The library models an SVG path as a list of strongly‑typed command objects.
-
-- **`Command` (abstract)**
-  - Base class for individual SVG commands.
-  - Each command has a **mode**: `'relative'` or `'absolute'`.
-  - **Methods**:
-    - `toString(): string` – SVG path segment (e.g. `"c 10 0 20 10 30 0"`).
-    - `getEndPoint(): Point2D` – absolute end point of the command.
-
-Concrete command types:
-
-- **`MoveCommand`** – `M` / `m`
-- **`LineCommand`** – `L` / `l`
-- **`QuadraticBezierCurveCommand`** – `Q` / `q`
-- **`CubicBezierCurveCommand`** – `C` / `c`
-- **`EllipticalArcCommand`** – `A` / `a`
-- **`ClosePathCommand`** – `Z` / `z`
-
-You usually don’t instantiate these directly; you build them via `PathBuilder`.
-
-#### `Path`
-
-- **`new Path(commands: Command[])`** – wrap an array of commands.
-- **`toString(): string`** – join command strings into a full SVG `d` attribute.
-
-Example of consuming a built path:
-
-```ts
-import { PathBuilder } from 'svg-path-kit';
-import { Point2D, Vector2D } from 'svg-path-kit';
-
-const pathBuilder = PathBuilder.M(Point2D.of(0, 0))
-  .l(Vector2D.of(100, 0))
-  .l(Vector2D.of(0, 100))
-  .z();
-
-const d = pathBuilder.toString();
-// <path d={d} /> in your SVG
-```
-
----
-
 ## PathBuilder: Fluent SVG Path Construction
 
 `PathBuilder` is the main entry point for building complex SVG paths. It manages the current point, stacks of open subpaths, and provides high‑level methods for lines, curves, arcs, and auto‑controlled Béziers.
 
+### Use Cases
+
+Starting simple, let's draw a square:
+
+```ts
+import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
+
+const pathBuilder = PathBuilder
+    // move to point (7, 0)
+    .M(Point2D.of(7, 0))
+    // a line extending 0 units forward and 6 units downward
+    .l(Vector2D.of(0, 6))
+    // a line extending 6 units backward and 0 units upward
+    .l(Vector2D.of(-6, 0))
+    // a line extending 0 units forward and 6 units upward
+    .l(Vector2D.of(0, -6))
+    // close path
+    .z();
+
+const d = pathBuilder.toString();
+```
+
+This creates the path data for a simple square:
+
+<svg width="100" height="100" viewBox="0 0 8 8">
+  <path d="M 7 0 l 0 6 l -6 0 l 0 -6 z" fill="hsl(0, 0%, 50%)"/>
+</svg>
+
+Let's draw the following shape:
+
+<svg width="100" height="100" viewBox="0 0 10 10">
+  <path d="M 7 0 l 0 6 c 0 1.6569 -1.3431 3 -3 3 c -1.6569 0 -3 -1.3431 -3 -3 l 0 -6 z" fill="hsl(0, 0%, 50%)"/>
+</svg>
+
+The actual path data for this shape is as follows:
+
+```
+M 7 0
+l 0 6
+c 0 1.6569 -1.3431 3 -3 3
+c -1.6569 0 -3 -1.3431 -3 -3
+l 0 -6
+z
+```
+
+This requires calculating the control-point coordinates for two cubic Bézier curves that produce two perfect circular arcs.
+
+With `PathBuilder`, you only need to specify:
+- the arc’s angle (in radians)
+- either the circle’s center or the arc’s endpoint.
+
+```ts
+import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
+
+const pathBuilder = PathBuilder.M(Point2D.of(7, 0))
+    // a line extending 0 units forward and 6 units downward
+    .l(Vector2D.of(0, 6))
+    // a 90-degree arc centered 3 units behind the current position
+    .cForCircularArc(
+        Vector2D.of(-3, 0),
+        Math.PI / 2
+    )
+    // a 90-degree arc centered 3 units above the last curve's endpoint
+    .cForCircularArc(
+        Vector2D.of(0, -3),
+        Math.PI / 2
+    )
+    // a line extending 0 units forward and 6 units upward
+    .l(Vector2D.of(0, -6))
+    // close path
+    .z();
+
+const d = pathBuilder.toString();
+```
+
+
+```ts
+import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
+
+const pathBuilder = PathBuilder.M(Point2D.of(5, 0))
+    .l(Vector2D.of(0, 6));
+const point = pathBuilder.currentPosition;
+pathBuilder.cForCircularArc(Math.PI / 3, Vector2D.of(-2, 3))
+    .CForCircularArc(Math.PI / 3, point.add(Vector2D.of(-1, 0)))
+    .l(Vector2D.of(0, -6))
+    .z();
+const d = pathBuilder.toString();
+```
+
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 10 10">
+  <path d="M 5 0 l 0 6 c -0.2137 1.7735 -1.3573 3.2983 -3 4 C 1.9043 8.4051 2.6667 6.8803 4 6 l 0 -6 z" fill="hsl(0deg, 0%, 50%)"/>
+</svg>
+
 ### Creating a builder
 
-- **Relative start**: `PathBuilder.m(vector: Vector2D)` – start a path with a relative move from `(0, 0)`.
-- **Absolute start**: `PathBuilder.M(point: Point2D)` – start a path at an absolute point.
-
+**Relative start**: `PathBuilder.m(vector: Vector2D)` – start a path with a relative move from `(0, 0)`.
+```ts
+PathBuilder.m(Vector2D.of(2, 3));
+```
+**Absolute start**: `PathBuilder.M(point: Point2D)` – start a path at an absolute point.
+```ts
+PathBuilder.M(Point2D.of(2, 3));
+```
 Internally both static methods call a private constructor and push a `MoveCommand`.
 
 ### State accessors
@@ -475,6 +354,230 @@ Here are some general patterns you can build with this library, independent of a
   - Compose `Point2D` + `Vector2D` operations (add, rotate, scale, perpendiculars) to express geometry declaratively before converting it into commands.
 - **Animation over time**
   - Drive input angles, lengths, and positions from an external interpolation system, then rebuild paths each frame using the same `PathBuilder` calls to get smooth, time‑varying shapes.
+
+<br/><br/>
+
+## Points and Vectors
+
+
+The library models 2D geometry explicitly:
+
+- **`Point2D`**: an absolute position in 2D space
+- **`Vector2D`**: a displacement with direction and magnitude
+
+<br/>
+
+### 2D Point
+
+#### Static Factory
+**`static of(x: number, y: number): Point2D`** — creates a 2D point at given coordinates
+```ts
+const point: Point2D = Point2D.of(5, 2);
+```
+<br/>
+
+#### Properties
+
+- `x: number` — X coordinate (read‑only)
+- `y: number` — Y coordinate (read‑only)
+
+<br/>
+
+#### Methods
+
+**`add(vector: Vector2D): Point2D`** — translates the point by a 2D vector
+```ts
+const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
+```
+---
+**`toVector(): Vector2D`** — converts the point to a vector from the origin
+```ts
+const vector: Vector2D = point.toVector();
+```
+<br/>
+
+### 2D Vector
+
+#### Static Constants
+**`static readonly NULL_VECTOR: Vector2D`** — a zero‑length vector (0, 0).
+
+<br/>
+
+#### Static Factories
+
+**`static of(x: number, y: number)`** — creates a vector from coordinates
+```ts
+const vector: Vector2D = Vector2D.of(2, 3);
+```
+---
+**`static ofAngle(angle: number)`** — creates a unit vector at angle (radians) from the x-axis
+```ts
+// unit vector at 45 degrees from the x-axis
+const vectorAtAngle: Vector2D = Vector2D.ofAngle(Math.PI / 4);
+```
+---
+**`static from(initial: Point2D, terminal: Point2D)`** — creates a vector from one point to another
+```ts
+const a = Point2D.of(7, 7);
+const b = Point2D.of(8, 8);
+const vectorFromAToB = Vector2D.from(a, b);
+// equivalent to Vector2D.of(1, 1)
+```
+<br/>
+
+#### Properties
+
+- `x: number` — X component
+- `y: number` — Y component
+- `magnitude: number` — Length of the vector — `Math.hypot(x, y)`
+- `slope: number` — `y / x` (⚠ undefined for `x = 0`)
+
+<br/>
+
+#### Non-mutating Methods
+
+**`add(vector: Vector2D): Vector2D`** — performs vector addition
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// (aX + bX, aY + bY) = (1 + 2, 2 + 1) = (3, 3);
+const vectorC: Vector2D = vectorA.add(vectorB);
+```
+---
+**`subtract(vector: Vector2D): Vector2D`** — performs vector subtraction
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// (aX - bX, aY - bY) = (1 - 2, 2 - 1) = (-1, 1);
+const vectorC: Vector2D = vectorA.subtract(vectorB);
+```
+---
+**`multiply(scalar: number): Vector2D`** — performs scalar multiplication
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// (scalar * x, scalar * y) = (2 * 1, 2 * 2) = (2, 4);
+const scaledVector: Vector2D = vector.multiply(2);
+```
+---
+**`dotProduct(vector: Vector2D): number`** — returns the dot product
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+const dotProduct: number = vectorA.dotProduct(vectorB);
+```
+---
+**`crossProduct(vector: Vector2D): number`** — returns the scalar Z‑component of the 3D cross product
+```ts
+const vectorA: Vector2D = Vector2D.of(1, 2);
+const vectorB: Vector2D = Vector2D.of(2, 1);
+// scalar z-component
+const crossProduct: number = vectorA.crossProduct(vectorB);
+```
+---
+**`unit(): Vector2D`** — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// normalized vector (Vector2D.NULL_VECTOR if magnitude is 0)
+const unitVector: Vector2D = vector.unit();
+```
+---
+**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector
+
+`enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
+* `CLOCKWISE`
+* `COUNTERCLOCKWISE` (default)
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// perpendicular vector, counterclockwise
+const counterClockwisePerp: Vector2D = vector.perpendicular();
+// perpendicular vector, clockwise
+const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE);
+```
+> Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
+SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.
+Perpendicular vectors can instead be obtained explicitly using the rotate method with angles of `±Math.PI / 2`, avoiding this ambiguity.
+---
+**`opposite(): Vector2D`** — returns the negated vector
+```ts
+const vector: Vector2D = Vector2D.of(5, 6);
+// (-1 * x, -1 * y) = (-1 * 5, -1 * 6) = (-5, -6)
+const oppositeVector: Vector2D = vector.opposite();
+```
+---
+**`clone(): Vector2D`** — returns an identical copy
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+const vectorClone: Vector2D = vector.clone();
+```
+---
+**`toPoint(): Point2D`** — converts the vector to a point relative to the origin
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// equivalent to Point2D.of(1, 2);
+const point: Point2D = vector.toPoint();
+```
+<br/>
+
+#### Mutating Methods
+
+**`scale(scalar: number): void`** — scales the vector in place and updates magnitude
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+vector.scale(2); // mutated to (2, 4);
+```
+---
+**`rotate(angle: number): void`** — rotates the vector by the given angle (radians) around the origin
+```ts
+const vector: Vector2D = Vector2D.of(1, 2);
+// (x * cos(angle) - y * sin(angle), x * sin(angle) + y * cos(angle))
+vector.rotate(Math.PI / 2); // mutated to (-4, 2)
+```
+
+<br/><br/>
+
+## Path Model
+
+### Command
+
+The library models an SVG path as a list of strongly‑typed command objects.
+
+- **`Command` (abstract)**
+  - Base class for individual SVG commands.
+  - Each command has a **mode**: `'relative'` or `'absolute'`.
+  - **Methods**:
+    - `toString(): string` – SVG path segment (e.g. `"c 10 0 20 10 30 0"`).
+    - `getEndPoint(): Point2D` – absolute end point of the command.
+
+Concrete command types:
+
+- **`MoveCommand`** – `M` / `m`
+- **`LineCommand`** – `L` / `l`
+- **`QuadraticBezierCurveCommand`** – `Q` / `q`
+- **`CubicBezierCurveCommand`** – `C` / `c`
+- **`EllipticalArcCommand`** – `A` / `a`
+- **`ClosePathCommand`** – `Z` / `z`
+
+You usually don’t instantiate these directly; you build them via `PathBuilder`.
+
+#### `Path`
+
+- **`new Path(commands: Command[])`** – wrap an array of commands.
+- **`toString(): string`** – join command strings into a full SVG `d` attribute.
+
+Example of consuming a built path:
+
+```ts
+import { PathBuilder } from 'svg-path-kit';
+import { Point2D, Vector2D } from 'svg-path-kit';
+
+const pathBuilder = PathBuilder.M(Point2D.of(0, 0))
+  .l(Vector2D.of(100, 0))
+  .l(Vector2D.of(0, 100))
+  .z();
+
+const d = pathBuilder.toString();
+// <path d={d} /> in your SVG
+```
 
 ---
 

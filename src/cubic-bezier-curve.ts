@@ -1,4 +1,5 @@
-import { Point2D, RotationDirection, Vector2D } from "./svg";
+import { RotationDirection, Vector2D } from "./vector2D";
+import {Point2D} from "./point2D";
 
 export class CubicBezierCurve {
     constructor(
@@ -141,10 +142,14 @@ function cubicBezierCurveForCircularArcFromCenterAndAngle(center: Point2D, start
 };
 
 export function cubicBezierCurveForEllipticalArc(
-    center: Point2D, startingPoint: Point2D, centralAngle: number, ratio: number, phi: number
+    center: Point2D,
+    startingPoint: Point2D,
+    centralAngle: number,
+    aToBRatio: number,
+    ellipseRotation: number
 ) {
     const startVec = Vector2D.from(center, startingPoint);
-    startVec.rotate(-phi);
+    startVec.rotate(-ellipseRotation);
 
     const endDirection = startVec.clone();
     endDirection.rotate(centralAngle);
@@ -152,14 +157,14 @@ export function cubicBezierCurveForEllipticalArc(
     // (x/a)^2 + (y/b)^2 = 1
     // → (x/(ratio*b))^2 + (y/b)^2 = 1
     // → b = √((x/ratio)^2 + y^2)
-    const b = Math.hypot(startVec.x / ratio, startVec.y);
-    const a = ratio * b;
+    const b = Math.hypot(startVec.x / aToBRatio, startVec.y);
+    const a = aToBRatio * b;
 
     const startParametricAngle = Math.atan2(startVec.y / b, startVec.x / a);
     const endParametricAngle = Math.atan2(endDirection.y / b, endDirection.x / a);
 
     const endVec = Vector2D.of(a * Math.cos(endParametricAngle), b * Math.sin(endParametricAngle));
-    endVec.rotate(phi);
+    endVec.rotate(ellipseRotation);
     const endingPoint = center.add(endVec);
 
     // local derivatives
@@ -170,8 +175,8 @@ export function cubicBezierCurveForEllipticalArc(
     startDerivative.scale(parametricAngleDiff / 3.0);
     endDerivative.scale(parametricAngleDiff / 3.0);
 
-    startDerivative.rotate(phi);
-    endDerivative.rotate(phi);
+    startDerivative.rotate(ellipseRotation);
+    endDerivative.rotate(ellipseRotation);
 
     return new CubicBezierCurve(
         startingPoint, startingPoint.add(startDerivative),

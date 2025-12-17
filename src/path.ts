@@ -1,6 +1,7 @@
 import { cubicBezierAutoControl, cubicBezierCurveForCircularArc, cubicBezierCurveForEllipticalArc } from "./cubic-bezier-curve";
 import { round } from "../utils/math";
-import { Point2D, Vector2D } from "./svg";
+import { Vector2D } from "./vector2D";
+import {Point2D} from "./point2D";
 
 export abstract class Command {
     constructor(readonly mode: 'relative' | 'absolute' = 'relative') {}
