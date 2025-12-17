@@ -28,19 +28,23 @@ The library models 2D geometry explicitly:
 - **`Point2D`**: an absolute position in 2D space
 - **`Vector2D`**: a displacement with direction and magnitude
 
+<br/>
+
 ### 2D Point
-Represents an immutable point in 2‑dimensional Cartesian space.
 
 #### Static Factory
 **`static of(x: number, y: number): Point2D`** — creates a 2D point at given coordinates
 ```ts
 const point: Point2D = Point2D.of(5, 2);
 ```
+<br/>
 
 #### Properties
 
 - `x: number` — X coordinate (read‑only)
 - `y: number` — Y coordinate (read‑only)
+
+<br/>
 
 #### Methods
 
@@ -53,6 +57,7 @@ const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
 ```ts
 const vector: Vector2D = point.toVector();
 ```
+<br/>
 
 ### 2D Vector
 
@@ -76,6 +81,7 @@ const b = Point2D.of(8, 8);
 const vectorFromAToB = Vector2D.from(a, b);
 // equivalent to Vector2D.of(1, 1)
 ```
+<br/>
 
 #### Properties
 
@@ -83,6 +89,8 @@ const vectorFromAToB = Vector2D.from(a, b);
 - `y: number` — Y component
 - `magnitude: number` — Length of the vector — `Math.hypot(x, y)`
 - `slope: number` — `y / x` (⚠ undefined for `x = 0`)
+
+<br/>
 
 #### Non-mutating Methods
 
@@ -166,6 +174,7 @@ const vector: Vector2D = Vector2D.of(1, 2);
 // equivalent to Point2D.of(1, 2);
 const point: Point2D = vector.toPoint();
 ```
+<br/>
 
 #### Mutating Methods
 
