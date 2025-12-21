@@ -1,4 +1,4 @@
-import {Point2D} from "./point2D";
+import { Point2D } from "./point2D";
 
 export enum RotationDirection {
     CLOCKWISE, COUNTERCLOCKWISE

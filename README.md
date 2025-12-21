@@ -111,9 +111,7 @@ pathBuilder.cForCircularArc(Math.PI / 3, Vector2D.of(-2, 3))
 const d = pathBuilder.toString();
 ```
 
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 10 10">
-  <path d="M 5 0 l 0 6 c -0.2137 1.7735 -1.3573 3.2983 -3 4 C 1.9043 8.4051 2.6667 6.8803 4 6 l 0 -6 z" fill="hsl(0deg, 0%, 50%)"/>
-</svg>
+![Shape_0](assets/examples/shape_0.svg)
 
 ### Creating a builder
 

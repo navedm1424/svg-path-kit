@@ -1,7 +1,7 @@
 import { cubicBezierAutoControl, cubicBezierCurveForCircularArc, cubicBezierCurveForEllipticalArc } from "./cubic-bezier-curve";
 import { round } from "../utils/math";
 import { Vector2D } from "./vector2D";
-import {Point2D} from "./point2D";
+import { Point2D } from "./point2D";
 
 export abstract class Command {
     constructor(readonly mode: 'relative' | 'absolute' = 'relative') {}
@@ -130,7 +130,7 @@ export class ClosePathCommand extends Command {
     }
 
     public getEndPoint(): Point2D {
-        return this.pathStart.startingPoint;
+        return this.pathStart.startingPoint.add(this.pathStart.endPoint);
     }
 };
 

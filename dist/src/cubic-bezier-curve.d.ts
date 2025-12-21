@@ -1,4 +1,5 @@
-import { Point2D, Vector2D } from "./svg";
+import { Vector2D } from "./vector2D";
+import { Point2D } from "./point2D";
 export declare class CubicBezierCurve {
     readonly startingPoint: Point2D;
     readonly firstControlPoint: Point2D;
@@ -12,7 +13,8 @@ export declare class CubicBezierCurve {
 }
 export declare function cubicBezierCurveForCircularArc(startingPoint: Point2D, angle: number, endingPoint: Point2D): CubicBezierCurve;
 export declare function cubicBezierCurveForCircularArc(center: Point2D, startingPoint: Point2D, angle: number): CubicBezierCurve;
-export declare function cubicBezierCurveForEllipticalArc(center: Point2D, startingPoint: Point2D, centralAngle: number, ratio: number, phi: number): CubicBezierCurve;
+export declare function cubicBezierCurveForEllipticalArc(center: Point2D, startingPoint: Point2D, centralAngle: number, aToBRatio: number, ellipseTilt: number): CubicBezierCurve;
+export declare function cubicBezierCurveForSuperellipse(startingPoint: Point2D, endingPoint: Point2D, tilt: number, squareness: number): CubicBezierCurve;
 export declare function cubicBezierAutoControl(startingPoint: Point2D, endingPoint: Point2D, startDirection?: Vector2D, // tangent vector out of the starting point
 endDirection?: Vector2D, // tangent vector into the ending point
 tensionA?: number, // fraction of chord length for handle distance

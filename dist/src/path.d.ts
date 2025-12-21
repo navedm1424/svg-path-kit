@@ -1,4 +1,5 @@
-import { Point2D, Vector2D } from "./svg";
+import { Vector2D } from "./vector2D";
+import { Point2D } from "./point2D";
 export declare abstract class Command {
     readonly mode: 'relative' | 'absolute';
     constructor(mode?: 'relative' | 'absolute');
@@ -84,6 +85,7 @@ export declare class PathBuilder {
     CForCircularArc(center: Point2D, angle: number): PathBuilder;
     cForEllipticalArc(center: Vector2D, angle: number, axisRatio: number, ellipseRotation?: number): this;
     CForEllipticalArc(center: Point2D, angle: number, axisRatio: number, ellipseRotation?: number): this;
+    cForSuperellipse(endingPoint: Vector2D, tilt: number, squareness: number): this;
     cAutoControl(endingPoint: Vector2D, startAngle?: number, endAngle?: number, curvatureA?: number, curvatureB?: number): this;
     CAutoControl(endingPoint: Point2D, startAngle?: number, endAngle?: number, curvatureA?: number, curvatureB?: number): this;
     z(): this;

@@ -1,6 +1,7 @@
-import { cubicBezierAutoControl, cubicBezierCurveForCircularArc, cubicBezierCurveForEllipticalArc } from "./cubic-bezier-curve";
+import { cubicBezierAutoControl, cubicBezierCurveForCircularArc, cubicBezierCurveForEllipticalArc, cubicBezierCurveForSuperellipse } from "./cubic-bezier-curve";
 import { round } from "../utils/math";
-import { Point2D, Vector2D } from "./svg";
+import { Vector2D } from "./vector2D";
+import { Point2D } from "./point2D";
 export class Command {
     constructor(mode = 'relative') {
         this.mode = mode;
@@ -110,7 +111,7 @@ export class ClosePathCommand extends Command {
         return `z`;
     }
     getEndPoint() {
-        return this.pathStart.startingPoint;
+        return this.pathStart.startingPoint.add(this.pathStart.endPoint);
     }
 }
 ;
@@ -275,6 +276,16 @@ export class PathBuilder {
         const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
         const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
         const endPointVector = Vector2D.from(startingPoint, endingPoint);
+        this.commands.push(new CubicBezierCurveCommand(startingPoint, firstControlPointVector, secondControlPointVector, endPointVector, 'absolute'));
+        return this;
+    }
+    cForSuperellipse(endingPoint, tilt, squareness) {
+        const startingPoint = this.currentPosition;
+        const cubicBezierCurve = cubicBezierCurveForSuperellipse(startingPoint, startingPoint.add(endingPoint), tilt, squareness);
+        const { firstControlPoint, secondControlPoint } = cubicBezierCurve;
+        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
+        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
+        const endPointVector = Vector2D.from(startingPoint, cubicBezierCurve.endingPoint);
         this.commands.push(new CubicBezierCurveCommand(startingPoint, firstControlPointVector, secondControlPointVector, endPointVector, 'absolute'));
         return this;
     }
