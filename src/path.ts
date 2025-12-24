@@ -463,8 +463,8 @@ export class PathBuilder {
     public cAutoControl(
         endingPoint: Vector2D,
         startAngle?: number, endAngle?: number,
-        curvatureA: number = 1 / 3,
-        curvatureB: number = curvatureA
+        startHandleScale: number = 1 / 3,
+        endHandleScale: number = startHandleScale
     ) {
         const startingPoint = this.currentPosition;
 
@@ -478,7 +478,7 @@ export class PathBuilder {
         const { firstControlPoint, secondControlPoint } = cubicBezierAutoControl(
             origin, endingPoint.toPoint(),
             startDirection ?? undefined, endDirection ?? undefined,
-            curvatureA, curvatureB
+            startHandleScale, endHandleScale
         );
         this.commands.push(CubicBezierCurveCommand.relative(
             startingPoint,
@@ -491,8 +491,8 @@ export class PathBuilder {
     public CAutoControl(
         endingPoint: Point2D,
         startAngle?: number, endAngle?: number,
-        curvatureA: number = 1 / 3,
-        curvatureB: number = curvatureA
+        startHandleScale: number = 1 / 3,
+        endHandleScale: number = startHandleScale
     ) {
         const startingPoint = this.currentPosition;
 
@@ -505,7 +505,7 @@ export class PathBuilder {
         const { firstControlPoint, secondControlPoint } = cubicBezierAutoControl(
             startingPoint, endingPoint,
             startDirection ?? undefined, endDirection ?? undefined,
-            curvatureA, curvatureB
+            startHandleScale, endHandleScale
         );
         this.commands.push(CubicBezierCurveCommand.absolute(
             startingPoint,

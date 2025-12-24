@@ -196,8 +196,8 @@ export function cubicBezierAutoControl(
     endingPoint: Point2D,
     startDirection?: Vector2D,  // tangent vector out of the starting point
     endDirection?: Vector2D,  // tangent vector into the ending point
-    tensionA = 1 / 3,  // fraction of chord length for handle distance
-    tensionB = tensionA
+    startHandleScale = 1 / 3,  // fraction of chord length for handle distance
+    endHandleScale = startHandleScale
 ): CubicBezierCurve {
     const chord = Vector2D.from(startingPoint, endingPoint);
     const chordLen = chord.magnitude;
@@ -211,21 +211,21 @@ export function cubicBezierAutoControl(
 
     // handle start
     if (startDirection) {
-        startDirection.scale(chordLen * tensionA);
+        startDirection.scale(chordLen * startHandleScale);
         p1 = startingPoint.add(startDirection);
     } else {
         const chordClone = chord.clone();
-        chordClone.scale(tensionA);
+        chordClone.scale(startHandleScale);
         p1 = startingPoint.add(chordClone);
     }
 
     // handle end
     if (endDirection) {
-        endDirection.scale(chordLen * tensionB);
+        endDirection.scale(chordLen * endHandleScale);
         p2 = endingPoint.add(endDirection);
     } else {
         const chordClone = chord.opposite();
-        chordClone.scale(tensionB);
+        chordClone.scale(endHandleScale);
         p2 = endingPoint.add(chordClone);
     }
 

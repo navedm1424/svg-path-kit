@@ -48,11 +48,11 @@ const d = pathBuilder.toString();
 
 This creates the path data for a simple square:
 
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 8 8">
-  <path d="M 7 0 l 0 6 l -6 0 l 0 -6 z" fill="hsl(0, 0%, 50%)"/>
-</svg>
+![Square](assets/examples/square.svg)
 
-Let's draw the following shape:
+---
+
+Now, let's draw the following shape:
 
 ![Round-capped Rectangle](assets/examples/roundcapped_rect.svg)
 
@@ -67,12 +67,13 @@ l 0 -6
 z
 ```
 
-This requires calculating the control-point coordinates for two cubic Bézier curves that produce two perfect circular arcs.
+This requires calculating the control-point coordinates for two cubic Bézier curves that produce the closest approximations of two circular arcs.
 
 With `PathBuilder`, you only need to specify:
 - the arc’s angle (in radians)
 - either the circle’s center or the arc’s endpoint.
 
+Here's the code:
 ```ts
 import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
 
@@ -96,7 +97,9 @@ const pathBuilder = PathBuilder.M(Point2D.of(7, 0))
 
 const d = pathBuilder.toString();
 ```
+---
 
+![Shape_0](assets/examples/shape_0.svg)
 
 ```ts
 import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
@@ -110,8 +113,6 @@ pathBuilder.cForCircularArc(Math.PI / 3, Vector2D.of(-2, 3))
     .z();
 const d = pathBuilder.toString();
 ```
-
-![Shape_0](assets/examples/shape_0.svg)
 
 ### Creating a builder
 
