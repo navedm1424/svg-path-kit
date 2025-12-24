@@ -1,138 +1,251 @@
-import { cubicBezierAutoControl, cubicBezierCurveForCircularArc, cubicBezierCurveForEllipticalArc } from "./cubic-bezier-curve";
+import {
+    cubicBezierAutoControl,
+    cubicBezierCurveForCircularArc,
+    cubicBezierCurveForEllipticalArc
+} from "./cubic-bezier-curve";
 import { round } from "../utils/math";
 import { Vector2D } from "./vector2D";
 import { Point2D } from "./point2D";
 
+export enum CommandMode {
+    RELATIVE='relative',
+    ABSOLUTE='absolute'
+}
+
 export abstract class Command {
-    constructor(readonly mode: 'relative' | 'absolute' = 'relative') {}
+    readonly endingPoint: Point2D;
+    protected readonly endingPointVector: Vector2D;
+    readonly mode: CommandMode;
+
+    protected constructor(
+        readonly startingPoint: Point2D,
+        endingPoint: Point2D | Vector2D,
+    ) {
+        if (endingPoint instanceof Vector2D) {
+            this.endingPointVector = endingPoint;
+            this.endingPoint = this.startingPoint.add(endingPoint);
+            this.mode = CommandMode.RELATIVE;
+        } else {
+            this.endingPoint = endingPoint;
+            this.endingPointVector = Vector2D.from(this.startingPoint, endingPoint);
+            this.mode = CommandMode.ABSOLUTE;
+        }
+    }
 
     protected coordinates(point: Point2D | Vector2D) {
         return `${round(point.x, 4)} ${round(point.y, 4)}`;
     }
 
     public abstract toString(): string;
-    public abstract getEndPoint(): Point2D;
-};
+    public abstract getEndDirection(): Vector2D | undefined;
+}
 
 export class MoveCommand extends Command {
-    constructor(readonly startingPoint: Point2D, readonly endPoint: Vector2D, mode: 'relative' | 'absolute' = 'relative') {
-        super(mode);
+    private constructor(
+        startingPoint: Point2D,
+        endingPoint: Point2D | Vector2D
+    ) {
+        super(startingPoint, endingPoint);
+    }
+    public static absolute(startingPoint: Point2D, endingPoint: Point2D) {
+        return new MoveCommand(startingPoint, endingPoint);
+    }
+    public static relative(startingPoint: Point2D, endingPointVector: Vector2D) {
+        return new MoveCommand(startingPoint, endingPointVector);
     }
 
     public toString() {
-        const cmd = this.mode === 'relative' ? 'm' : 'M';
-        const point = this.mode === 'relative' ? this.endPoint : this.startingPoint.add(this.endPoint);
+        const cmd = this.mode === CommandMode.RELATIVE ? 'm' : 'M';
+        const point = this.mode === CommandMode.RELATIVE ? this.endingPointVector : this.endingPoint;
         return `${cmd} ${this.coordinates(point)}`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.startingPoint.add(this.endPoint);
+    public getEndDirection(): Vector2D {
+        return this.endingPointVector.unit();
     }
-};
+}
 
 export class LineCommand extends Command {
-    constructor(readonly startingPoint: Point2D, readonly endPoint: Vector2D, mode: 'relative' | 'absolute' = 'relative') {
-        super(mode);
+    private constructor(
+        startingPoint: Point2D,
+        endingPoint: Point2D | Vector2D
+    ) {
+        super(startingPoint, endingPoint);
+    }
+    public static absolute(startingPoint: Point2D, endingPoint: Point2D) {
+        return new LineCommand(startingPoint, endingPoint);
+    }
+    public static relative(startingPoint: Point2D, endingPointVector: Vector2D) {
+        return new LineCommand(startingPoint, endingPointVector);
     }
 
     public toString() {
-        const cmd = this.mode === 'relative' ? 'l' : 'L';
-        const end = this.mode === 'relative' ? this.endPoint : this.startingPoint.add(this.endPoint);
+        const cmd = this.mode === CommandMode.RELATIVE ? 'l' : 'L';
+        const end = this.mode === CommandMode.RELATIVE ? this.endingPointVector : this.endingPoint;
         return `${cmd} ${this.coordinates(end)}`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.startingPoint.add(this.endPoint);
+    public getEndDirection(): Vector2D {
+        return this.endingPointVector.unit();
     }
-};
+}
 
 export class QuadraticBezierCurveCommand extends Command {
-    constructor(
-        readonly startingPoint: Point2D,
-        readonly controlPoint: Vector2D,
-        readonly endPoint: Vector2D,
-        mode: 'relative' | 'absolute' = 'relative'
+    readonly controlPoint: Vector2D;
+    private constructor(
+        startingPoint: Point2D,
+        controlPoint: Point2D | Vector2D,
+        endingPoint: Point2D | Vector2D,
     ) {
-        super(mode);
+        super(startingPoint, endingPoint);
+        if (controlPoint instanceof Vector2D)
+            this.controlPoint = controlPoint;
+        else
+            this.controlPoint = Vector2D.from(startingPoint, controlPoint);
+    }
+    public static absolute(startingPoint: Point2D, controlPoint: Point2D, endingPoint: Point2D) {
+        return new QuadraticBezierCurveCommand(startingPoint, controlPoint, endingPoint);
+    }
+    public static relative(startingPoint: Point2D, controlPoint: Vector2D, endingPoint: Vector2D) {
+        return new QuadraticBezierCurveCommand(startingPoint, controlPoint, endingPoint);
     }
 
     public toString() {
-        const cmd = this.mode === 'relative' ? 'q' : 'Q';
-        const cp = this.mode === 'relative' ? this.controlPoint : this.startingPoint.add(this.controlPoint);
-        const ep = this.mode === 'relative' ? this.endPoint : this.startingPoint.add(this.endPoint);
+        const cmd = this.mode === CommandMode.RELATIVE ? 'q' : 'Q';
+        const cp = this.mode === CommandMode.RELATIVE ? this.controlPoint : this.startingPoint.add(this.controlPoint);
+        const ep = this.mode === CommandMode.RELATIVE ? this.endingPointVector : this.endingPoint;
         return `${cmd} ${this.coordinates(cp)} ${this.coordinates(ep)}`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.startingPoint.add(this.endPoint);
+    public getEndDirection(): Vector2D {
+        return this.endingPointVector.subtract(this.controlPoint).unit();
     }
-};
+}
 
 export class CubicBezierCurveCommand extends Command {
-    constructor(
-        readonly startingPoint: Point2D,
-        readonly firstControlPoint: Vector2D,
-        readonly secondControlPoint: Vector2D,
-        readonly endPoint: Vector2D,
-        mode: 'relative' | 'absolute' = 'relative'
+    readonly firstControlPoint: Vector2D;
+    readonly secondControlPoint: Vector2D;
+    private constructor(
+        startingPoint: Point2D,
+        firstControlPoint: Point2D | Vector2D,
+        secondControlPoint: Point2D | Vector2D,
+        endingPoint: Point2D | Vector2D
     ) {
-        super(mode);
+        super(startingPoint, endingPoint);
+        if (firstControlPoint instanceof Vector2D)
+            this.firstControlPoint = firstControlPoint;
+        else
+            this.firstControlPoint = Vector2D.from(startingPoint, firstControlPoint);
+        if (secondControlPoint instanceof Vector2D)
+            this.secondControlPoint = secondControlPoint;
+        else
+            this.secondControlPoint = Vector2D.from(startingPoint, secondControlPoint);
+    }
+    public static absolute(startingPoint: Point2D, firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D) {
+        return new CubicBezierCurveCommand(startingPoint, firstControlPoint, secondControlPoint, endingPoint);
+    }
+    public static relative(startingPoint: Point2D, firstControlPoint: Vector2D, secondControlPoint: Vector2D, endingPoint: Vector2D) {
+        return new CubicBezierCurveCommand(startingPoint, firstControlPoint, secondControlPoint, endingPoint);
     }
 
     public toString() {
-        const cmd = this.mode === 'relative' ? 'c' : 'C';
-        const cp1 = this.mode === 'relative' ? this.firstControlPoint : this.startingPoint.add(this.firstControlPoint);
-        const cp2 = this.mode === 'relative' ? this.secondControlPoint : this.startingPoint.add(this.secondControlPoint);
-        const ep = this.mode === 'relative' ? this.endPoint : this.startingPoint.add(this.endPoint);
+        const cmd = this.mode === CommandMode.RELATIVE ? 'c' : 'C';
+        const cp1 = this.mode === CommandMode.RELATIVE ? this.firstControlPoint : this.startingPoint.add(this.firstControlPoint);
+        const cp2 = this.mode === CommandMode.RELATIVE ? this.secondControlPoint : this.startingPoint.add(this.secondControlPoint);
+        const ep = this.mode === CommandMode.RELATIVE ? this.endingPointVector : this.endingPointVector;
         return `${cmd} ${this.coordinates(cp1)} ${this.coordinates(cp2)} ${this.coordinates(ep)}`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.startingPoint.add(this.endPoint);
+    public getEndDirection(): Vector2D {
+        return this.endingPointVector.subtract(this.secondControlPoint).unit();
     }
-};
+}
 
 export class EllipticalArcCommand extends Command {
-    constructor(
-        readonly startingPoint: Point2D,
+    private constructor(
+        startingPoint: Point2D,
         readonly xRadius: number,
         readonly yRadius: number,
         readonly xAxisRotation: number,
         readonly largeArcFlag: 0 | 1,
         readonly sweepFlag: 0 | 1,
-        readonly endPoint: Vector2D,
-        mode: 'relative' | 'absolute' = 'relative'
+        endingPoint: Point2D | Vector2D
     ) {
-        super(mode);
+        super(startingPoint, endingPoint);
+    }
+    public static absolute(
+        startingPoint: Point2D,
+        xRadius: number,
+        yRadius: number,
+        xAxisRotation: number,
+        largeArcFlag: 0 | 1,
+        sweepFlag: 0 | 1,
+        endingPoint: Point2D
+    ) {
+        return new EllipticalArcCommand(
+            startingPoint,
+            xRadius,
+            yRadius,
+            xAxisRotation,
+            largeArcFlag,
+            sweepFlag,
+            endingPoint,
+        );
+    }
+    public static relative(
+        startingPoint: Point2D,
+        xRadius: number,
+        yRadius: number,
+        xAxisRotation: number,
+        largeArcFlag: 0 | 1,
+        sweepFlag: 0 | 1,
+        endingPoint: Vector2D
+    ) {
+        return new EllipticalArcCommand(
+            startingPoint,
+            xRadius,
+            yRadius,
+            xAxisRotation,
+            largeArcFlag,
+            sweepFlag,
+            endingPoint,
+        );
     }
 
     public toString() {
-        const cmd = this.mode === 'relative' ? 'a' : 'A';
-        const ep = this.mode === 'relative' ? this.endPoint : this.startingPoint.add(this.endPoint);
+        const cmd = this.mode === CommandMode.RELATIVE ? 'a' : 'A';
+        const ep = this.mode === CommandMode.RELATIVE ? this.endingPointVector : this.endingPoint;
         return `${cmd} ${this.xRadius} ${this.yRadius} ${this.xAxisRotation} ${this.largeArcFlag} ${this.sweepFlag} ${this.coordinates(ep)}`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.startingPoint.add(this.endPoint);
+    // TODO: Write the actual implementation
+    public getEndDirection(): Vector2D | undefined {
+        return undefined;
     }
-};
+}
 
 export class ClosePathCommand extends Command {
-    constructor(
-        readonly pathStart: MoveCommand,
-        mode: 'relative' | 'absolute' = 'relative'
+    private constructor(
+        startingPoint: Point2D,
+        endingPoint: Point2D | Vector2D
     ) {
-        super(mode);
+        super(startingPoint, endingPoint);
+    }
+    public static absolute(startingPoint: Point2D, endingPoint: Point2D) {
+        return new ClosePathCommand(startingPoint, endingPoint);
+    }
+    public static relative(startingPoint: Point2D, endingPointVector: Vector2D) {
+        return new ClosePathCommand(startingPoint, endingPointVector);
     }
 
     public toString() {
         return `z`;
     }
 
-    public getEndPoint(): Point2D {
-        return this.pathStart.startingPoint.add(this.pathStart.endPoint);
+    public getEndDirection(): Vector2D | undefined {
+        return this.endingPointVector.unit();
     }
-};
+}
 
 export class Path {
     constructor(readonly commands: Command[]) { }
@@ -140,14 +253,14 @@ export class Path {
     public toString() {
         return this.commands.map(c => c.toString()).join(' ');
     }
-};
+}
 
 export class PathBuilder {
     private commands: Command[] = [];
     private openPathStack: MoveCommand[] = [];
 
     get currentPosition() {
-        return this.lastCommand?.getEndPoint() ?? Point2D.of(0, 0);
+        return this.lastCommand?.endingPoint ?? Point2D.of(0, 0);
     }
     get lastCommand() {
         return this.commands.length === 0 ?
@@ -173,7 +286,7 @@ export class PathBuilder {
     // Relative move
     public m(point: Vector2D) {
         const startingPoint = this.currentPosition;
-        const moveCommand = new MoveCommand(startingPoint, point, 'relative');
+        const moveCommand = MoveCommand.relative(startingPoint, point);
         this.commands.push(moveCommand);
         this.openPathStack.push(moveCommand);
         return this;
@@ -182,8 +295,7 @@ export class PathBuilder {
     // Absolute move
     public M(point: Point2D) {
         const startingPoint = this.currentPosition;
-        const endPointVector = Vector2D.from(startingPoint, point);
-        const moveCommand = new MoveCommand(startingPoint, endPointVector, 'absolute');
+        const moveCommand = MoveCommand.absolute(startingPoint, point);
         this.commands.push(moveCommand);
         this.openPathStack.push(moveCommand);
         return this;
@@ -192,48 +304,42 @@ export class PathBuilder {
     // Relative line
     public l(point: Vector2D) {
         const startingPoint = this.currentPosition;
-        this.commands.push(new LineCommand(startingPoint, point, 'relative'));
+        this.commands.push(LineCommand.relative(startingPoint, point));
         return this;
     }
 
     // Absolute line
     public L(point: Point2D) {
         const startingPoint = this.currentPosition;
-        const endPointVector = Vector2D.from(startingPoint, point);
-        this.commands.push(new LineCommand(startingPoint, endPointVector, 'absolute'));
+        this.commands.push(LineCommand.absolute(startingPoint, point));
         return this;
     }
 
     // Relative quadratic Bézier curve
     public q(controlPoint: Vector2D, endPoint: Vector2D) {
         const startingPoint = this.currentPosition;
-        this.commands.push(new QuadraticBezierCurveCommand(startingPoint, controlPoint, endPoint, 'relative'));
+        this.commands.push(QuadraticBezierCurveCommand.relative(startingPoint, controlPoint, endPoint));
         return this;
     }
 
     // Absolute quadratic Bézier curve
-    public Q(controlPoint: Point2D, endPoint: Point2D) {
+    public Q(controlPoint: Point2D, endingPoint: Point2D) {
         const startingPoint = this.currentPosition;
-        const controlPointVector = Vector2D.from(startingPoint, controlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endPoint);
-        this.commands.push(new QuadraticBezierCurveCommand(startingPoint, controlPointVector, endPointVector, 'absolute'));
+        this.commands.push(QuadraticBezierCurveCommand.absolute(startingPoint, controlPoint, endingPoint));
         return this;
     }
 
     // Relative cubic Bézier curve
-    public c(firstControlPoint: Vector2D, secondControlPoint: Vector2D, endPoint: Vector2D) {
+    public c(firstControlPoint: Vector2D, secondControlPoint: Vector2D, endingPoint: Vector2D) {
         const startingPoint = this.currentPosition;
-        this.commands.push(new CubicBezierCurveCommand(startingPoint, firstControlPoint, secondControlPoint, endPoint, 'relative'));
+        this.commands.push(CubicBezierCurveCommand.relative(startingPoint, firstControlPoint, secondControlPoint, endingPoint));
         return this;
     }
 
     // Absolute cubic Bézier curve
-    public C(firstControlPoint: Point2D, secondControlPoint: Point2D, endPoint: Point2D) {
+    public C(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D) {
         const startingPoint = this.currentPosition;
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endPoint);
-        this.commands.push(new CubicBezierCurveCommand(startingPoint, firstControlPointVector, secondControlPointVector, endPointVector, 'absolute'));
+        this.commands.push(CubicBezierCurveCommand.absolute(startingPoint, firstControlPoint, secondControlPoint, endingPoint));
         return this;
     }
 
@@ -247,7 +353,7 @@ export class PathBuilder {
         endPoint: Vector2D
     ) {
         const startingPoint = this.currentPosition;
-        this.commands.push(new EllipticalArcCommand(startingPoint, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag, endPoint, 'relative'));
+        this.commands.push(EllipticalArcCommand.relative(startingPoint, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag, endPoint));
         return this;
     }
 
@@ -261,8 +367,7 @@ export class PathBuilder {
         endPoint: Point2D
     ) {
         const startingPoint = this.currentPosition;
-        const endPointVector = Vector2D.from(startingPoint, endPoint);
-        this.commands.push(new EllipticalArcCommand(startingPoint, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag, endPointVector, 'absolute'));
+        this.commands.push(EllipticalArcCommand.absolute(startingPoint, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag, endPoint));
         return this;
     }
 
@@ -276,26 +381,21 @@ export class PathBuilder {
     ) {
         const startingPoint = this.currentPosition;
         let cubicBezierCurve;
+        const origin = Point2D.of(0, 0);
         if (typeof args[0] === "number" && args[1] instanceof Vector2D) {
-            const absoluteEndPoint = startingPoint.add(args[1]);
-            cubicBezierCurve = cubicBezierCurveForCircularArc(startingPoint, args[0], absoluteEndPoint);
+            cubicBezierCurve = cubicBezierCurveForCircularArc(origin, args[0], args[1].toPoint());
         } else if (args[0] instanceof Vector2D && typeof args[1] === "number") {
-            const absoluteCenter = startingPoint.add(args[0]);
-            cubicBezierCurve = cubicBezierCurveForCircularArc(absoluteCenter, startingPoint, args[1]);
+            cubicBezierCurve = cubicBezierCurveForCircularArc(args[0].toPoint(), origin, args[1]);
         } else {
             throw new Error("Invalid Arguments");
         }
 
         const { firstControlPoint, secondControlPoint, endingPoint } = cubicBezierCurve;
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endingPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.relative(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'relative'
+            firstControlPoint.toVector(),
+            secondControlPoint.toVector(),
+            endingPoint.toVector()
         ));
         return this;
     }
@@ -319,15 +419,11 @@ export class PathBuilder {
         }
 
         const { firstControlPoint, secondControlPoint, endingPoint } = cubicBezierCurve;
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endingPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.absolute(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'absolute'
+            firstControlPoint,
+            secondControlPoint,
+            endingPoint
         ));
         return this;
     }
@@ -336,18 +432,14 @@ export class PathBuilder {
         center: Vector2D, angle: number, axisRatio: number, ellipseRotation: number = 0
     ) {
         const startingPoint = this.currentPosition;
-        const absoluteCenter = startingPoint.add(center);
-        const cubicBezierCurve = cubicBezierCurveForEllipticalArc(absoluteCenter, startingPoint, angle, axisRatio, ellipseRotation);
+        const origin = Point2D.of(0, 0);
+        const cubicBezierCurve = cubicBezierCurveForEllipticalArc(center.toPoint(), origin, angle, axisRatio, ellipseRotation);
         const { firstControlPoint, secondControlPoint, endingPoint } = cubicBezierCurve;
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endingPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.relative(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'relative'
+            firstControlPoint.toVector(),
+            secondControlPoint.toVector(),
+            endingPoint.toVector()
         ));
         return this;
     }
@@ -358,15 +450,11 @@ export class PathBuilder {
         const startingPoint = this.currentPosition;
         const cubicBezierCurve = cubicBezierCurveForEllipticalArc(center, startingPoint, angle, axisRatio, ellipseRotation);
         const { firstControlPoint, secondControlPoint, endingPoint } = cubicBezierCurve;
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endingPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.absolute(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'absolute'
+            firstControlPoint,
+            secondControlPoint,
+            endingPoint
         ));
         return this;
     }
@@ -379,45 +467,27 @@ export class PathBuilder {
         curvatureB: number = curvatureA
     ) {
         const startingPoint = this.currentPosition;
-        const absoluteEndPoint = startingPoint.add(endingPoint);
 
-        let startDirection: Vector2D | null = null;
-        if (startAngle !== undefined) {
-            startDirection = Vector2D.of(Math.cos(startAngle), Math.sin(startAngle))
-        } else {
-            const lastCommand = this.lastCommand;
-            if (lastCommand instanceof LineCommand) {
-                startDirection = lastCommand.endPoint.unit();
-            } else if (lastCommand instanceof CubicBezierCurveCommand) {
-                const directionVector = lastCommand.endPoint.subtract(lastCommand.secondControlPoint);
-                startDirection = directionVector.unit();
-            } else if (lastCommand instanceof QuadraticBezierCurveCommand) {
-                const directionVector = lastCommand.endPoint.subtract(lastCommand.controlPoint);
-                startDirection = directionVector.unit();
-            }
-        }
-        let endDirection: Vector2D | null = null;
-        if (endAngle !== undefined) {
-            endDirection = Vector2D.of(Math.cos(endAngle), Math.sin(endAngle));
-        }
+        const startDirection: Vector2D | null = startAngle !== undefined ?
+            Vector2D.of(Math.cos(startAngle), Math.sin(startAngle)):
+            this.lastCommand?.getEndDirection() ?? null;
+        const endDirection: Vector2D | null = endAngle !== undefined ?
+            Vector2D.of(Math.cos(endAngle), Math.sin(endAngle)):
+            null;
+        const origin = Point2D.of(0, 0);
         const { firstControlPoint, secondControlPoint } = cubicBezierAutoControl(
-            startingPoint, absoluteEndPoint,
+            origin, endingPoint.toPoint(),
             startDirection ?? undefined, endDirection ?? undefined,
             curvatureA, curvatureB
         );
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, absoluteEndPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.relative(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'relative'
+            firstControlPoint.toVector(),
+            secondControlPoint.toVector(),
+            endingPoint
         ));
         return this;
     }
-
     public CAutoControl(
         endingPoint: Point2D,
         startAngle?: number, endAngle?: number,
@@ -426,45 +496,30 @@ export class PathBuilder {
     ) {
         const startingPoint = this.currentPosition;
 
-        let startDirection: Vector2D | null = null;
-        if (startAngle !== undefined) {
-            startDirection = Vector2D.of(Math.cos(startAngle), Math.sin(startAngle))
-        } else {
-            const lastCommand = this.lastCommand;
-            if (lastCommand instanceof LineCommand) {
-                startDirection = lastCommand.endPoint.unit();
-            } else if (lastCommand instanceof CubicBezierCurveCommand) {
-                const directionVector = lastCommand.endPoint.subtract(lastCommand.secondControlPoint);
-                startDirection = directionVector.unit();
-            } else if (lastCommand instanceof QuadraticBezierCurveCommand) {
-                const directionVector = lastCommand.endPoint.subtract(lastCommand.controlPoint);
-                startDirection = directionVector.unit();
-            }
-        }
-        let endDirection: Vector2D | null = null;
-        if (endAngle !== undefined) {
-            endDirection = Vector2D.of(Math.cos(endAngle), Math.sin(endAngle));
-        }
+        const startDirection: Vector2D | null = startAngle !== undefined ?
+            Vector2D.of(Math.cos(startAngle), Math.sin(startAngle)):
+            this.lastCommand?.getEndDirection() ?? null;
+        const endDirection: Vector2D | null = endAngle !== undefined ?
+            Vector2D.of(Math.cos(endAngle), Math.sin(endAngle)):
+            null;
         const { firstControlPoint, secondControlPoint } = cubicBezierAutoControl(
             startingPoint, endingPoint,
             startDirection ?? undefined, endDirection ?? undefined,
             curvatureA, curvatureB
         );
-        const firstControlPointVector = Vector2D.from(startingPoint, firstControlPoint);
-        const secondControlPointVector = Vector2D.from(startingPoint, secondControlPoint);
-        const endPointVector = Vector2D.from(startingPoint, endingPoint);
-        this.commands.push(new CubicBezierCurveCommand(
+        this.commands.push(CubicBezierCurveCommand.absolute(
             startingPoint,
-            firstControlPointVector,
-            secondControlPointVector,
-            endPointVector,
-            'absolute'
+            firstControlPoint,
+            secondControlPoint,
+            endingPoint
         ));
         return this;
     }
 
     public z() {
-        this.commands.push(new ClosePathCommand(this.openPathStack.pop()!, 'relative'));
+        const startingPoint = this.currentPosition;
+        const endingPoint = this.openPathStack.pop()!.endingPoint;
+        this.commands.push(ClosePathCommand.absolute(startingPoint, endingPoint));
         return this;
     }
 
@@ -475,4 +530,4 @@ export class PathBuilder {
     public toString() {
         return this.toPath().toString();
     }
-};
+}
