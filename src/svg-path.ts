@@ -6,12 +6,12 @@ function coordinates(point: Point2D | Vector2D) {
     return `${round(point.x, 4)} ${round(point.y, 4)}`;
 }
 
-export abstract class SVGPathCommand {
+export abstract class PrimitiveCommand {
     public abstract getKey(): string;
     public abstract toString(): string;
 }
 
-export abstract class MoveCommand extends SVGPathCommand {
+export abstract class MovePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
     public toString() {
@@ -19,7 +19,7 @@ export abstract class MoveCommand extends SVGPathCommand {
     }
 }
 
-export class AbsoluteMoveCommand extends MoveCommand {
+export class AbsoluteMovePrimitive extends MovePrimitive {
     constructor(readonly endingPoint: Point2D) {
         super();
     }
@@ -32,7 +32,7 @@ export class AbsoluteMoveCommand extends MoveCommand {
     }
 }
 
-export class RelativeMoveCommand extends MoveCommand {
+export class RelativeMovePrimitive extends MovePrimitive {
     constructor(readonly endingPoint: Vector2D) {
         super();
     }
@@ -45,7 +45,7 @@ export class RelativeMoveCommand extends MoveCommand {
     }
 }
 
-export abstract class LineCommand extends SVGPathCommand {
+export abstract class LinePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
     public toString() {
@@ -55,7 +55,7 @@ export abstract class LineCommand extends SVGPathCommand {
     }
 }
 
-export class AbsoluteLineCommand extends LineCommand {
+export class AbsoluteLinePrimitive extends LinePrimitive {
     constructor(readonly endingPoint: Point2D) {
         super();
     }
@@ -68,7 +68,7 @@ export class AbsoluteLineCommand extends LineCommand {
     }
 }
 
-export class RelativeLineCommand extends LineCommand {
+export class RelativeLinePrimitive extends LinePrimitive {
     constructor(readonly endingPoint: Vector2D) {
         super();
     }
@@ -81,7 +81,7 @@ export class RelativeLineCommand extends LineCommand {
     }
 }
 
-export abstract class QuadraticBezierCurveCommand extends SVGPathCommand {
+export abstract class QuadraticBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getControlPoint(): Point2D | Vector2D;
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
@@ -93,7 +93,7 @@ export abstract class QuadraticBezierCurveCommand extends SVGPathCommand {
     }
 }
 
-export class AbsoluteQuadraticBezierCurveCommand extends QuadraticBezierCurveCommand {
+export class AbsoluteQuadraticBezierCurvePrimitive extends QuadraticBezierCurvePrimitive {
     constructor(
         readonly controlPoint: Point2D,
         readonly endingPoint: Point2D
@@ -110,7 +110,7 @@ export class AbsoluteQuadraticBezierCurveCommand extends QuadraticBezierCurveCom
         return this.endingPoint;
     }
 }
-export class RelativeQuadraticBezierCurveCommand extends QuadraticBezierCurveCommand {
+export class RelativeQuadraticBezierCurvePrimitive extends QuadraticBezierCurvePrimitive {
     constructor(
         readonly controlPoint: Vector2D,
         readonly endingPoint: Vector2D
@@ -128,7 +128,7 @@ export class RelativeQuadraticBezierCurveCommand extends QuadraticBezierCurveCom
     }
 }
 
-export abstract class CubicBezierCurveCommand extends SVGPathCommand {
+export abstract class CubicBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getFirstControlPoint(): Point2D | Vector2D;
     protected abstract getSecondControlPoint(): Point2D | Vector2D;
     protected abstract getEndingPoint(): Point2D | Vector2D;
@@ -141,7 +141,7 @@ export abstract class CubicBezierCurveCommand extends SVGPathCommand {
     }
 }
 
-export class AbsoluteCubicBezierCurveCommand extends CubicBezierCurveCommand {
+export class AbsoluteCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive {
     constructor(
         readonly firstControlPoint: Point2D,
         readonly secondControlPoint: Point2D,
@@ -164,7 +164,7 @@ export class AbsoluteCubicBezierCurveCommand extends CubicBezierCurveCommand {
     }
 }
 
-export class RelativeCubicBezierCurveCommand extends CubicBezierCurveCommand {
+export class RelativeCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive {
     constructor(
         readonly firstControlPoint: Vector2D,
         readonly secondControlPoint: Vector2D,
@@ -187,7 +187,7 @@ export class RelativeCubicBezierCurveCommand extends CubicBezierCurveCommand {
     }
 }
 
-export abstract class EllipticalArcCommand extends SVGPathCommand {
+export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
     protected constructor(
         readonly xRadius: number,
         readonly yRadius: number,
@@ -205,7 +205,7 @@ export abstract class EllipticalArcCommand extends SVGPathCommand {
     }
 }
 
-export class AbsoluteEllipticalArcCommand extends EllipticalArcCommand {
+export class AbsoluteEllipticalArcPrimitive extends EllipticalArcPrimitive {
     constructor(
         xRadius: number,
         yRadius: number,
@@ -225,7 +225,7 @@ export class AbsoluteEllipticalArcCommand extends EllipticalArcCommand {
     }
 }
 
-export class RelativeEllipticalArcCommand extends EllipticalArcCommand {
+export class RelativeEllipticalArcPrimitive extends EllipticalArcPrimitive {
     constructor(
         xRadius: number,
         yRadius: number,
@@ -245,7 +245,17 @@ export class RelativeEllipticalArcCommand extends EllipticalArcCommand {
     }
 }
 
-export class RelativeClosePathCommand extends SVGPathCommand {
+export class AbsoluteClosePathPrimitive extends PrimitiveCommand {
+    public getKey(): string {
+        return "Z";
+    }
+
+    public toString() {
+        return this.getKey();
+    }
+}
+
+export class RelativeClosePathPrimitive extends PrimitiveCommand {
     public getKey(): string {
         return "z";
     }
@@ -256,7 +266,7 @@ export class RelativeClosePathCommand extends SVGPathCommand {
 }
 
 export class SVGPath {
-    constructor(readonly commands: SVGPathCommand[]) { }
+    constructor(readonly commands: PrimitiveCommand[]) { }
 
     public toString() {
         return this.commands.map(c => c.toString()).join(' ');
