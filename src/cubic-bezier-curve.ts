@@ -1,5 +1,7 @@
-import { RotationDirection, Vector2D } from "./vector2D";
+import { Orientation, Vector2D } from "./vector2D";
 import { Point2D } from "./point2D";
+import {ifNegative} from "../utils/math";
+import {Ellipse} from "./ellipse";
 
 export class CubicBezierCurve {
     constructor(
@@ -88,16 +90,19 @@ function getScalarFactor(angle: number) {
 }
 
 export function cubicBezierCurveForCircularArc(startingPoint: Point2D, angle: number, endingPoint: Point2D): CubicBezierCurve;
-export function cubicBezierCurveForCircularArc(center: Point2D, startingPoint: Point2D, angle: number): CubicBezierCurve;
+export function cubicBezierCurveForCircularArc(startingPoint: Point2D, radius: number, startAngle: number, endAngle: number): CubicBezierCurve;
 
 export function cubicBezierCurveForCircularArc(...args:
     [startingPoint: Point2D, angle: number, endingPoint: Point2D] |
-    [center: Point2D, startingPoint: Point2D, angle: number]
+    [startingPoint: Point2D, radius: number, startAngle: number, endAngle: number]
 ) {
     if (typeof args[1] === 'number' && args[2] instanceof Point2D) {
         return cubicBezierCurveForCircularArcFromAngle(args[0], args[1], args[2]);
-    } else if (args[1] instanceof Point2D && typeof args[2] === "number") {
-        return cubicBezierCurveForCircularArcFromCenterAndAngle(args[0], args[1], args[2]);
+    } else if (
+        args[0] instanceof Point2D && typeof args[1] === "number"
+        && typeof args[2] === "number" && typeof args[3] === "number"
+    ) {
+        return cubicBezierCurveForCircularArcFromRadiusAndAngle(args[0], args[1], args[2], args[3]);
     }
 }
 
@@ -122,73 +127,66 @@ function cubicBezierCurveForCircularArcFromAngle(startingPoint: Point2D, angle: 
 
     return new CubicBezierCurve(
         startingPoint, startingPoint.add(v0.perpendicular()),
-        endingPoint.add(v1.perpendicular(RotationDirection.CLOCKWISE)), endingPoint
+        endingPoint.add(v1.perpendicular(Orientation.CLOCKWISE)), endingPoint
     );
 }
 
-function cubicBezierCurveForCircularArcFromCenterAndAngle(center: Point2D, startingPoint: Point2D, angle: number) {
-    const v0 = Vector2D.from(center, startingPoint);
-    const v1 = v0.clone();
-    v1.rotate(angle);
-    const endingPoint = center.add(v1);
-    const scalarFactor = getScalarFactor(angle);
-    v0.scale(scalarFactor);
-    v1.scale(scalarFactor);
+function cubicBezierCurveForCircularArcFromRadiusAndAngle(startingPoint: Point2D, radius: number, startAngle: number, endAngle: number) {
+    const centerToStart = Vector2D.polar(radius, startAngle);
+    const centerToEnd = Vector2D.polar(radius, endAngle);
+
+    const center = startingPoint.add(centerToStart.opposite());
+    const endingPoint = center.add(centerToEnd);
+    const scalarFactor = getScalarFactor(endAngle - startAngle);
+
+    centerToStart.scale(scalarFactor);
+    centerToEnd.scale(scalarFactor);
 
     return new CubicBezierCurve(
-        startingPoint, startingPoint.add(v0.perpendicular()),
-        endingPoint.add(v1.perpendicular(RotationDirection.CLOCKWISE)), endingPoint
+        startingPoint, startingPoint.add(centerToStart.perpendicular()),
+        endingPoint.add(centerToEnd.perpendicular(Orientation.CLOCKWISE)), endingPoint
     );
 }
 
 export function cubicBezierCurveForEllipticalArc(
-    center: Point2D,
     startingPoint: Point2D,
-    centralAngle: number,
-    aToBRatio: number,
-    ellipseTilt: number
-) {
-    const startVec = Vector2D.from(center, startingPoint);
-    startVec.rotate(-ellipseTilt);
+    a: number, b: number,
+    startAngle: number, endAngle: number,
+    ellipseTilt: number = 0
+): [Ellipse, CubicBezierCurve] {
+    // const startParametricAngle = Math.atan2(a * Math.sin(startAngle), b * Math.cos(startAngle));
+    // const endParametricAngle = ifNegative(Math.atan2(a * Math.sin(endAngle), b * Math.cos(endAngle)), angle => 2 * Math.PI + angle);
 
-    const endDirection = startVec.clone();
-    endDirection.rotate(centralAngle);
+    const startAngleSine = Math.sin(startAngle);
+    const startAngleCosine = Math.cos(startAngle);
+    const endAngleSine = Math.sin(endAngle);
+    const endAngleCosine = Math.cos(endAngle);
 
-    // vec_x / (a / b) = a * cos(angle) / (a / b) = b * cos(angle)
-    // bringing the x-component into the b-circle's frame and calculating the hypotenuse to get the radius of the b-circle, which is b.
-    const b = Math.hypot(startVec.x / aToBRatio, startVec.y);
-    // from b, we can get a using the provided ratio.
-    const a = aToBRatio * b;
-
-    // (vec_x, vec_y) = (a * cos(angle), b * sin(angle))
-    // angle = atan(tan(angle)) = atan2(sin(angle), cos(angle)) = atan2(vec_y / b, vec_x / a)
-    const startParametricAngle = Math.atan2(startVec.y / b, startVec.x / a);
-    const endParametricAngle = Math.atan2(endDirection.y / b, endDirection.x / a);
-
-    const endVec = Vector2D.of(a * Math.cos(endParametricAngle), b * Math.sin(endParametricAngle));
+    const startVec = Vector2D.of(a * startAngleCosine, b * startAngleSine);
+    startVec.rotate(ellipseTilt);
+    const endVec = Vector2D.of(a * endAngleCosine, b * endAngleSine);
     endVec.rotate(ellipseTilt);
+    const center = startingPoint.add(startVec.opposite());
     const endingPoint = center.add(endVec);
 
     // tangents at (a * cos(angle), b * sin(angle)) = (a * sin(angle), -b * cos(angle))
-    const startControlVector = Vector2D.of(
-        a * Math.sin(startParametricAngle),
-        -b * Math.cos(startParametricAngle),
-    );
-    const endControlVector = Vector2D.of(
-        a * Math.sin(endParametricAngle),
-        -b * Math.cos(endParametricAngle),
-    );
-    // scalar factor = 4 / 3 * tan((startAngle - endAngle) / 4))
-    const factor = 4 / 3 * Math.tan((startParametricAngle - endParametricAngle) / 4);
-    startControlVector.scale(factor);
-    endControlVector.scale(-factor);
+    const startControlVector = Vector2D.of(-a * startAngleSine, b * startAngleCosine);
     startControlVector.rotate(ellipseTilt);
+    const endControlVector = Vector2D.of(-a * endAngleSine, b * endAngleCosine);
     endControlVector.rotate(ellipseTilt);
 
-    return new CubicBezierCurve(
-        startingPoint, startingPoint.add(startControlVector),
-        endingPoint.add(endControlVector), endingPoint
-    );
+    // scalar factor = 4 / 3 * tan((endAngle - startAngle) / 4))
+    const factor = getScalarFactor(endAngle - startAngle);
+    startControlVector.scale(factor);
+    endControlVector.scale(-factor);
+
+    return [
+        new Ellipse(center, a, b, ellipseTilt),
+        new CubicBezierCurve(
+            startingPoint, startingPoint.add(startControlVector),
+            endingPoint.add(endControlVector), endingPoint
+        )
+    ];
 }
 
 export function cubicBezierAutoControl(

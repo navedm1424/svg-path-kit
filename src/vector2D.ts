@@ -1,6 +1,6 @@
 import { Point2D } from "./point2D";
 
-export enum RotationDirection {
+export enum Orientation {
     CLOCKWISE, COUNTERCLOCKWISE
 };
 
@@ -30,8 +30,8 @@ export class Vector2D {
         return new Vector2D(x, y);
     }
 
-    public static ofAngle(angle: number): Vector2D {
-        return new Vector2D(Math.cos(angle), Math.sin(angle));
+    public static polar(radius: number, angle: number): Vector2D {
+        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
     }
 
     public static from(initialPoint: Point2D, terminalPoint: Point2D): Vector2D {
@@ -64,8 +64,8 @@ export class Vector2D {
         return new Vector2D(this.x / this._magnitude, this.y / this._magnitude);
     }
 
-    public perpendicular(rotationDirection: RotationDirection = RotationDirection.COUNTERCLOCKWISE): Vector2D {
-        return RotationDirection.COUNTERCLOCKWISE === rotationDirection ?
+    public perpendicular(orientation: Orientation = Orientation.COUNTERCLOCKWISE): Vector2D {
+        return Orientation.COUNTERCLOCKWISE === orientation ?
             new Vector2D(-1 * this.y, this.x):
             new Vector2D(this.y, -1 * this.x);
     }

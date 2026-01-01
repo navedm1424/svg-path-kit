@@ -52,28 +52,20 @@ This creates the path data for a simple square:
 
 ---
 
-Now, let's draw the following shape:
+#### Circular Arcs
 
-![Round-capped Rectangle](assets/examples/roundcapped_rect.svg)
+One of the challenges while working with SVG paths is of drawing circular arcs with cubic Bézier curves. It requires you to calculate the control-point coordinates for a cubic Bézier curve that produce the closest approximations of a circular arc. `PathBuilder` gives you a `cForCircularArc` method that has two overloads.
 
-The actual path data for this shape is as follows:
+The first one has three arguments:
+- the radius of the circle
+- the arc’s starting angle (in radians)
+- the arc's ending angle (in radians)
 
-```
-M 7 0
-l 0 6
-c 0 1.6569 -1.3431 3 -3 3
-c -1.6569 0 -3 -1.3431 -3 -3
-l 0 -6
-z
-```
+The second one has two arguments:
+- the ending point of the arc
+- the swept angle (in radians)
 
-This requires calculating the control-point coordinates for two cubic Bézier curves that produce the closest approximations of two circular arcs.
-
-With `PathBuilder`, you only need to specify:
-- the arc’s angle (in radians)
-- either the circle’s center or the arc’s endpoint.
-
-Here's the code:
+Here's how easily you can do it:
 ```ts
 import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
 
@@ -82,7 +74,7 @@ const pathBuilder = PathBuilder.M(Point2D.of(7, 0))
     .l(Vector2D.of(0, 6))
     // a 90-degree arc centered 3 units behind the current position
     .cForCircularArc(
-        Vector2D.of(-3, 0),
+        Vector2D.of(-3, 0), // vector from the current position to the center
         Math.PI / 2
     )
     // a 90-degree arc centered 3 units above the last curve's endpoint
@@ -97,20 +89,154 @@ const pathBuilder = PathBuilder.M(Point2D.of(7, 0))
 
 const d = pathBuilder.toString();
 ```
+
+Here's the path data it produces:
+
+```
+M 7 0
+l 0 6
+c 0 1.6569 -1.3431 3 -3 3
+c -1.6569 0 -3 -1.3431 -3 -3
+l 0 -6
+z
+```
+
+And here's the resulting shape:
+
+![Round-capped Rectangle](assets/examples/roundcapped_rect.svg)
+
 ---
 
-![Shape_0](assets/examples/shape_0.svg)
+#### Elliptical Arcs
+
+You can also draw elliptical arcs:
+
+![Elliptical_Bean](assets/examples/elliptical_bean.svg)
+
+This shape begins with a quarter elliptical arc, transitions into a quarter circular arc, followed by another quarter elliptical arc, and concludes with a quarter circular arc.
+
+Here's the path data:
+```
+M 4 0
+c 1.6569 0 3 2.2386 3 5
+c 0 1.6569 -1.3431 3 -3 3
+c -1.6569 0 -3 -2.2386 -3 -5
+c 0 -1.6569 1.3431 -3 3 -3
+z
+```
+
+And here's the code:
 
 ```ts
 import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
 
-const pathBuilder = PathBuilder.M(Point2D.of(5, 0))
-    .l(Vector2D.of(0, 6));
-const point = pathBuilder.currentPosition;
-pathBuilder.cForCircularArc(Math.PI / 3, Vector2D.of(-2, 3))
-    .CForCircularArc(Math.PI / 3, point.add(Vector2D.of(-1, 0)))
-    .l(Vector2D.of(0, -6))
+const pathBuilder = PathBuilder.M(Point2D.of(4, 0))
+    // a quarter (90°) elliptical arc centered 5 units below the current position
+    .cForEllipticalArc(
+        Vector2D.of(0, 5),
+        0, Math.PI / 2, // sweeping from 0 to 90° in central angle
+        5 / 3, // the semi-minor axis (`a`) is 5/3 of the semi-major (`b`)
+        -Math.PI / 2 // the ellipse is tilted −90° relative to the global axes
+    )
+    // a 90° circular arc centered 3 units behind the current position
+    .cForCircularArc(
+        Vector2D.of(-3, 0),
+        Math.PI / 2
+    )
+    // a quarter (90°) elliptical arc centered 5 units above the current position
+    .cForEllipticalArc(
+        Vector2D.of(0, -5),
+        0, Math.PI / 2, // sweeping from 0 to 90° in central angle
+        5 / 3, // the semi-minor axis (`a`) is 5/3 of the semi-major (`b`)
+        Math.PI / 2 // the ellipse is tilted 90° relative to the global axes
+    )
+    // a 90° circular arc centered 3 units ahead of the current position
+    .cForCircularArc(
+        Vector2D.of(3, 0),
+        Math.PI / 2
+    )
+    // close path
     .z();
+
+const d = pathBuilder.toString();
+```
+---
+
+Let's kick things up a notch. Let's draw the following golf club:
+
+![Golf Club](assets/examples/golf_club.svg)
+
+We start with a vertical line extending, say, 8 units downward. We then draw an arc of π / 2.5 radians.
+
+
+It has the following path data:
+
+```
+M 5 0.25
+l 0 8
+c 0 0.8665 -0.5579 1.6344 -1.382 1.9021
+l -1.9021 0.618
+c -1.1208 0.3642 -1 -0.5286 -1 -1
+l 0 -1
+c 0 -0.4714 -0.1208 -1.3642 1 -1
+l 1.9021 0.618
+C 3.901 8.4801 4.5 8.6964 4.5 8.25
+l 0 -8
+c 0 -0.1381 0.1119 -0.25 0.25 -0.25
+c 0.1381 0 0.25 0.1119 0.25 0.25
+z
+```
+
+The second cubic Bézier curve in this path has to end one unit behind the first line’s endpoint. Since the line is earlier in the command sequence and is defined using a relative command, we cannot define another command relative to its endpoint.
+
+To address this, `PathBuilder` exposes a state accessor called `currentPosition`, which represents the current position of the path—that is, the endpoint of the most recent command. You can read this point after declaring the line, add a vector to it, and use the result to write absolute commands relative to a previous endpoint.
+
+Here's how you would use this solution to draw the above shape: 
+
+```ts
+import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
+
+const shaftLength = 8;
+const angle = Math.PI / 2.5;
+
+const pathBuilder = PathBuilder.M(Point2D.of(5, 0.25))
+    .l(Vector2D.of(0, shaftLength));
+
+// the absolute coordinates of the above line's endpoint
+// the endpoint of the right edge of the club shaft
+const shaftRightEdgeEndpoint = pathBuilder.currentPosition;
+
+pathBuilder
+    .cForCircularArc(
+        Vector2D.of(-2, 0),
+        angle
+    )
+    .l(Vector2D.ofAngle(Math.PI / 2 + angle).multiply(2))
+    .cAutoControl(
+        Vector2D.of(-1, -1),
+        Math.PI / 2 + angle, Math.PI / 2,
+        5 / 6, 1 / 3
+    )
+    .l(Vector2D.of(0, -1))
+    .cAutoControl(
+        Vector2D.of(1, -1),
+        -Math.PI / 2, -(Math.PI / 2 + angle),
+        1 / 3, 5 / 6
+    )
+    .l(Vector2D.ofAngle(Math.PI / 2 - angle).multiply(2))
+    // a cubic Bézier curve starting at an angle of 30° and ending at an angle of 90°
+    // notice the uppercase "C" for the absolute cubic Bézier curve command
+    .CAutoControl(
+        // The absolute coordinates of the point located one unit behind the right-edge endpoint of the club shaft
+        shaftRightEdgeEndpoint.add(Vector2D.of(-0.5, 0)),
+        Math.PI / 2 - angle, Math.PI / 2,
+        1 / 3, 1 / 2
+    )
+    .l(Vector2D.of(0, -shaftLength))
+    .cForCircularArc(Vector2D.of(0.25, 0), Math.PI / 2)
+    .cForCircularArc(Vector2D.of(0, 0.25), Math.PI / 2)
+    .z();
+
 const d = pathBuilder.toString();
 ```
 
@@ -478,9 +604,9 @@ const vector: Vector2D = Vector2D.of(1, 2);
 const unitVector: Vector2D = vector.unit();
 ```
 ---
-**`perpendicular(direction?: RotationDirection): Vector2D`** — returns the perpendicular vector
+**`perpendicular(orientation?: Orientation): Vector2D`** — returns the perpendicular vector
 
-`enum RotationDirection` specifies the direction of rotation for perpendicular vectors:
+`enum Orientation` specifies the orientation of rotation for perpendicular vectors:
 * `CLOCKWISE`
 * `COUNTERCLOCKWISE` (default)
 ```ts
@@ -488,7 +614,7 @@ const vector: Vector2D = Vector2D.of(1, 2);
 // perpendicular vector, counterclockwise
 const counterClockwisePerp: Vector2D = vector.perpendicular();
 // perpendicular vector, clockwise
-const clockwisePerp: Vector2D = vector.perpendicular(RotationDirection.CLOCKWISE);
+const clockwisePerp: Vector2D = vector.perpendicular(Orientation.CLOCKWISE);
 ```
 > Note: This method may be removed due to ambiguities caused by SVG’s coordinate system.
 SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system. As a result, clockwise and counterclockwise perpendiculars appear reversed relative to standard expectations.

@@ -1,6 +1,8 @@
 import { Vector2D } from "./vector2D";
 
 export class Point2D {
+    public static readonly ORIGIN = Point2D.of(0, 0);
+
     constructor(readonly x: number, readonly y: number) {
     }
 
