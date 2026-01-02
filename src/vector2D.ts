@@ -46,10 +46,6 @@ export class Vector2D {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
     }
 
-    public multiply(scalar: number) {
-        return new Vector2D(this.x * scalar, this.y * scalar);
-    }
-
     public dotProduct(vector: Vector2D) {
         return this.x * vector.x + this.y * vector.y;
     }
@@ -78,19 +74,21 @@ export class Vector2D {
         return new Vector2D(this.x, this.y);
     }
 
-    public scale(scalar: number): void {
+    public scale(scalar: number): this {
         this._x *= scalar;
         this._y *= scalar;
         this._magnitude = Math.hypot(this.x, this.y);
+        return this;
     }
 
-    public rotate(angle: number): void {
+    public rotate(angle: number): this {
         const sine = Math.sin(angle);
         const cosine = Math.cos(angle);
         const newX = this.x * cosine - this.y * sine;
         const newY = this.x * sine + this.y * cosine;
         this._x = newX;
         this._y = newY;
+        return this;
     }
 
     public toPoint(): Point2D {
