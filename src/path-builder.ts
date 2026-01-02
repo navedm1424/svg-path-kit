@@ -1,9 +1,6 @@
 import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
-import {
-    cubicBezierAutoControl,
-    CubicBezierCurve
-} from "./cubic-bezier-curve";
+import { CubicBezierCurve } from "./cubic-bezier-curve";
 import {
     AbsoluteCubicBezierCurvePrimitive,
     AbsoluteEllipticalArcPrimitive,
@@ -439,9 +436,9 @@ export class PathBuilder {
         ));
     }
 
-    public cForHermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D): CubicBezierHermiteCurveCommand;
-    public cForHermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Vector2D): CubicBezierHermiteCurveCommand;
-    public cForHermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D | Vector2D): CubicBezierHermiteCurveCommand {
+    public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D): CubicBezierHermiteCurveCommand;
+    public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Vector2D): CubicBezierHermiteCurveCommand;
+    public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D | Vector2D): CubicBezierHermiteCurveCommand {
         return this.append(new CubicBezierHermiteCurveCommand(
             this.currentPosition, startVelocity, endVelocity,
             // @ts-ignore

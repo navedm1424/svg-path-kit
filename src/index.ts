@@ -5,4 +5,4 @@ export * from "./vector2D";
 export * from "../utils/math";
 export * from "../utils/lerp";
 export * from "../utils/array-utils";
-export {PathBuilder} from "./path-builder";
+export * from "./path-builder";
