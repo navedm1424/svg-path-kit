@@ -188,10 +188,10 @@ export class CubicBezierEllipticalArc implements Command {
         return this.cubicBezierCurve.endingPoint;
     }
     getStartVelocity(): Vector2D {
-        return this.arc.startingTangentVector;
+        return Vector2D.from(this.initialPoint, this.cubicBezierCurve.firstControlPoint).scale(3);
     }
     getEndVelocity(): Vector2D {
-        return this.arc.endingTangentVector;
+        return Vector2D.from(this.cubicBezierCurve.secondControlPoint, this.cubicBezierCurve.endingPoint).scale(3);
     }
     toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteCubicBezierCurvePrimitive(

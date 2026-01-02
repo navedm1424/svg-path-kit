@@ -25,6 +25,9 @@ export class Vector2D {
     get slope() {
         return this._y / this._x;
     }
+    get angle() {
+        return Math.atan2(this._y, this._x);
+    }
 
     public static of(x: number, y: number): Vector2D {
         return new Vector2D(x, y);
