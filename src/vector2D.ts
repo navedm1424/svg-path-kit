@@ -1,9 +1,5 @@
 import { Point2D } from "./point2D";
 
-export enum Orientation {
-    CLOCKWISE, COUNTERCLOCKWISE
-};
-
 export class Vector2D {
     private _magnitude: number;
 
@@ -11,6 +7,10 @@ export class Vector2D {
 
     constructor(private _x: number, private _y: number) {
         this._magnitude = Math.hypot(_x, _y);
+    }
+
+    public static angleBetween(vectorA: Vector2D, vectorB: Vector2D): number {
+        return Math.acos(vectorA.dotProduct(vectorB) / (vectorA.magnitude * vectorB.magnitude));
     }
 
     get x() {
@@ -55,7 +55,7 @@ export class Vector2D {
 
     public crossProduct(vector: Vector2D): number {
         return this.x * vector.y - this.y * vector.x;
-    }    
+    }
 
     public unit(): Vector2D {
         if (this._magnitude === 0)
@@ -63,10 +63,10 @@ export class Vector2D {
         return new Vector2D(this.x / this._magnitude, this.y / this._magnitude);
     }
 
-    public perpendicular(orientation: Orientation = Orientation.COUNTERCLOCKWISE): Vector2D {
-        return Orientation.COUNTERCLOCKWISE === orientation ?
-            new Vector2D(-1 * this.y, this.x):
-            new Vector2D(this.y, -1 * this.x);
+    public perpendicular(orientation: 1 | -1 = 1): Vector2D {
+        let sign = Math.sign(orientation);
+        sign = sign === 0 ? 1 : sign;
+        return new Vector2D(sign * -1 * this.y, sign * this.x);
     }
 
     public opposite(): Vector2D {

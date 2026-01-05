@@ -389,7 +389,7 @@ export class PathBuilder {
     public m(point: Point2D | Vector2D): MoveCommand {
         const moveCommand = new MoveCommand(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             point
         );
         this.openPathStack.push(moveCommand);
@@ -401,7 +401,7 @@ export class PathBuilder {
     public l(point: Point2D | Vector2D): LineCommand {
         return this.append(new LineCommand(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             point
         ));
     }
@@ -411,7 +411,7 @@ export class PathBuilder {
     public q(controlPoint: Point2D | Vector2D, endPoint: Point2D | Vector2D): QuadraticBezierCurveCommand {
         return this.append(new QuadraticBezierCurveCommand(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             controlPoint, endPoint
         ));
     }
@@ -421,7 +421,7 @@ export class PathBuilder {
     public c(firstControlPoint: Point2D | Vector2D, secondControlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): CubicBezierCurveCommand {
         return this.append(new CubicBezierCurveCommand(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             firstControlPoint, secondControlPoint, endingPoint
         ));
     }
@@ -431,7 +431,7 @@ export class PathBuilder {
     public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endPoint: Point2D | Vector2D): EllipticalArcCommand {
         return this.append(new EllipticalArcCommand(
             this.currentPosition, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag,
-            // @ts-ignore
+            // @ts-expect-error
             endPoint
         ));
     }
@@ -441,7 +441,7 @@ export class PathBuilder {
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D | Vector2D): CubicBezierHermiteCurveCommand {
         return this.append(new CubicBezierHermiteCurveCommand(
             this.currentPosition, startVelocity, endVelocity,
-            // @ts-ignore
+            // @ts-expect-error
             endingPoint
         ));
     }
@@ -482,7 +482,7 @@ export class PathBuilder {
     ): CubicBezierEllipticalArc {
         return this.append(new CubicBezierEllipticalArc(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             ...args
         ));
     }
@@ -497,7 +497,7 @@ export class PathBuilder {
     ): CubicBezierAutoControlCurveCommand {
         return this.append(new CubicBezierAutoControlCurveCommand(
             this.currentPosition,
-            // @ts-ignore
+            // @ts-expect-error
             endingPoint,
             startAngle, endAngle, startHandleScale, endHandleScale
         ));
