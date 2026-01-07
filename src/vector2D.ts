@@ -57,7 +57,7 @@ export class Vector2D {
         return this.x * vector.y - this.y * vector.x;
     }
 
-    public unit(): Vector2D {
+    public normalize(): Vector2D {
         if (this._magnitude === 0)
             return Vector2D.NULL_VECTOR;
         return new Vector2D(this.x / this._magnitude, this.y / this._magnitude);
@@ -97,4 +97,4 @@ export class Vector2D {
     public toPoint(): Point2D {
         return new Point2D(this.x, this.y);
     }
-};
+}

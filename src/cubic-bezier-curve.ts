@@ -191,7 +191,7 @@ function cubicBezierCurveForCircularArcFromAngle(startingPoint: Point2D, angle: 
     if (angle < 0)
         midpointToCenter = -midpointToCenter;
 
-    const normalToChord = chordVector.unit().perpendicular();
+    const normalToChord = chordVector.normalize().perpendicular();
     normalToChord.scale(midpointToCenter);
     const center = midpoint.add(normalToChord);
 

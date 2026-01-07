@@ -37,7 +37,7 @@ export class MoveCommand implements Command {
     }
 
     public getStartVelocity(): Vector2D {
-        return Vector2D.from(this.initialPoint, this.terminalPoint).unit();
+        return Vector2D.from(this.initialPoint, this.terminalPoint).normalize();
     }
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
@@ -61,7 +61,7 @@ class LineCommand implements Command {
     }
 
     public getStartVelocity(): Vector2D {
-        return Vector2D.from(this.initialPoint, this.terminalPoint).unit();
+        return Vector2D.from(this.initialPoint, this.terminalPoint).normalize();
     }
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
