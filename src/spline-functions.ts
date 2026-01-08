@@ -15,19 +15,26 @@ export function fitCurve(
 
     if (bezier.maxError(curve, t0, t1) < tolerance) {
         out.push(bezier);
-    } else {
-        const tm = (t0 + t1) / 2;
-        fitCurve(
-            curve, t0, tm, tolerance,
-            // @ts-expect-error
-            out
-        );
-        fitCurve(
-            curve, tm, t1, tolerance,
-            // @ts-expect-error
-            out
-        );
+        return out;
     }
+
+    // const reverseBezier = CubicBezierCurve.fit(curve, t1, t0);
+    // if (reverseBezier.maxError(curve, t1, t0) < tolerance) {
+    //     out.push(bezier);
+    //     return out;
+    // }
+
+    const tm = (t0 + t1) / 2;
+    fitCurve(
+        curve, t0, tm, tolerance,
+        // @ts-expect-error
+        out
+    );
+    fitCurve(
+        curve, tm, t1, tolerance,
+        // @ts-expect-error
+        out
+    );
     return out;
 }
 

@@ -9,18 +9,21 @@ export abstract class Curve {
         const p1 = this.at(t + eps);
         return Vector2D.from(p0, p1).scale(1 / (2 * eps));
     }
-    // public accelerationAt(t: number) {
-    //     const eps = 1e-4;
-    //     const p0 = this.at(t - eps);
-    //     const p = this.at(t);
-    //     const p1 = this.at(t + eps);
-    //     // ddx = (x(t+h) - 2*x(t) + x(t-h)) / (h*h)
-    //     // ddy = (y(t+h) - 2*y(t) + y(t-h)) / (h*h)
-    //     return Vector2D.of(
-    //         p1.x - 2 * p.x + p0.x,
-    //         p1.y - 2 * p.y + p0.y
-    //     ).scale(1 / (eps * eps));
-    // }
+    public accelerationAt(t: number) {
+        const eps = 1e-4;
+
+        const p0 = this.at(t - 2 * eps);
+        const p1 = this.at(t - eps);
+        const p = this.at(t);
+        const p2 = this.at(t + eps);
+        const p3 = this.at(t + 2 * eps);
+
+        return Vector2D.of(
+            -p3.x + 16 * p2.x - 30 * p.x + 16 * p1.x - p0.x,
+            -p3.y + 16 * p2.y - 30 * p.y + 16 * p1.y - p0.y
+        ).scale(1 / (12 * eps * eps));
+    }
+
     // public curvature(t: number) {
     //     const tangent = this.tangentAt(t);
     //     const acceleration = this.accelerationAt(t);
