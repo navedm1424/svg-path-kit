@@ -4,34 +4,34 @@ import {fitCurve} from "../src/spline-functions";
 
 const epitrochoids = new (class extends Curve {
     constructor(
-        readonly fixedCircleRadius: number,
-        readonly rollingCircleRadius: number,
-        readonly distance: number
+        readonly statorRadius: number,
+        readonly rotorRadius: number,
+        readonly penDistance: number
     ) {
         super();
     }
 
     at(t: number): Point2D {
-        const radiiSum = this.fixedCircleRadius + this.rollingCircleRadius;
-        const quotient = radiiSum / this.rollingCircleRadius;
+        const radiiSum = this.statorRadius + this.rotorRadius;
+        const quotient = radiiSum / this.rotorRadius;
         return Point2D.of(
-            radiiSum * Math.cos(t) - this.distance * Math.cos(t * quotient),
-            radiiSum * Math.sin(t) - this.distance * Math.sin(t * quotient)
+            radiiSum * Math.cos(t) - this.penDistance * Math.cos(t * quotient),
+            radiiSum * Math.sin(t) - this.penDistance * Math.sin(t * quotient)
         );
     }
     tangentAt(t: number): Vector2D {
-        const radiiSum = this.fixedCircleRadius + this.rollingCircleRadius;
-        const quotient = radiiSum / this.rollingCircleRadius;
+        const radiiSum = this.statorRadius + this.rotorRadius;
+        const quotient = radiiSum / this.rotorRadius;
         return Vector2D.of(
-            - radiiSum * Math.sin(t) + this.distance * quotient * Math.sin(t * quotient),
-            radiiSum * Math.cos(t) - this.distance * quotient * Math.cos(t * quotient)
+            - radiiSum * Math.sin(t) + this.penDistance * quotient * Math.sin(t * quotient),
+            radiiSum * Math.cos(t) - this.penDistance * quotient * Math.cos(t * quotient)
         );
     }
-})(3, 0.98, 20);
+})(10, 6, 7);
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 
-const spline: CubicBezierCurve[] = fitCurve(epitrochoids, 0, 79 * Math.PI / 10, 0.25);
+const spline: CubicBezierCurve[] = fitCurve(epitrochoids, 0, 12 * Math.PI, 0.25);
 console.log(spline.length);
 spline.forEach(c => pb.c(
     Vector2D.from(c.startingPoint, c.firstControlPoint),
