@@ -522,11 +522,14 @@ vector.rotate(Math.PI / 2); // mutated to (-4, 2)
 **Geometry**
 
 - `Point2D.of(x, y)`
+- `pointInstance.add(vector)`
 - `Vector2D.of(x, y)`
 - `Vector2D.polar(radius, angle)`
 - `Vector2D.from(initial, terminal)`
 - `vectorInstance.slope`
 - `vectorInstance.angle`
+- `vectorInstance.rotate(angle)`
+- `vectorInstance.scale(scalar)`
 
 **Path construction**
 
