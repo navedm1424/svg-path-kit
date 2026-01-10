@@ -1,6 +1,6 @@
 {
   "name": "svg-path-kit",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Build precise, complex SVG paths with smooth curves and circular or elliptical arcs using a fluent API.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",
