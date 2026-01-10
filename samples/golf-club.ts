@@ -3,15 +3,16 @@ import {LineCommand, PathBuilder, Point2D, Vector2D} from "../src/index";
 const shaftLength = 8;
 const angle = Math.PI / 12;
 
-const pb: PathBuilder = PathBuilder.m(Point2D.of(5, 0.25));
-const shaftRightEdgeVector = Vector2D.polar(shaftLength, 7 * angle);
+const pb: PathBuilder = PathBuilder.m(Point2D.of(7, 0.375));
+const shaftRightEdgeVector = Vector2D.polar(shaftLength, Math.PI / 2 + angle);
 const shaftRightEdgeCommand: LineCommand = pb.l(shaftRightEdgeVector);
 
-pb.bezierCircularArc(2, shaftRightEdgeVector.angle - Math.PI / 2, Math.PI / 2);
-pb.l(Vector2D.of(-2, 0));
-pb.bezierCircularArc(Math.SQRT1_2, Math.PI / 2, 11 * angle);
-pb.bezierCircularArc(Math.PI, 11 * angle, 13 * angle);
-pb.bezierEllipticalArc(0.75, 0.75, Math.PI, 3 * Math.PI / 2, angle);
+pb.l(Vector2D.polar(1, Math.PI / 2 + angle));
+pb.bezierCircularArc(Math.SQRT1_2, angle, Math.PI / 2 - angle);
+pb.bezierCircularArc(6, Math.PI / 2 - angle, Math.PI / 2 + angle);
+pb.bezierCircularArc(Math.SQRT1_2, Math.PI / 2 + angle, Math.PI - angle);
+pb.bezierCircularArc(Math.PI, Math.PI - angle, Math.PI + angle);
+pb.bezierCircularArc(0.75, Math.PI, 3 * Math.PI / 2, angle);
 pb.bezierCircularArc(12, -Math.PI / 2 + angle, -Math.PI / 2 + 2 * angle);
 
 pb.cAutoControl(

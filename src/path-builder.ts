@@ -405,18 +405,18 @@ export class PathBuilder {
         ));
     }
 
-    public q(controlPoint: Point2D, endPoint: Point2D): QuadraticBezierCurveCommand;
-    public q(controlPoint: Vector2D, endPoint: Vector2D): QuadraticBezierCurveCommand;
-    public q(controlPoint: Point2D | Vector2D, endPoint: Point2D | Vector2D): QuadraticBezierCurveCommand {
+    public q(controlPoint: Point2D, endingPoint: Point2D): QuadraticBezierCurveCommand;
+    public q(controlPointVector: Vector2D, endingPointVector: Vector2D): QuadraticBezierCurveCommand;
+    public q(controlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): QuadraticBezierCurveCommand {
         return this.append(new QuadraticBezierCurveCommand(
             this.currentPosition,
             // @ts-expect-error
-            controlPoint, endPoint
+            controlPoint, endingPoint
         ));
     }
 
     public c(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D): CubicBezierCurveCommand;
-    public c(firstControlPoint: Vector2D, secondControlPoint: Vector2D, endingPoint: Vector2D): CubicBezierCurveCommand;
+    public c(firstControlPointVector: Vector2D, secondControlPointVector: Vector2D, endingPointVector: Vector2D): CubicBezierCurveCommand;
     public c(firstControlPoint: Point2D | Vector2D, secondControlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): CubicBezierCurveCommand {
         return this.append(new CubicBezierCurveCommand(
             this.currentPosition,
@@ -425,13 +425,13 @@ export class PathBuilder {
         ));
     }
 
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endPoint: Point2D): EllipticalArcCommand;
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endPoint: Vector2D): EllipticalArcCommand;
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endPoint: Point2D | Vector2D): EllipticalArcCommand {
+    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPoint: Point2D): EllipticalArcCommand;
+    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPointVector: Vector2D): EllipticalArcCommand;
+    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPoint: Point2D | Vector2D): EllipticalArcCommand {
         return this.append(new EllipticalArcCommand(
             this.currentPosition, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag,
             // @ts-expect-error
-            endPoint
+            endingPoint
         ));
     }
 
