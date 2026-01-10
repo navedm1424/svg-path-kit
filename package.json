@@ -10,7 +10,8 @@
     "build": "tsc"
   },
   "files": [
-    "dist"
+    "dist",
+    "assets"
   ],
   "keywords": [
     "svg",
