@@ -12,7 +12,7 @@ for (let j = jLimit - 1; j >= 0; j--) {
         let temp = a;
         a = b;
         b = temp + b;
-        pb.circularArc(b, angle, angle += Math.PI / 2);
+        pb.bezierCircularArc(b, angle, angle += Math.PI / 2);
     }
 
     angle -= Math.PI;
@@ -21,7 +21,7 @@ for (let j = jLimit - 1; j >= 0; j--) {
     b = temp;
 
     for (let i = 0; i < innerLimit; i++) {
-        pb.circularArc(a, angle, angle -= Math.PI / 2);
+        pb.bezierCircularArc(a, angle, angle -= Math.PI / 2);
         let temp = a;
         a = b;
         b = temp - b;
@@ -39,7 +39,7 @@ for (let j = jLimit - 1; j >= 0; j--) {
         let temp = a;
         a = b;
         b = temp + b;
-        pb.circularArc(b, angle, angle += Math.PI / 2);
+        pb.bezierCircularArc(b, angle, angle += Math.PI / 2);
     }
 
     angle -= Math.PI;
@@ -48,7 +48,7 @@ for (let j = jLimit - 1; j >= 0; j--) {
     b = temp;
 
     for (let i = 0; i < innerLimit; i++) {
-        pb.circularArc(a, angle, angle -= Math.PI / 2);
+        pb.bezierCircularArc(a, angle, angle -= Math.PI / 2);
         let temp = a;
         a = b;
         b = temp - b;

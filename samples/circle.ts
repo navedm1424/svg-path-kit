@@ -25,6 +25,6 @@ spline.forEach(c => pb.c(
     Vector2D.from(c.startingPoint, c.endingPoint)
 ));
 pb.m(Point2D.ORIGIN);
-pb.circularArc(2, 0, Math.PI / 2);
+pb.bezierCircularArc(2, 0, Math.PI / 2);
 
 console.log(pb.toString());

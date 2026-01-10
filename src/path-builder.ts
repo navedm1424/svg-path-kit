@@ -47,7 +47,7 @@ export class MoveCommand implements Command {
     }
 }
 
-class LineCommand implements Command {
+export class LineCommand implements Command {
     readonly terminalPoint: Point2D;
 
     constructor(initialPoint: Point2D, terminalPoint: Point2D);
@@ -356,8 +356,7 @@ export class PathBuilder {
     private openPathStack: MoveCommand[] = [];
 
     get lastCommand() {
-        return this.commands.length === 0 ?
-            null : this.commands[this.commands.length - 1];
+        return this.commands[this.commands.length - 1];
     }
     get pathStart(): Point2D {
         return this.firstCommand.terminalPoint;
@@ -446,9 +445,9 @@ export class PathBuilder {
         ));
     }
 
-    public circularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): CubicBezierEllipticalArc;
-    public circularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
-    public circularArc(...args:
+    public bezierCircularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): CubicBezierEllipticalArc;
+    public bezierCircularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
+    public bezierCircularArc(...args:
         [radius: number, startAngle: number, endAngle: number, rotation?: number] |
         [circularArc: CircularArc]
     ): CubicBezierEllipticalArc {
@@ -467,13 +466,13 @@ export class PathBuilder {
         ));
     }
 
-    public ellipticalArc(
+    public bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
         startAngle: number, endAngle: number,
         ellipseTilt?: number
     ): CubicBezierEllipticalArc;
-    public ellipticalArc(ellipticalArc: EllipticalArc): CubicBezierEllipticalArc;
-    public ellipticalArc(...args:
+    public bezierEllipticalArc(ellipticalArc: EllipticalArc): CubicBezierEllipticalArc;
+    public bezierEllipticalArc(...args:
         [
             semiMajorAxis: number, semiMinorAxis: number,
             startAngle: number, endAngle: number,
