@@ -317,6 +317,7 @@ Beyond raw commands, the library provides geometry‑aware helpers that turn arc
     ): CubicBezierEllipticalArc`**:
 
 These compute a cubic Bézier curve that follows the given elliptical arc, using parametric ellipse math and derivatives for smooth tangents.
+
 ---
 #### Auto‑Controlled Cubic Bézier
 
