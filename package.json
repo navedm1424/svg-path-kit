@@ -17,8 +17,8 @@
     "svg",
     "path",
     "toolkit",
-    "builder",
-    "fluent"
+    "geometry",
+    "builder"
   ],
   "license": "MIT",
   "repository": {
