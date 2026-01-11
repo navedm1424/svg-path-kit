@@ -344,6 +344,20 @@ After constructing your commands with `PathBuilder`:
 - **`toPath()`** – convert the internal commands into primitive SVG commands and return an `SVGPath` instance.
 - **`toString()`** – stringify to an SVG `d` string.
 
+---
+
+#### The Command interface
+
+Each method in `PathBuilder` has a corresponding command class that implements the command interface.
+The interface has the following properties and functions:
+
+- `readonly initialPoint: Point2D` – the point where the shape starts
+- `readonly terminalPoint: Point2D` – the point where the shape ends
+
+- `getStartVelocity(): Vector2D | undefined` – the starting tangent of the shape
+- `getEndVelocity(): Vector2D | undefined` – the ending tangent of the shape
+- `toSVGPathCommand(): PrimitiveCommand` – returns the primitive counterpart of the command
+
 <br/><br/>
 
 ## Points and Vectors
@@ -516,7 +530,7 @@ vector.rotate(Math.PI / 2); // mutated to (-4, 2)
   - `PathBuilder` and the `Command` classes
   - `CubicBezierCurve` and the various arc / auto‑control helpers
 
----
+<br/><br/>
 
 ## Summary of Public API
 
@@ -550,3 +564,15 @@ vector.rotate(Math.PI / 2); // mutated to (-4, 2)
   - `splitAt(t, side?)`
 
 This is the toolkit you use to build precise, smooth, and expressive SVG paths in a fully programmatic way.
+
+<br/><br/>
+
+## Note from Author
+
+This library turned out to be really helpful for me when I was coding shapes. I think coding shapes gives us a degree of control over the mathematical details of the shape that we do not get in many of the graphic design software. I like to keep everything calculated and doing that in SVG is hard. Drawing a mere angled line can be quite challenging. Therefore, I think the point and vector utilities can prove to be useful anytime you're working with coordinates.
+
+I'm aiming to expand this library and to expand the geometry. I want the consumers of this library, primarily myself, to be able to perform a wide range of geometric operations on the lines and curves and all kinds of shapes they're working on.
+
+The package would also include an abstract `Curve` class with an `at(t: number): Point2D` method which you can extend to create an instance of any parametric curve. There are also spline functions that you can pass a curve to and they'll give you the tangent-matched spline for it. I'm currently working on it, I want to match the second derivatives and curvatures at the endpoints too so that I get a more accurate curve with less Bézier segments. I don't know if that's mathematically possible. I'm exploring. For this reason, I haven't exposed these classes and functions through the main index but you can find them in the package and use them if you like. The spline functions produce pretty good epitrochoids and hypotrochoids. I haven't tried many curves.
+
+Thanks a lot!
