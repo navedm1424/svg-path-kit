@@ -64,25 +64,26 @@ Here's how easily you can do it:
 ```ts
 import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
 
-const pathBuilder = PathBuilder.M(Point2D.of(7, 0))
-    // a line extending 0 units forward and 6 units downward
-    .l(Vector2D.of(0, 6))
-    // a 90-degree arc centered 3 units behind the current position
-    .bezierCircularArc(
-        Vector2D.of(-3, 0), // vector from the current position to the center
-        Math.PI / 2
-    )
-    // a 90-degree arc centered 3 units above the last curve's endpoint
-    .bezierCircularArc(
-        Vector2D.of(0, -3),
-        Math.PI / 2
-    )
-    // a line extending 0 units forward and 6 units upward
-    .l(Vector2D.of(0, -6))
-    // close path
-    .z();
+const pb = PathBuilder.m(Point2D.of(7, 0));
+// a line extending 0 units forward and 6 units downward
+pb.l(Vector2D.of(0, 6))
+// a cubic Bézier curve approximating a 90° circular arc
+pb.bezierCircularArc(
+        3, // radius
+        0, // starting at parametric angle 0
+        Math.PI / 2 // ending at parametric angle π / 2 radians (90°)
+)
+// a cubic Bézier curve approximating a 90° circular arc
+pb.bezierCircularArc(
+        3, // radius
+        Math.PI / 2, Math.PI // from parametric angle π / 2 to π radians (90° to 180°)
+)
+// a line extending 0 units forward and 6 units upward
+pb.l(Vector2D.of(0, -6))
+// close path
+pb.z();
 
-const d = pathBuilder.toString();
+const d = pb.toString();
 ```
 
 Here's the path data it produces:
@@ -113,11 +114,11 @@ This shape begins with a quarter elliptical arc, transitions into a quarter circ
 Here's the path data:
 ```
 M 4 0
-c 1.6569 0 3 2.2386 3 5
-c 0 1.6569 -1.3431 3 -3 3
-c -1.6569 0 -3 -2.2386 -3 -5
-c 0 -1.6569 1.3431 -3 3 -3
-z
+C 5.6569 0 7 2.2386 7 5
+C 7 6.6569 5.6569 8 4 8
+C 2.3431 8 1 5.7614 1 3
+C 1 1.3431 2.3431 0 4 0
+Z
 ```
 
 And here's the code:
@@ -155,11 +156,13 @@ const d = pb.toString();
 ```
 ---
 
+#### Angled Lines & Command Referencing
+
 Let's kick things up a notch. Let's draw the following golf club:
 
 ![Golf Club](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/golf_club.svg)
 
-We start with a line extending, say, 8 units in the direction of an angle. It is followed by multiple circular arcs of different radii that form the clubhead; let's call them the head curves. We draw the right-edge line backwards to create the left edge of the shaft. We close the path with a round cap over the shaft. 
+We start with an angled line extending, say, 8 units in the direction of the angle. It is followed by multiple circular arcs of different radii that form the clubhead; let's call them the head curves. We draw the right-edge line backwards to create the left edge of the shaft. We close the path with a round cap over the shaft. 
 
 The shape has the following path data:
 
@@ -180,13 +183,15 @@ C 6.9566 0.1045 7.0357 0.2416 7 0.375
 Z
 ```
 
-The last head curve in this path must end half a unit away from the right edge of the shaft marking the shaft's thickness. The shaft is formed by the first two lines in the path. Since they are earlier in the command sequence, we cannot define a command relative to their endpoints.
+To draw an angled line, you can use the `Vector2D.polar(radius, angle)` method to create a vector with polar coordinates.
+
+Also, the last head curve in this path must end half a unit away from the right edge of the shaft marking the shaft's thickness. The shaft is formed by the first two lines in the path. Since they are earlier in the command sequence, we cannot define a command relative to their endpoints.
 
 To address this, every command class exposes a property called `terminalPoint`, which is the endpoint of the command. You can read this endpoint and add a vector to it that takes you half a unit away from the endpoint perpendicular to the line. You can specify the result as the endpoint of the last head curve.
 
 This allows you to write commands relative to any previous command. `PathBuilder` also has properties like `lastCommand` and `currentPosition`—the endpoint of the last command—that allow you to do the same and more.
 
-Here's how you would use this solution to draw the above shape: 
+Here's how you would use these solutions to draw the above shape: 
 
 ```ts
 import { LineCommand, PathBuilder, Point2D, Vector2D } from "svg-path-kit";
@@ -573,4 +578,4 @@ I'm aiming to expand this library and to expand the geometry. I want the consume
 
 The package would also include an abstract `Curve` class with an `at(t: number): Point2D` method which you can extend to create an instance of any parametric curve. There are also spline functions that you can pass a curve to and they'll give you the tangent-matched spline for it. I'm currently working on it, I want to match the second derivatives and curvatures at the endpoints too so that I get a more accurate curve with less Bézier segments. I don't know if that's mathematically possible. I'm exploring. For this reason, I haven't exposed these classes and functions through the main index but you can find them in the package and use them if you like. The spline functions produce pretty good epitrochoids and hypotrochoids. I haven't tried many curves.
 
-Thanks a lot!
+Suggestions are very welcome. Thanks a lot!
