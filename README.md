@@ -123,9 +123,7 @@ z
 And here's the code:
 
 ```ts
-import { PathBuilder, Point2D, Vector2D } from "svg-path-kit";
-
-import { PathBuilder, Point2D } from "../src/index";
+import { PathBuilder, Point2D } from "svg-path-kit";
 
 const pb = PathBuilder.m(Point2D.of(4, 0));
 // a quarter (90°) elliptical arc
