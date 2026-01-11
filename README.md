@@ -47,7 +47,7 @@ const d = pb.toString();
 
 This creates the path data for a simple square:
 
-![Square](assets/examples/square.svg)
+![Square](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/square.svg)
 
 ---
 
@@ -98,7 +98,7 @@ Z
 
 And here's the resulting shape:
 
-![Round-capped Rectangle](assets/examples/roundcapped_rect.svg)
+![Round-capped Rectangle](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/roundcapped_rect.svg)
 
 ---
 
@@ -106,7 +106,7 @@ And here's the resulting shape:
 
 You can also draw elliptical arcs:
 
-![Elliptical_Bean](assets/examples/elliptical_bean.svg)
+![Elliptical_Bean](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/elliptical_bean.svg)
 
 This shape begins with a quarter elliptical arc, transitions into a quarter circular arc, followed by another quarter elliptical arc, and concludes with a quarter circular arc.
 
@@ -159,7 +159,7 @@ const d = pb.toString();
 
 Let's kick things up a notch. Let's draw the following golf club:
 
-![Golf Club](assets/examples/golf_club.svg)
+![Golf Club](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/golf_club.svg)
 
 We start with a line extending, say, 8 units in the direction of an angle. It is followed by multiple circular arcs of different radii that form the clubhead; let's call them the head curves. We draw the right-edge line backwards to create the left edge of the shaft. We close the path with a round cap over the shaft. 
 
@@ -512,8 +512,8 @@ vector.rotate(Math.PI / 2); // mutated to (-4, 2)
 
 - All public classes and functions ship with `.d.ts` declarations.
 - Works smoothly in TS projects; you get autocomplete for:
-  - `Point2D`, `Vector2D`, `RotationDirection`
-  - `PathBuilder` and its full fluent API
+  - `Point2D`, `Vector2D`,
+  - `PathBuilder` and the `Command` classes
   - `CubicBezierCurve` and the various arc / auto‑control helpers
 
 ---
