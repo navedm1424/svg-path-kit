@@ -23,12 +23,4 @@ export abstract class Curve {
             -p3.y + 16 * p2.y - 30 * p.y + 16 * p1.y - p0.y
         ).scale(1 / (12 * eps * eps));
     }
-
-    // public curvature(t: number) {
-    //     const tangent = this.tangentAt(t);
-    //     const acceleration = this.accelerationAt(t);
-    //     const num = Math.abs(tangent.crossProduct(acceleration));
-    //     const den = Math.pow(tangent.magnitude, 3);
-    //     return num / den;
-    // }
 }

@@ -2,78 +2,39 @@ import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
 import {Curve} from "./curve";
 
-export class CubicBezierCurve {
+export class CubicBezierCurve extends Curve {
     constructor(
         readonly startingPoint: Point2D,
         readonly firstControlPoint: Point2D,
         readonly secondControlPoint: Point2D,
         readonly endingPoint: Point2D
-    ) { }
-
+    ) {
+        super();
+    }
 
     public static fit(
         curve: Curve,
-        t0: number, t1: number
+        t0: number,
+        t1: number
     ): CubicBezierCurve {
-        // const p0 = curve.at(t0);
-        // const p1 = curve.at(t1);
-        // const scale = (t1 - t0) / 3;
-        // const d0 = curve.tangentAt(t0).scale(scale);
-        // const d1 = curve.tangentAt(t1).scale(-scale);
-        // return new CubicBezierCurve(
-        //     p0, p0.add(d0), p1.add(d1), p1
-        // );
-        // --- Step 1: sample geometry ---
-        const r0 = curve.at(t0);
-        const r1 = curve.at(t1);
 
-        const v0 = curve.tangentAt(t0);       // r'_0
-        const v1 = curve.tangentAt(t1);       // r'_1
-        const a0 = curve.accelerationAt(t0);  // r''_0
+        const P0 = curve.at(t0);
+        const P3 = curve.at(t1);
 
-        // --- Step 2: build Frenet frame at start ---
-        const T0 = v0.normalize();
-        const N0 = T0.perpendicular(1).normalize(); // chosen normal direction
+        const tangent0 = curve.tangentAt(t0);
+        const tangent1 = curve.tangentAt(t1);
 
-        // --- Step 3: compute scalar terms in the quadratic ---
-        const chord = Vector2D.from(r0, r1);
+        const scale = (t1 - t0) / 3;
 
-        const A = a0.dotProduct(N0);       // r''_0 · N_0
-        const B = v1.dotProduct(N0);       // r'_1 · N_0
-        const C = chord.dotProduct(N0);    // (r1 - r0) · N_0
-
-        // Quadratic: 9 A k^2 + 6 B k - 6 C = 0
-        // Reduced:   A k^2 + (2/3) B k - (2/3) C = 0
-
-        const discriminant = B * B + 6 * A * C;
-
-        if (discriminant < 0 || Math.abs(A) < 1e-8) {
-            // Degenerate or nearly straight — fall back to simple chord-based handles
-            const fallbackK = chord.magnitude / 3;
-            return new CubicBezierCurve(
-                r0,
-                r0.add(v0.clone().scale(fallbackK)),
-                r1.add(v1.clone().scale(-fallbackK)),
-                r1
-            );
-        }
-
-        // --- Step 4: solve for k (positive root only) ---
-        const k =
-            (-B + Math.sqrt(discriminant)) /
-            (3 * A);
-
-        // --- Step 5: construct Bézier control points ---
-        const p0 = r0;
-        const p3 = r1;
-
-        const p1 = r0.add(v0.clone().scale(k));
-        const p2 = r1.add(v1.clone().scale(-k));
-
-        return new CubicBezierCurve(p0, p1, p2, p3);
+        return new CubicBezierCurve(
+            P0,
+            P0.add(tangent0.scale(scale)),
+            P3.add(tangent1.scale(-scale)),
+            P3
+        );
     }
 
-    public getPointAt(t: number): Point2D {
+    public at(t: number): Point2D {
         const u = 1 - t;
     
         const p0 = this.startingPoint;
@@ -96,7 +57,7 @@ export class CubicBezierCurve {
         return Point2D.of(x, y);
     }
 
-    public getTangentAt(t: number): Vector2D {
+    public tangentAt(t: number): Vector2D {
         const u = 1 - t;
     
         const p0 = this.startingPoint;
@@ -148,10 +109,24 @@ export class CubicBezierCurve {
             const u = i / 10;
             const t = t0 + u * (t1 - t0);
             const p = curve.at(t);
-            const q = this.getPointAt(u);
+            const q = this.at(u);
             max = Math.max(max, Math.hypot(p.x - q.x, p.y - q.y));
         }
         return max;
+    }
+
+    accelerationAt(t: number) {
+        const u = 1 - t;
+        const P0 = this.startingPoint;
+        const P1 = this.firstControlPoint;
+        const P2 = this.secondControlPoint;
+        const P3 = this.endingPoint;
+        return Vector2D.of(
+            6 * (P2.x - 2 * P1.x + P0.x) * u +
+            6 * (P3.x - 2 * P2.x + P1.x) * t,
+            6 * (P2.y - 2 * P1.y + P0.y) * u +
+            6 * (P3.y - 2 * P2.y + P1.y) * t,
+        );
     }
 }
 

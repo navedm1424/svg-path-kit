@@ -19,14 +19,22 @@ const epitrochoids = new (class extends Curve {
             radiiSum * Math.sin(t) - this.penDistance * Math.sin(t * quotient)
         );
     }
-    tangentAt(t: number): Vector2D {
-        const radiiSum = this.statorRadius + this.rotorRadius;
-        const quotient = radiiSum / this.rotorRadius;
-        return Vector2D.of(
-            - radiiSum * Math.sin(t) + this.penDistance * quotient * Math.sin(t * quotient),
-            radiiSum * Math.cos(t) - this.penDistance * quotient * Math.cos(t * quotient)
-        );
-    }
+    // tangentAt(t: number): Vector2D {
+    //     const radiiSum = this.statorRadius + this.rotorRadius;
+    //     const quotient = radiiSum / this.rotorRadius;
+    //     return Vector2D.of(
+    //         - radiiSum * Math.sin(t) + this.penDistance * quotient * Math.sin(t * quotient),
+    //         radiiSum * Math.cos(t) - this.penDistance * quotient * Math.cos(t * quotient)
+    //     );
+    // }
+    // accelerationAt(t: number): Vector2D {
+    //     const radiiSum = this.statorRadius + this.rotorRadius;
+    //     const quotient = this.statorRadius / this.rotorRadius + 1;
+    //     return Vector2D.of(
+    //         -radiiSum * Math.cos(t) - this.penDistance * (quotient ** 2) * Math.cos(t * quotient),
+    //         -radiiSum * Math.sin(t) - this.penDistance * (quotient ** 2) * Math.sin(t * quotient)
+    //     );
+    // }
 })(10, 6, 7);
 
 const pb = PathBuilder.m(Point2D.ORIGIN);

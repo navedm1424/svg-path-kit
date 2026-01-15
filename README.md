@@ -69,14 +69,14 @@ const pb = PathBuilder.m(Point2D.of(7, 0));
 pb.l(Vector2D.of(0, 6))
 // a cubic Bézier curve approximating a 90° circular arc
 pb.bezierCircularArc(
-        3, // radius
-        0, // starting at parametric angle 0
-        Math.PI / 2 // ending at parametric angle π / 2 radians (90°)
+      3, // radius
+      0, // starting at parametric angle 0
+      Math.PI / 2 // ending at parametric angle π / 2 radians (90°)
 )
 // a cubic Bézier curve approximating a 90° circular arc
 pb.bezierCircularArc(
-        3, // radius
-        Math.PI / 2, Math.PI // from parametric angle π / 2 to π radians (90° to 180°)
+      3, // radius
+      Math.PI / 2, Math.PI // from parametric angle π / 2 to π radians (90° to 180°)
 )
 // a line extending 0 units forward and 6 units upward
 pb.l(Vector2D.of(0, -6))
@@ -480,9 +480,9 @@ const unitVector: Vector2D = vector.normalize();
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 // perpendicular vector, clockwise
-const counterClockwisePerp: Vector2D = vector.perpendicular();
+const clockwisePerp: Vector2D = vector.perpendicular();
 // perpendicular vector, counterclockwise
-const clockwisePerp: Vector2D = vector.perpendicular(-1);
+const counterClockwisePerp: Vector2D = vector.perpendicular(-1);
 ```
 > Note: SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system.
 In the conventional Cartesian system, a positive orientation would correspond to counterclockwise and a negative orientation would correspond to clockwise.
