@@ -1,5 +1,5 @@
 import {CubicBezierCurve, PathBuilder, Point2D, Vector2D} from "../src/index";
-import {fitCurve} from "../src/spline-functions";
+import {fitCurve, fitCurveAtParams} from "../src/spline-functions";
 import {Curve} from "../src/curve";
 
 const superellipse = new (class extends Curve {
@@ -34,7 +34,7 @@ const superellipse = new (class extends Curve {
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 
-const spline: CubicBezierCurve[] = fitCurve(superellipse, Math.PI / 2, 0, 0.25);
+const spline: CubicBezierCurve[] = fitCurveAtParams(superellipse, 0, Math.PI / 28, Math.PI / 4, 13 * Math.PI / 28, Math.PI / 2);
 console.log(spline.length);
 spline.forEach(c => pb.c(
     Vector2D.from(c.startingPoint, c.firstControlPoint),

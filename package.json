@@ -1,6 +1,6 @@
 {
   "name": "svg-path-kit",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Build precise, complex SVG paths with Hermite curves and circular or elliptical arcs using a builder API.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",

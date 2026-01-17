@@ -17,20 +17,29 @@ export class CubicBezierCurve extends Curve {
         t0: number,
         t1: number
     ): CubicBezierCurve {
+        const p0 = curve.at(t0);
+        const p3 = curve.at(t1);
+        const p0Vec = p0.toVector();
+        const p3Vec = p3.toVector();
+        const midPoint = curve.at((t0 + t1) / 2).toVector();
 
-        const P0 = curve.at(t0);
-        const P3 = curve.at(t1);
-
-        const tangent0 = curve.tangentAt(t0);
-        const tangent1 = curve.tangentAt(t1);
-
-        const scale = (t1 - t0) / 3;
+        const v0 = curve.tangentAt(t0).normalize();
+        const v1 = curve.tangentAt(t1).normalize();
+        const R = (
+            midPoint.scale(2)
+                .subtract(p0Vec)
+                .subtract(p3Vec)
+        ).scale(4 / 3);
+        const c = v0.dotProduct(v1);
+        const denominator = 1 - c * c;
+        const s0 = (R.dotProduct(v0) - c * (R.dotProduct(v1))) / denominator;
+        const s1 = (c * R.dotProduct(v0) - (R.dotProduct(v1))) / denominator;
 
         return new CubicBezierCurve(
-            P0,
-            P0.add(tangent0.scale(scale)),
-            P3.add(tangent1.scale(-scale)),
-            P3
+            p0,
+            p0.add(v0.scale(s0)),
+            p3.add(v1.scale(-s1)),
+            p3
         );
     }
 
@@ -78,6 +87,20 @@ export class CubicBezierCurve extends Curve {
         return Vector2D.of(dx, dy);
     }
 
+    accelerationAt(t: number) {
+        const u = 1 - t;
+        const P0 = this.startingPoint;
+        const P1 = this.firstControlPoint;
+        const P2 = this.secondControlPoint;
+        const P3 = this.endingPoint;
+        return Vector2D.of(
+            6 * (P2.x - 2 * P1.x + P0.x) * u +
+            6 * (P3.x - 2 * P2.x + P1.x) * t,
+            6 * (P2.y - 2 * P1.y + P0.y) * u +
+            6 * (P3.y - 2 * P2.y + P1.y) * t,
+        );
+    }
+
     private lerp(a: Point2D, b: Point2D, t: number) {
         return Point2D.of(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
     }    
@@ -114,47 +137,33 @@ export class CubicBezierCurve extends Curve {
         }
         return max;
     }
-
-    accelerationAt(t: number) {
-        const u = 1 - t;
-        const P0 = this.startingPoint;
-        const P1 = this.firstControlPoint;
-        const P2 = this.secondControlPoint;
-        const P3 = this.endingPoint;
-        return Vector2D.of(
-            6 * (P2.x - 2 * P1.x + P0.x) * u +
-            6 * (P3.x - 2 * P2.x + P1.x) * t,
-            6 * (P2.y - 2 * P1.y + P0.y) * u +
-            6 * (P3.y - 2 * P2.y + P1.y) * t,
-        );
-    }
 }
 
-function midPoint(pointA: Point2D, pointB: Point2D) {
-    return Point2D.of((pointA.x + pointB.x) / 2, (pointA.y + pointB.y) / 2);
-}
-
-function cubicBezierCurveForCircularArcFromAngle(startingPoint: Point2D, angle: number, endingPoint: Point2D) {
-    const chordVector = Vector2D.from(startingPoint, endingPoint);
-    const radius = chordVector.magnitude * Math.cos(angle / 2) / Math.sin(angle);
-    const midpoint = midPoint(startingPoint, endingPoint);
-
-    let midpointToCenter = Math.sqrt(Math.pow(radius, 2) - Math.pow(chordVector.magnitude / 2.0, 2));
-    if (angle < 0)
-        midpointToCenter = -midpointToCenter;
-
-    const normalToChord = chordVector.normalize().perpendicular();
-    normalToChord.scale(midpointToCenter);
-    const center = midpoint.add(normalToChord);
-
-    const v0 = Vector2D.from(center, startingPoint);
-    const v1 = Vector2D.from(center, endingPoint);
-    const scalarFactor = (4.0 / 3.0) * Math.tan(angle / 4);
-    v0.scale(scalarFactor);
-    v1.scale(scalarFactor);
-
-    return new CubicBezierCurve(
-        startingPoint, startingPoint.add(v0.perpendicular()),
-        endingPoint.add(v1.perpendicular(-1)), endingPoint
-    );
-}
+// function midPoint(pointA: Point2D, pointB: Point2D) {
+//     return Point2D.of((pointA.x + pointB.x) / 2, (pointA.y + pointB.y) / 2);
+// }
+//
+// function cubicBezierCurveForCircularArcFromAngle(startingPoint: Point2D, angle: number, endingPoint: Point2D) {
+//     const chordVector = Vector2D.from(startingPoint, endingPoint);
+//     const radius = chordVector.magnitude * Math.cos(angle / 2) / Math.sin(angle);
+//     const midpoint = midPoint(startingPoint, endingPoint);
+//
+//     let midpointToCenter = Math.sqrt(Math.pow(radius, 2) - Math.pow(chordVector.magnitude / 2.0, 2));
+//     if (angle < 0)
+//         midpointToCenter = -midpointToCenter;
+//
+//     const normalToChord = chordVector.normalize().perpendicular();
+//     normalToChord.scale(midpointToCenter);
+//     const center = midpoint.add(normalToChord);
+//
+//     const v0 = Vector2D.from(center, startingPoint);
+//     const v1 = Vector2D.from(center, endingPoint);
+//     const scalarFactor = (4.0 / 3.0) * Math.tan(angle / 4);
+//     v0.scale(scalarFactor);
+//     v1.scale(scalarFactor);
+//
+//     return new CubicBezierCurve(
+//         startingPoint, startingPoint.add(v0.perpendicular()),
+//         endingPoint.add(v1.perpendicular(-1)), endingPoint
+//     );
+// }
