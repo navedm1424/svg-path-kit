@@ -20,7 +20,7 @@ The library is written in TypeScript and ships with type definitions.
 
 <br/><br/>
 
-## PathBuilder: Fluent SVG Path Construction
+## PathBuilder
 
 `PathBuilder` is the main entry point for building complex SVG paths. It manages the current point, stacks of open subpaths, and provides high‑level methods for lines, curves, arcs, and auto‑controlled Béziers.
 
@@ -69,14 +69,14 @@ const pb = PathBuilder.m(Point2D.of(7, 0));
 pb.l(Vector2D.of(0, 6))
 // a cubic Bézier curve approximating a 90° circular arc
 pb.bezierCircularArc(
-      3, // radius
-      0, // starting at parametric angle 0
-      Math.PI / 2 // ending at parametric angle π / 2 radians (90°)
+    3, // radius
+    0, // starting at parametric angle 0
+    Math.PI / 2 // ending at parametric angle π / 2 radians (90°)
 )
 // a cubic Bézier curve approximating a 90° circular arc
 pb.bezierCircularArc(
-      3, // radius
-      Math.PI / 2, Math.PI // from parametric angle π / 2 to π radians (90° to 180°)
+    3, // radius
+    Math.PI / 2, Math.PI // from parametric angle π / 2 to π radians (90° to 180°)
 )
 // a line extending 0 units forward and 6 units upward
 pb.l(Vector2D.of(0, -6))
@@ -259,8 +259,8 @@ PathBuilder.m(Point2D.of(2, 3));
 
 #### State accessors
 
-- **`currentPosition: Point2D`** – absolute current endpoint (origin if no commands yet).
-- **`lastCommand: Command`** – last appended command.
+- `currentPosition: Point2D` – absolute current endpoint (origin if no commands yet).
+- `lastCommand: Command` – last appended command.
 
 `currentPosition` is especially useful when you have built up parts of the path with **relative** commands and you want to:
 
@@ -272,36 +272,36 @@ PathBuilder.m(Point2D.of(2, 3));
 
 Direct wrappers around SVG `M` / `m` commands:
 
-- **`m(point: Point2D): MoveCommand`** – move to an absolute point.
-- **`m(vector: Vector2D): MoveCommand`** – move relative to the current position.
+- `m(point: Point2D): MoveCommand` – move to an absolute point.
+- `m(vector: Vector2D): MoveCommand` – move relative to the current position.
 ---
 #### Line commands
 
 Direct wrappers around SVG `L` / `l` commands:
 
-- **`l(point: Point2D): LineCommand`** – line to an absolute point.
-- **`l(vector: Vector2D): LineCommand`** – line to a point relative to the current position.
+- `l(point: Point2D): LineCommand` – line to an absolute point.
+- `l(vector: Vector2D): LineCommand` – line to a point relative to the current position.
 ---
 #### Quadratic Bézier commands
 
 Direct wrappers around SVG `Q` / `q` commands:
 
-- **`q(controlPoint: Point2D, endingPoint: Point2D): QuadraticBezierCurveCommand`** – absolute `Q`.
-- **`q(controlPointVector: Vector2D, endingPoint: Vector2D): QuadraticBezierCurveCommand`** – relative `q`.
+- `q(controlPoint: Point2D, endingPoint: Point2D): QuadraticBezierCurveCommand` – absolute `Q`.
+- `q(controlPointVector: Vector2D, endingPoint: Vector2D): QuadraticBezierCurveCommand` – relative `q`.
 ---
 #### Cubic Bézier commands
 
 Direct wrappers around SVG `C` / `c` commands:
 
-- **`c(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D): CubicBezierCurveCommand`** – absolute `C`.
-- **`c(firstControlPointVector: Vector2D, secondControlPointVector: Vector2D, endingPointVector: Vector2D): CubicBezierCurveCommand`** – relative `c`.
+- `c(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D): CubicBezierCurveCommand` – absolute `C`.
+- `c(firstControlPointVector: Vector2D, secondControlPointVector: Vector2D, endingPointVector: Vector2D): CubicBezierCurveCommand` – relative `c`.
 ---
 #### Elliptical arc commands
 
 Direct wrappers around SVG `A` / `a` commands:
 
-- **`a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPoint: Point2D): EllipticalArcCommand`** - absolute
-- **`a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPointVector: Vector2D): EllipticalArcCommand`** - relative
+- `a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPoint: Point2D): EllipticalArcCommand` - absolute
+- `a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: 0 | 1, sweepFlag: 0 | 1, endingPointVector: Vector2D): EllipticalArcCommand` - relative
 
 ---
 
@@ -309,15 +309,15 @@ Beyond raw commands, the library provides geometry‑aware helpers that turn arc
 
 #### Circular Arc as Cubic Bézier
 
-- **`bezierCircularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): CubicBezierEllipticalArc`**
+- `bezierCircularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): CubicBezierEllipticalArc`
 
 #### Elliptical Arc as Cubic Bézier
 
-- **`bezierEllipticalArc(
+- `bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
         startAngle: number, endAngle: number,
         ellipseTilt?: number
-    ): CubicBezierEllipticalArc`**:
+    ): CubicBezierEllipticalArc`:
 
 These compute a cubic Bézier curve that follows the given elliptical arc, using parametric ellipse math and derivatives for smooth tangents.
 
@@ -326,8 +326,8 @@ These compute a cubic Bézier curve that follows the given elliptical arc, using
 
 To avoid manually guessing control points for smooth joins, the library offers an **auto‑control** helper.
 
-- **`cAutoControl(endingPoint: Point2D, startAngle?: number, endAngle?: number, startHandleScale?: number, endHandleScale?: number): CubicBezierAutoControlCurveCommand`** - absolute ending point
-- **`cAutoControl(endingPointVector: Vector2D, startAngle?: number, endAngle?: number, startHandleScale?: number, endHandleScale?: number): CubicBezierAutoControlCurveCommand`** - relative ending point
+- `cAutoControl(endingPoint: Point2D, startAngle?: number, endAngle?: number, startHandleScale?: number, endHandleScale?: number): CubicBezierAutoControlCurveCommand` - absolute ending point
+- `cAutoControl(endingPointVector: Vector2D, startAngle?: number, endAngle?: number, startHandleScale?: number, endHandleScale?: number): CubicBezierAutoControlCurveCommand` - relative ending point
 
 if `startAngle` / `endAngle` are provided, they’re converted to unit direction vectors. Otherwise, the chord direction is used.
 
@@ -335,7 +335,7 @@ if `startAngle` / `endAngle` are provided, they’re converted to unit direction
 #### Appending Commands
 
 All of these methods have corresponding command classes that you can instantiate and append into the path builder.
-- **`append<T extends Command>(command: T): T`**
+- `append<T extends Command>(command: T): T`
 
 ---
 
@@ -343,9 +343,9 @@ All of these methods have corresponding command classes that you can instantiate
 
 After constructing your commands with `PathBuilder`:
 
-- **`z()`** – close the current subpath.
-- **`toPath()`** – convert the internal commands into primitive SVG commands and return an `SVGPath` instance.
-- **`toString()`** – stringify to an SVG `d` string.
+- `z()` – close the current subpath.
+- `toPath()` – convert the internal commands into primitive SVG commands and return an `SVGPath` instance.
+- `toString()` – stringify to an SVG `d` string.
 
 ---
 
@@ -374,10 +374,10 @@ The library models 2D geometry explicitly:
 ### 2D Point
 
 #### Static Constants
-**`static readonly ORIGIN: Point2D`** — the absolute origin point (0, 0).
+`static readonly ORIGIN: Point2D` — the absolute origin point (0, 0).
 
 #### Static Factory
-**`static of(x: number, y: number): Point2D`** — creates a 2D point at given coordinates
+`static of(x: number, y: number): Point2D` — creates a 2D point at given coordinates
 ```ts
 const point: Point2D = Point2D.of(5, 2);
 ```
@@ -389,12 +389,12 @@ const point: Point2D = Point2D.of(5, 2);
 
 #### Methods
 
-**`add(vector: Vector2D): Point2D`** — translates the point by a 2D vector
+`add(vector: Vector2D): Point2D` — translates the point by a 2D vector
 ```ts
 const translatedPoint: Point2D = point.add(Vector2D.of(3, -3));
 ```
 ---
-**`toVector(): Vector2D`** — converts the point to a vector from the origin
+`toVector(): Vector2D` — converts the point to a vector from the origin
 ```ts
 const vector: Vector2D = point.toVector();
 ```
@@ -403,22 +403,22 @@ const vector: Vector2D = point.toVector();
 ### 2D Vector
 
 #### Static Constants
-**`static readonly NULL_VECTOR: Vector2D`** — a zero‑length vector (0, 0).
+`static readonly NULL_VECTOR: Vector2D` — a zero‑length vector (0, 0).
 
 #### Static Factories
 
-**`static of(x: number, y: number)`** — creates a vector from coordinates
+`static of(x: number, y: number)` — creates a vector from coordinates
 ```ts
 const vector: Vector2D = Vector2D.of(2, 3);
 ```
 ---
-**`static polar(radius: number, angle: number)`** — creates a vector with polar coordinates—a radius and an angle. 
+`static polar(radius: number, angle: number)` — creates a vector with polar coordinates—a radius and an angle. 
 ```ts
 // vector at 45 degrees from the x-axis of length 2 units
 const vectorAtAngle: Vector2D = Vector2D.polar(2, Math.PI / 4);
 ```
 ---
-**`static from(initial: Point2D, terminal: Point2D)`** — creates a vector from one point to another
+`static from(initial: Point2D, terminal: Point2D)` — creates a vector from one point to another
 ```ts
 const a = Point2D.of(7, 7);
 const b = Point2D.of(8, 8);
@@ -436,7 +436,7 @@ const vectorFromAToB = Vector2D.from(a, b);
 
 #### Non-mutating Methods
 
-**`add(vector: Vector2D): Vector2D`** — performs vector addition
+`add(vector: Vector2D): Vector2D` — performs vector addition
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
 const vectorB: Vector2D = Vector2D.of(2, 1);
@@ -444,7 +444,7 @@ const vectorB: Vector2D = Vector2D.of(2, 1);
 const vectorC: Vector2D = vectorA.add(vectorB);
 ```
 ---
-**`subtract(vector: Vector2D): Vector2D`** — performs vector subtraction
+`subtract(vector: Vector2D): Vector2D` — performs vector subtraction
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
 const vectorB: Vector2D = Vector2D.of(2, 1);
@@ -452,27 +452,27 @@ const vectorB: Vector2D = Vector2D.of(2, 1);
 const vectorC: Vector2D = vectorA.subtract(vectorB);
 ```
 ---
-**`dotProduct(vector: Vector2D): number`** — returns the dot product
+`dotProduct(vector: Vector2D): number` — returns the dot product
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
 const vectorB: Vector2D = Vector2D.of(2, 1);
 const dotProduct: number = vectorA.dotProduct(vectorB);
 ```
 ---
-**`crossProduct(vector: Vector2D): number`** — returns the scalar cross product
+`crossProduct(vector: Vector2D): number` — returns the scalar cross product
 ```ts
 const vectorA: Vector2D = Vector2D.of(1, 2);
 const vectorB: Vector2D = Vector2D.of(2, 1);
 const crossProduct: number = vectorA.crossProduct(vectorB);
 ```
 ---
-**`normalize(): Vector2D`** — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
+`normalize(): Vector2D` — returns the normalized vector (or `Vector2D.NULL_VECTOR` if magnitude is 0)
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 const unitVector: Vector2D = vector.normalize();
 ```
 ---
-**`perpendicular(orientation?: 1 | -1): Vector2D`** — returns the perpendicular vector
+`perpendicular(orientation?: 1 | -1): Vector2D` — returns the perpendicular vector
 
 `orientation` specifies the orientation of rotation for perpendicular vectors:
 * `1 (default)`—specifying clockwise in SVG's coordinate system.
@@ -488,20 +488,20 @@ const counterClockwisePerp: Vector2D = vector.perpendicular(-1);
 In the conventional Cartesian system, a positive orientation would correspond to counterclockwise and a negative orientation would correspond to clockwise.
 Perpendicular vectors can also be obtained using the `rotate` method with angles of `±Math.PI / 2`.
 ---
-**`opposite(): Vector2D`** — returns the negated vector
+`opposite(): Vector2D` — returns the negated vector
 ```ts
 const vector: Vector2D = Vector2D.of(5, 6);
 // (-1 * x, -1 * y) = (-1 * 5, -1 * 6) = (-5, -6)
 const oppositeVector: Vector2D = vector.opposite();
 ```
 ---
-**`clone(): Vector2D`** — returns an identical copy
+`clone(): Vector2D` — returns an identical copy
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 const vectorClone: Vector2D = vector.clone();
 ```
 ---
-**`toPoint(): Point2D`** — converts the vector to a point relative to the origin
+`toPoint(): Point2D` — converts the vector to a point relative to the origin
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 // equivalent to Point2D.of(1, 2);
@@ -510,13 +510,13 @@ const point: Point2D = vector.toPoint();
 
 #### Mutating Methods
 
-**`scale(scalar: number): this`** — scales the vector in place and updates magnitude
+`scale(scalar: number): this` — scales the vector in place and updates magnitude
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 vector.scale(2); // mutated to (2, 4);
 ```
 ---
-**`rotate(angle: number): this`** — rotates the vector by the given angle (radians) around the origin
+`rotate(angle: number): this` — rotates the vector by the given angle (radians) around the origin
 ```ts
 const vector: Vector2D = Vector2D.of(1, 2);
 // (x * cos(angle) - y * sin(angle), x * sin(angle) + y * cos(angle))

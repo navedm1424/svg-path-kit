@@ -1,8 +1,8 @@
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
-import {Curve} from "./curve";
+import {ParametricCurve2D} from "./parametric-curve-2D";
 
-export class CubicBezierCurve extends Curve {
+export class CubicBezierCurve extends ParametricCurve2D {
     constructor(
         readonly startingPoint: Point2D,
         readonly firstControlPoint: Point2D,
@@ -10,37 +10,6 @@ export class CubicBezierCurve extends Curve {
         readonly endingPoint: Point2D
     ) {
         super();
-    }
-
-    public static fit(
-        curve: Curve,
-        t0: number,
-        t1: number
-    ): CubicBezierCurve {
-        const p0 = curve.at(t0);
-        const p3 = curve.at(t1);
-        const p0Vec = p0.toVector();
-        const p3Vec = p3.toVector();
-        const midPoint = curve.at((t0 + t1) / 2).toVector();
-
-        const v0 = curve.tangentAt(t0).normalize();
-        const v1 = curve.tangentAt(t1).normalize();
-        const R = (
-            midPoint.scale(2)
-                .subtract(p0Vec)
-                .subtract(p3Vec)
-        ).scale(4 / 3);
-        const c = v0.dotProduct(v1);
-        const denominator = 1 - c * c;
-        const s0 = (R.dotProduct(v0) - c * (R.dotProduct(v1))) / denominator;
-        const s1 = (c * R.dotProduct(v0) - (R.dotProduct(v1))) / denominator;
-
-        return new CubicBezierCurve(
-            p0,
-            p0.add(v0.scale(s0)),
-            p3.add(v1.scale(-s1)),
-            p3
-        );
     }
 
     public at(t: number): Point2D {
@@ -87,7 +56,7 @@ export class CubicBezierCurve extends Curve {
         return Vector2D.of(dx, dy);
     }
 
-    accelerationAt(t: number) {
+    public accelerationAt(t: number) {
         const u = 1 - t;
         const P0 = this.startingPoint;
         const P1 = this.firstControlPoint;
@@ -125,17 +94,79 @@ export class CubicBezierCurve extends Curve {
       
         return new CubicBezierCurve(Point2D.of(0, 0), rel(r1), rel(q2), rel(this.endingPoint));
     }
+}
 
-    public maxError(curve: Curve, t0: number, t1: number): number {
-        let max = 0;
-        for (let i = 1; i < 10; i++) {
-            const u = i / 10;
-            const t = t0 + u * (t1 - t0);
-            const p = curve.at(t);
-            const q = this.at(u);
-            max = Math.max(max, Math.hypot(p.x - q.x, p.y - q.y));
+export class CubicBezierFit {
+    readonly cubicBezierCurve: CubicBezierCurve;
+
+    constructor(
+        readonly targetParametricCurve: ParametricCurve2D,
+        readonly segmentStart: number,
+        readonly segmentEnd: number
+    ) {
+        this.cubicBezierCurve = CubicBezierFit.fit(targetParametricCurve, segmentStart, segmentEnd);
+    }
+
+    private static fit(
+        curve: ParametricCurve2D,
+        t0: number, t1: number
+    ) {
+        const p0 = curve.at(t0);
+        const p3 = curve.at(t1);
+        const p0Vec = p0.toVector();
+        const p3Vec = p3.toVector();
+        const midPoint = curve.at((t0 + t1) / 2).toVector();
+
+        const v0 = curve.tangentAt(t0);
+        const v1 = curve.tangentAt(t1);
+        const v0Unit = v0.normalize();
+        const v1Unit = v1.normalize();
+        const R = (
+            midPoint.scale(2)
+                .subtract(p0Vec)
+                .subtract(p3Vec)
+        ).scale(4 / 3);
+        const c = v0Unit.dotProduct(v1Unit);
+        const denominator = 1 - c * c;
+        if (Math.abs(denominator) < 1e-8) {
+            const scale = (t1 - t0) / 3;
+            return new CubicBezierCurve(
+                p0,
+                p0.add(v0.scale(scale)),
+                p3.add(v1.scale(-scale)),
+                p3
+            );
         }
-        return max;
+
+        const s0 = (R.dotProduct(v0Unit) - c * (R.dotProduct(v1Unit))) / denominator;
+        const s1 = (c * R.dotProduct(v0Unit) - (R.dotProduct(v1Unit))) / denominator;
+
+        return new CubicBezierCurve(
+            p0,
+            p0.add(v0Unit.scale(s0)),
+            p3.add(v1Unit.scale(-s1)),
+            p3
+        );
+    }
+
+    public radialError(samples = 10): number {
+        let maxError = 0;
+
+        for (let i = 0; i <= samples; i++) {
+            const t = this.segmentStart + (i / samples) * (this.segmentEnd - this.segmentStart);
+
+            const b = this.cubicBezierCurve.at(t);
+            const c = this.targetParametricCurve.at(t);
+
+            const dx = b.x - c.x;
+            const dy = b.y - c.y;
+
+            const error = Math.hypot(dx, dy);
+            if (error > maxError)
+                maxError = error;
+        }
+
+        return maxError;
     }
 }
 

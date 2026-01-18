@@ -9,7 +9,8 @@ export function clamp(
     max = 1
 ) {
     if (min > max) {
-        [min, max] = [max, min];
+        min = max;
+        max = min;
     }
 
     return Math.max(min, Math.min(max, value));

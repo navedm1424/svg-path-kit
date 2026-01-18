@@ -1,67 +1,176 @@
 import {PathBuilder} from "./path-builder";
 import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
-import {Curve} from "./curve";
-import {CubicBezierCurve} from "./cubic-bezier-curve";
+import {ParametricCurve2D} from "./parametric-curve-2D";
+import {CubicBezierCurve, CubicBezierFit} from "./cubic-bezier-curve";
+import {clamp, round} from "./utils/index";
 
-export function fitCurve(curve: Curve, t0: number, t1: number, tolerance: number): CubicBezierCurve[];
-export function fitCurve(
-    curve: Curve,
+const roundingOrder = 8;
+const equalityThreshold = Math.pow(10, -roundingOrder);
+
+// function derivative(f: (t: number) => Point2D | Vector2D, dt?: number): (t: number) => Vector2D;
+// function derivative(f: (t: number) => number, dt?: number): (t: number) => number;
+// function derivative(f: (t: number) => Point2D | Vector2D | number, dt = 1e-4) {
+//     return (t: number) => {
+//         const f0 = f(t - dt);
+//         const f1 = f(t + dt);
+//         if (typeof f0 === "number" && typeof f1 === "number")
+//             return (round(f1, roundingOrder) - round(f0, roundingOrder)) / (2 * dt);
+//         if ((f0 instanceof Point2D && f1 instanceof Point2D) || (f0 instanceof Vector2D && f1 instanceof Vector2D))
+//             return Vector2D.from(
+//                 Point2D.of(round(f0.x, roundingOrder), round(f0.y, roundingOrder)),
+//                 Point2D.of(round(f1.x, roundingOrder), round(f1.y, roundingOrder)),
+//             ).scale(1 / (2 * dt));
+//         return 0;
+//     };
+// }
+
+function curvature(curve: ParametricCurve2D) {
+    return (t: number) => {
+        const tangent = curve.tangentAt(t);
+        const acceleration = curve.accelerationAt(t);
+        return tangent.crossProduct(acceleration) / Math.pow(tangent.magnitude, 3);
+    };
+}
+
+function findRoots(f: (t: number) => number, tStart: number, tEnd: number) {
+    if (!Number.isFinite(tStart) || !Number.isFinite(tEnd))
+        throw Error("invalid arguments.");
+
+    const roots: number[] = [];
+
+    let tCurr = tStart, fCurr = f(tCurr);
+    if (Math.abs(fCurr) < equalityThreshold)
+        roots.push(tCurr);
+    const eps = 1e-4;
+    let currSpeed = (f(tCurr + eps) - f(tCurr - eps)) / (2 * eps);
+
+    while (Math.abs(tEnd - tCurr) >= equalityThreshold) {
+        const dt = clamp(0.1 / Math.abs(currSpeed), eps, 0.1);
+        let tNext = tCurr + dt;
+        if (tNext > tEnd)
+            tNext = tEnd;
+        const fNext = f(tNext);
+        const nextSpeed = (f(tNext + eps) - f(tNext - eps)) / (2 * eps);
+        if (Math.abs(fNext - fCurr) >= equalityThreshold && Math.abs(fNext) < equalityThreshold) {
+            roots.push(tNext);
+        } else if (fCurr * fNext < 0 || (currSpeed * nextSpeed < 0 && (Math.abs(fCurr) <= 0.1 || Math.abs(fNext) <= 0.1))) {
+            // bisection
+            let a = tCurr, b = tNext;
+            let fa = fCurr, fb = fNext;
+            let root = (a + b) / 2;
+            for (let j = 0; j < 50; j++) {
+                root = (a + b) / 2;
+                const fr = f(root);
+                if (Math.abs(fr) < equalityThreshold) break;
+                if (fa * fr <= 0) { b = root; fb = fr; }
+                else { a = root; fa = fr; }
+            }
+            roots.push(root);
+        }
+
+        tCurr = tNext; fCurr = fNext; currSpeed = nextSpeed;
+    }
+    return roots;
+}
+
+export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: number) {
+    // const speed = (t: number) => curve.tangentAt(t).magnitude;
+    const kappa = curvature(curve);
+    // const dkappa = derivative(kappa);
+
+    const criticalTs = new Set<number>();
+
+    // Coordinate extrema
+    const addToSet = (t: number) => criticalTs.add(round(t, roundingOrder));
+    findRoots((t: number) => curve.tangentAt(t).x, tStart, tEnd).forEach(addToSet);
+    findRoots((t: number) => curve.tangentAt(t).y, tStart, tEnd).forEach(addToSet);
+    // findRoots((t: number) => curve.accelerationAt(t).x, tStart, tEnd).forEach(addToSet);
+    // findRoots((t: number) => curve.accelerationAt(t).y, tStart, tEnd).forEach(addToSet);
+    // findRoots((t: number) => {
+    //     const posVec = curve.at(t).toVector();
+    //     const tangent = curve.tangentAt(t);
+    //     return posVec.dotProduct(tangent) / posVec.magnitude;
+    // }, tStart, tEnd).forEach(addToSet);
+    // findRoots(
+    //     (t: number) => curve.at(t).toVector().crossProduct(curve.tangentAt(t)),
+    //     tStart, tEnd
+    // ).forEach(addToSet);
+
+    // Cusps (speed = 0)
+    // findRoots(speed, tStart, tEnd).forEach(addToSet);
+
+    // Inflections (curvature = 0)
+    findRoots(kappa, tStart, tEnd).forEach(addToSet);
+
+    // Curvature extrema
+    // findRoots(dkappa, tStart, tEnd).forEach(addToSet);
+
+    return Array.from(criticalTs).sort((a, b) => a - b);
+}
+
+export function fitSplineBySubdivision(
+    pb: PathBuilder,
+    curve: ParametricCurve2D,
     t0: number, t1: number,
-    tolerance: number,
-    out: CubicBezierCurve[] = []
+    tolerance: number
 ) {
-    const bezier = CubicBezierCurve.fit(curve, t0, t1);
-    const isValid = !Number.isNaN(bezier.firstControlPoint.x) && !Number.isNaN(bezier.firstControlPoint.y)
-        && !Number.isNaN(bezier.secondControlPoint.x) && !Number.isNaN(bezier.secondControlPoint.y);
+    const bezierFit = new CubicBezierFit(curve, t0, t1);
 
-    if (isValid && bezier.maxError(curve, t0, t1) < tolerance) {
-        out.push(bezier);
-        return out;
+    if (bezierFit.radialError() < tolerance) {
+        const bezier = bezierFit.cubicBezierCurve;
+        pb.c(
+            Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.endingPoint)
+        );
+        return;
     }
 
-    // const reverseBezier = CubicBezierCurve.fit(curve, t1, t0);
-    // if (reverseBezier.maxError(curve, t1, t0) < tolerance) {
-    //     out.push(bezier);
-    //     return out;
-    // }
-
     const tm = (t0 + t1) / 2;
-    fitCurve(
-        curve, t0, tm, tolerance,
-        // @ts-expect-error
-        out
+    fitSplineBySubdivision(
+        pb, curve, t0, tm, tolerance
     );
-    fitCurve(
-        curve, tm, t1, tolerance,
-        // @ts-expect-error
-        out
+    fitSplineBySubdivision(
+        pb, curve, tm, t1, tolerance
     );
-    return out;
 }
 
-export function fitCurveAtParams(curve: Curve, ...ts: number[]) {
-    const out: CubicBezierCurve[] = [];
-    for (let i = 1; i < ts.length; i++)
-        out.push(CubicBezierCurve.fit(curve, ts[i - 1], ts[i]));
-    return out;
-}
-
-export function fitCurveInSteps(
-    curve: Curve,
+export function fitSplineInSteps(
+    pb: PathBuilder,
+    curve: ParametricCurve2D,
     t0: number, t1: number,
     steps: number
 ) {
     const range = t1 - t0;
-    const out: CubicBezierCurve[] = [];
     let prevStep = t0;
     let currentStep = prevStep;
     while (Math.abs(t1 - currentStep) > 1e-4) {
         prevStep = currentStep;
         currentStep = currentStep + (1 / steps) * range;
-        out.push(CubicBezierCurve.fit(curve, prevStep, currentStep));
+        const bezier = new CubicBezierFit(curve, prevStep, currentStep).cubicBezierCurve;
+        pb.c(
+            Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.endingPoint)
+        );
     }
-    return out;
+}
+
+export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: number[]) {
+    for (let i = 1; i < ts.length; i++) {
+        const bezier = new CubicBezierFit(curve, ts[i - 1], ts[i])
+            .cubicBezierCurve;
+        pb.c(
+            Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
+            Vector2D.from(bezier.startingPoint, bezier.endingPoint)
+        );
+    }
+}
+
+export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: number, t1: number) {
+    fitSplineAtParams(pb, curve, t0, t1, ...findCriticalTs(curve, t0, t1));
 }
 
 export function cardinalSpline(

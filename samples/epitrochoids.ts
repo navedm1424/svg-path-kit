@@ -1,8 +1,8 @@
-import {CubicBezierCurve, PathBuilder, Point2D, Vector2D} from "../src/index";
-import {Curve} from "../src/curve";
-import {fitCurve} from "../src/spline-functions";
+import {PathBuilder, Point2D, Vector2D} from "../src/index";
+import {ParametricCurve2D} from "../src/parametric-curve-2D";
+import {fitSplineTo} from "../src/spline-functions";
 
-const epitrochoids = new (class extends Curve {
+const epitrochoid = new (class extends ParametricCurve2D {
     constructor(
         readonly statorRadius: number,
         readonly rotorRadius: number,
@@ -39,12 +39,6 @@ const epitrochoids = new (class extends Curve {
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 
-const spline: CubicBezierCurve[] = fitCurve(epitrochoids, 0, 12 * Math.PI, 0.25);
-console.log(spline.length);
-spline.forEach(c => pb.c(
-    Vector2D.from(c.startingPoint, c.firstControlPoint),
-    Vector2D.from(c.startingPoint, c.secondControlPoint),
-    Vector2D.from(c.startingPoint, c.endingPoint)
-));
+fitSplineTo(pb, epitrochoid, 0, 12 * Math.PI);
 
 console.log(pb.toString());
