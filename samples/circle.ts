@@ -1,22 +1,8 @@
-import {PathBuilder, Point2D, Vector2D} from "../src/index";
-import {ParametricCurve2D} from "../src/parametric-curve-2D";
-import {fitSplineTo} from "../src/spline-functions";
+import {PathBuilder, Point2D} from "../src/index";
+import {fitSplineTo} from "../src/spline-fitting";
+import {Circle} from "../src/curves/index";
 
-const circle = new (class extends ParametricCurve2D {
-    constructor(readonly radius: number) {
-        super();
-    }
-
-    at(t: number): Point2D {
-        return Point2D.of(this.radius * Math.cos(t), this.radius * Math.sin(t));
-    }
-    tangentAt(t: number): Vector2D {
-        return Vector2D.of(-this.radius * Math.sin(t), this.radius * Math.cos(t));
-    }
-    accelerationAt(t: number): Vector2D {
-        return Vector2D.of(-this.radius * Math.cos(t), -this.radius * Math.sin(t));
-    }
-})(2);
+const circle = Circle.of(2);
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 

@@ -1,8 +1,8 @@
 import {PathBuilder, Point2D, Vector2D} from "../src/index";
 import {ParametricCurve2D} from "../src/parametric-curve-2D";
-import {fitSplineTo} from "../src/spline-functions";
+import {fitSplineTo} from "../src/spline-fitting";
 
-const epitrochoid = new (class extends ParametricCurve2D {
+class Epitrochoid extends ParametricCurve2D {
     constructor(
         readonly statorRadius: number,
         readonly rotorRadius: number,
@@ -19,23 +19,27 @@ const epitrochoid = new (class extends ParametricCurve2D {
             radiiSum * Math.sin(t) - this.penDistance * Math.sin(t * quotient)
         );
     }
+
     tangentAt(t: number): Vector2D {
         const radiiSum = this.statorRadius + this.rotorRadius;
         const quotient = radiiSum / this.rotorRadius;
         return Vector2D.of(
-            - radiiSum * Math.sin(t) + this.penDistance * quotient * Math.sin(t * quotient),
+            -radiiSum * Math.sin(t) + this.penDistance * quotient * Math.sin(t * quotient),
             radiiSum * Math.cos(t) - this.penDistance * quotient * Math.cos(t * quotient)
         );
     }
+
     accelerationAt(t: number): Vector2D {
         const radiiSum = this.statorRadius + this.rotorRadius;
-        const quotient = this.statorRadius / this.rotorRadius + 1;
+        const quotient = radiiSum / this.rotorRadius;
         return Vector2D.of(
             -radiiSum * Math.cos(t) - this.penDistance * (quotient ** 2) * Math.cos(t * quotient),
             -radiiSum * Math.sin(t) - this.penDistance * (quotient ** 2) * Math.sin(t * quotient)
         );
     }
-})(10, 6, 7);
+}
+
+const epitrochoid = new Epitrochoid(10, 6, 7);
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 

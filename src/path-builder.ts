@@ -11,8 +11,8 @@ import {
     PrimitiveCommand,
     AbsoluteClosePathPrimitive
 } from "./svg-path";
-import {EllipticalArc} from "./ellipse";
-import {CircularArc} from "./circle";
+import {EllipticalArc} from "./curves/ellipse";
+import {CircularArc} from "./curves/circle";
 
 export interface Command {
     readonly initialPoint: Point2D;
