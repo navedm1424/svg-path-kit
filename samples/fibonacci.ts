@@ -32,4 +32,4 @@ for (let initialAngle = Math.PI; initialAngle >= 0; initialAngle -= Math.PI) {
         pb.m(Point2D.ORIGIN);
 }
 
-console.log(pb.toString());
+console.log(pb.toSVGPathString());

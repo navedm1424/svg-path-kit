@@ -45,4 +45,4 @@ const pb = PathBuilder.m(Point2D.ORIGIN);
 
 fitSplineTo(pb, epitrochoid, 0, 12 * Math.PI);
 
-console.log(pb.toString());
+console.log(pb.toSVGPathString());

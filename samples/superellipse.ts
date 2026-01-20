@@ -17,4 +17,4 @@ for (let i = 1; i < 4; i++) {
 ts.push(2 * Math.PI);
 fitSplineAtParams(pb, superellipse, ...ts);
 
-console.log(pb.toString());
+console.log(pb.toSVGPathString());

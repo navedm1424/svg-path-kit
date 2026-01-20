@@ -43,4 +43,4 @@ pb.hermiteCurve(
 );
 pb.z();
 
-console.log(pb.toString());
+console.log(pb.toSVGPathString());

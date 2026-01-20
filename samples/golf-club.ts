@@ -25,4 +25,4 @@ pb.bezierCircularArc(0.25, Math.PI, 3 * Math.PI / 2, angle);
 pb.bezierCircularArc(0.25, 3 * Math.PI / 2, 2 * Math.PI, angle);
 pb.z();
 
-console.log(pb.toString());
+console.log(pb.toSVGPathString());
