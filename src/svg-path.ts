@@ -201,7 +201,7 @@ export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
 
     public toString() {
         const ep = coordinates(this.getEndingPoint());
-        return `${this.getKey()} ${this.xRadius} ${this.yRadius} ${this.xAxisRotation} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
+        return `${this.getKey()} ${this.xRadius} ${this.yRadius} ${round(this.xAxisRotation, 4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
     }
 }
 

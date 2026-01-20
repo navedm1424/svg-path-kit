@@ -15,10 +15,10 @@ pb.bezierCircularArc(Math.PI, Math.PI - angle, Math.PI + angle);
 pb.bezierCircularArc(0.75, Math.PI, 3 * Math.PI / 2, angle);
 pb.bezierCircularArc(12, -Math.PI / 2 + angle, -Math.PI / 2 + 2 * angle);
 
-pb.cAutoControl(
+pb.chordScaledBezier(
     shaftRightEdgeCommand.terminalPoint.add(Vector2D.polar(0.5, angle + Math.PI)),
-    2 * angle, Math.PI / 2 + angle,
-    1 / 3, 2 / 3
+    pb.lastCommand.getEndVelocity()!, shaftRightEdgeVector,
+    1 / 4, 3 / 4
 );
 pb.l(shaftRightEdgeVector.opposite());
 pb.bezierCircularArc(0.25, Math.PI, 3 * Math.PI / 2, angle);

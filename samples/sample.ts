@@ -1,4 +1,5 @@
-import {EllipticalArc, PathBuilder, Point2D} from "../src/index";
+import {PathBuilder, Point2D} from "../src/index";
+import {EllipticalArc} from "../src/curves/index";
 
 const ellipticalArc = new EllipticalArc(
     5, 3,
