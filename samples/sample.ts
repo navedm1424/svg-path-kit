@@ -14,10 +14,9 @@ pb.l(endingTangentVector);
 
 let angle = endingTangentVector.angle - Math.PI / 2;
 pb.bezierCircularArc(2, 0, Math.PI / 2, angle);
-let lastCommand = pb.bezierEllipticalArc(4, 2, 0, Math.PI / 2, angle + Math.PI / 2);
+pb.bezierEllipticalArc(4, 2, 0, Math.PI / 2, angle + Math.PI / 2);
 
-const endVelocity = lastCommand.getEndVelocity();
-angle = endVelocity.angle - Math.PI / 2;
+angle = pb.currentVelocity.angle - Math.PI / 2;
 pb.bezierCircularArc(2, 0, Math.PI / 2, angle);
 pb.bezierCircularArc(3, Math.PI / 2, Math.PI, angle);
 pb.bezierCircularArc(5, Math.PI, 3 * Math.PI / 2, angle);
@@ -35,10 +34,10 @@ pb.bezierCircularArc(1.75, Math.PI / 2, Math.PI, angle);
 pb.bezierCircularArc(1.5, Math.PI, 3 * Math.PI / 2, angle);
 pb.bezierCircularArc(8, Math.PI / 2, 0, angle);
 pb.bezierCircularArc(5, 0, -Math.PI / 2, angle);
-lastCommand = pb.bezierCircularArc(13, Math.PI / 2, Math.PI, angle);
+pb.bezierCircularArc(13, Math.PI / 2, Math.PI, angle);
 
 pb.hermiteCurve(
-    lastCommand.getEndVelocity(), ellipticalArc.startingTangentVector,
+    pb.currentVelocity, ellipticalArc.startingTangentVector,
     pb.pathStart
 );
 pb.z();

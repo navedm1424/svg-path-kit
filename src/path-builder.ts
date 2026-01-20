@@ -29,7 +29,11 @@ export class PathBuilder {
     }
 
     get currentPosition() {
-        return this.lastCommand?.terminalPoint ?? Point2D.of(0, 0);
+        return this.lastCommand.terminalPoint;
+    }
+
+    get currentVelocity() {
+        return this.lastCommand.getEndVelocity();
     }
 
     private constructor(initialPoint: Point2D | Vector2D) {
