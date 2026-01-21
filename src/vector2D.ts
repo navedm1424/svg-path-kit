@@ -1,4 +1,5 @@
 import { Point2D } from "./point2D";
+import {Angle} from "./angle";
 
 export class Vector2D {
     private _magnitude: number;
@@ -33,7 +34,9 @@ export class Vector2D {
         return new Vector2D(x, y);
     }
 
-    public static polar(radius: number, angle: number): Vector2D {
+    public static polar(radius: number, angle: number | Angle): Vector2D {
+        if (angle instanceof Angle)
+            return new Vector2D(radius * angle.cosine, radius * angle.sine);
         return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
     }
 

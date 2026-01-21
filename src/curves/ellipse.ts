@@ -1,6 +1,7 @@
 import {Point2D} from "../point2D";
 import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
+import {Angle} from "../angle";
 
 export class Ellipse extends ParametricCurve2D {
     private _center: Point2D;
@@ -66,68 +67,52 @@ export class Ellipse extends ParametricCurve2D {
 }
 
 export class EllipticalArc {
-    private readonly _startingPointVector: Vector2D;
-    private readonly _endingPointVector: Vector2D;
-    private readonly _startingTangentVector: Vector2D;
-    private readonly _endingTangentVector: Vector2D;
     private _ellipseTilt: number;
+    readonly startAngle: Angle;
+    readonly endAngle: Angle;
 
     constructor(
         readonly semiMajorAxis: number,
         readonly semiMinorAxis: number,
-        readonly startAngle: number,
-        readonly endAngle: number,
+        startAngle: number | Angle,
+        endAngle: number | Angle,
         ellipseTilt: number = 0
     ) {
         this._ellipseTilt = ellipseTilt;
-        const startAngleSine = Math.sin(startAngle);
-        const startAngleCosine = Math.cos(startAngle);
-        const endAngleSine = Math.sin(endAngle);
-        const endAngleCosine = Math.cos(endAngle);
-        this._startingPointVector = Vector2D.of(
-            semiMajorAxis * startAngleCosine,
-            semiMinorAxis * startAngleSine
-        );
-        this._startingPointVector.rotate(ellipseTilt);
-        this._endingPointVector = Vector2D.of(
-            semiMajorAxis * endAngleCosine,
-            semiMinorAxis * endAngleSine
-        );
-        this._endingPointVector.rotate(ellipseTilt);
-        this._startingTangentVector = Vector2D.of(
-            -semiMajorAxis * startAngleSine,
-            semiMinorAxis * startAngleCosine
-        );
-        this._startingTangentVector.rotate(ellipseTilt);
-        this._endingTangentVector = Vector2D.of(
-            -semiMajorAxis * endAngleSine,
-            semiMinorAxis * endAngleCosine
-        );
-        this._endingTangentVector.rotate(ellipseTilt);
+        this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
+        this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
     }
     get ellipseTilt(): number {
         return this._ellipseTilt;
     }
 
     get startingPointVector(): Vector2D {
-        return this._startingPointVector.clone();
+        return Vector2D.of(
+            this.semiMajorAxis * this.startAngle.cosine,
+            this.semiMinorAxis * this.startAngle.sine
+        ).rotate(this._ellipseTilt);
     }
     get endingPointVector(): Vector2D {
-        return this._endingPointVector.clone();
+        return Vector2D.of(
+            this.semiMajorAxis * this.endAngle.cosine,
+            this.semiMinorAxis * this.endAngle.sine
+        ).rotate(this._ellipseTilt);
     }
 
     get startingTangentVector(): Vector2D {
-        return this._startingTangentVector.clone();
+        return Vector2D.of(
+            -this.semiMajorAxis * this.startAngle.sine,
+            this.semiMinorAxis * this.startAngle.cosine
+        ).rotate(this._ellipseTilt);
     }
     get endingTangentVector(): Vector2D {
-        return this._endingTangentVector.clone();
+        return Vector2D.of(
+            -this.semiMajorAxis * this.endAngle.sine,
+            this.semiMinorAxis * this.endAngle.cosine
+        ).rotate(this._ellipseTilt);
     }
 
     public rotate(angle: number) {
         this._ellipseTilt += angle;
-        this._startingPointVector.rotate(angle);
-        this._endingPointVector.rotate(angle);
-        this._startingTangentVector.rotate(angle);
-        this._endingTangentVector.rotate(angle);
     }
 }
