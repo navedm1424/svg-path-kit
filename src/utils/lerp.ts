@@ -3,6 +3,9 @@ import { clamp } from "./math";
 type Range = readonly [number, number];
 type Path = readonly [number, number, ...number[]];
 
+/**
+ * Map a value from one numeric range to another.
+ */
 export function lerp(
     value: number,
     currentScaleMin: number,
@@ -17,6 +20,9 @@ export function lerp(
     );
 };
 
+/**
+ * Range-map a value and clamp the result to the target range.
+ */
 export function clampedLerp(
     value: number,
     currentScaleMin: number,
@@ -42,6 +48,9 @@ export function clampedLerp(
     );
 };
 
+/**
+ * Apply clamped linear interpolation to multiple named ranges at once.
+ */
 export function batchedLerp<K extends string>(
     t: number, inputRange: Range,
     outputBatch: Record<K, Range>
@@ -68,6 +77,9 @@ export function batchedLerp<K extends string>(
     }, {} as Record<K, number>);
 };
 
+/**
+ * Interpolate along a polyline of input/output points.
+ */
 export function lerpPath<
     T extends Path
 >(
@@ -96,6 +108,9 @@ export function lerpPath<
     return 0;
 };
 
+/**
+ * Batch variant of {@link lerpPath} that interpolates multiple outputs in one call.
+ */
 export function batchedLerpPath<
     T extends Path,
     K extends string
@@ -156,6 +171,9 @@ export type Interpolator<S extends keyof any> = {
     segment: Range;
 }>;
 
+/**
+ * Create an interpolation helper bound to a position `t` with optional named segments.
+ */
 export function interpolator<S extends keyof any | never = never>(
     t: number, segments?: Record<S, Range>
 ): Interpolator<S> {

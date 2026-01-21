@@ -14,9 +14,10 @@ const bottomLineLength = lineCommand.length;
 const bottomLineEndpoint = lineCommand.terminalPoint;
 const bulbPath = pb.toPath();
 pb = PathBuilder.m(bottomLineEndpoint.add(Vector2D.of(2 * bottomLineLength / 3, 0)));
+const NEG_HALF_PI = Angle.HALF_PI.negative();
 pb.chordScaledBezier(
     Vector2D.of(1, -8),
-    Angle.UP, Angle.of(5 * Math.PI / 8),
+    NEG_HALF_PI, Angle.of(5 * Math.PI / 8),
     5 / 8, 1 / 8
 );
 const startVelocity = pb.currentVelocity;
@@ -39,7 +40,7 @@ pb.hermiteCurve(
 );
 pb.chordScaledBezier(
     Vector2D.of(0.5, 8),
-    pb.currentVelocity.angle, Angle.UP,
+    pb.currentVelocity.angle, NEG_HALF_PI,
     1 / 8, 5 / 8
 );
 const filamentPath = pb.toPath();

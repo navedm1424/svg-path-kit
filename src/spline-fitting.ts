@@ -2,53 +2,15 @@ import {PathBuilder} from "./path-builder";
 import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
 import {ParametricCurve2D} from "./parametric-curve-2D";
-import {clamp, round} from "./utils/index";
+import {findRoots, round} from "./utils/index";
 import {CubicBezierCurve} from "./cubic-bezier-curve";
 
 const roundingOrder = 8;
-const equalityThreshold = Math.pow(10, -roundingOrder);
+const equalityThreshold = 1e-8;
 
-function findRoots(f: (t: number) => number, tStart: number, tEnd: number) {
-    if (!Number.isFinite(tStart) || !Number.isFinite(tEnd))
-        throw Error("invalid arguments.");
-
-    const roots: number[] = [];
-
-    let tCurr = tStart, vCurr = f(tCurr);
-    if (Math.abs(vCurr) < equalityThreshold)
-        roots.push(tCurr);
-    const eps = 1e-4;
-    let currSpeed = (f(tCurr + eps) - f(tCurr - eps)) / (2 * eps);
-
-    while (Math.abs(tEnd - tCurr) >= equalityThreshold) {
-        const dt = clamp(0.1 / Math.abs(currSpeed), eps, 0.1);
-        let tNext = tCurr + dt;
-        if (tNext > tEnd)
-            tNext = tEnd;
-        const vNext = f(tNext);
-        const nextSpeed = (f(tNext + eps) - f(tNext - eps)) / (2 * eps);
-        if (Math.abs(vNext - vCurr) >= equalityThreshold && Math.abs(vNext) < equalityThreshold) {
-            roots.push(tNext);
-        } else if (vCurr * vNext < 0 || (currSpeed * nextSpeed < 0 && (Math.abs(vCurr) <= 0.1 || Math.abs(vNext) <= 0.1))) {
-            // bisection
-            let a = tCurr, b = tNext;
-            let fa = vCurr, fb = vNext;
-            let root = (a + b) / 2;
-            for (let j = 0; j < 50; j++) {
-                root = (a + b) / 2;
-                const fr = f(root);
-                if (Math.abs(fr) < equalityThreshold) break;
-                if (fa * fr <= 0) { b = root; fb = fr; }
-                else { a = root; fa = fr; }
-            }
-            roots.push(root);
-        }
-
-        tCurr = tNext; vCurr = vNext; currSpeed = nextSpeed;
-    }
-    return roots;
-}
-
+/**
+ * Collect parameter values where a parametric curve has extrema or inflection points.
+ */
 export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: number) {
     const criticalTs = new Set<number>();
 
@@ -79,6 +41,9 @@ export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: n
     return Array.from(criticalTs).sort((a, b) => a - b);
 }
 
+/**
+ * Encapsulates a cubic Bézier approximation of a curve segment.
+ */
 export class CubicBezierFit {
     readonly cubicBezierCurve: CubicBezierCurve;
 
@@ -90,6 +55,9 @@ export class CubicBezierFit {
         this.cubicBezierCurve = CubicBezierFit.fit(targetParametricCurve, segmentStart, segmentEnd);
     }
 
+    /**
+     * Compute a cubic Bézier that best matches the source curve over [t0, t1].
+     */
     private static fit(
         curve: ParametricCurve2D,
         t0: number, t1: number
@@ -132,6 +100,9 @@ export class CubicBezierFit {
         );
     }
 
+    /**
+     * Measure maximum radial error against the source curve by sampling.
+     */
     public radialError(samples = 10): number {
         let maxError = 0;
 
@@ -153,6 +124,9 @@ export class CubicBezierFit {
     }
 }
 
+/**
+ * Recursively subdivide the curve and fit cubic Bézier segments to them until the error tolerance is met.
+ */
 export function fitSplineBySubdivision(
     pb: PathBuilder,
     curve: ParametricCurve2D,
@@ -180,6 +154,9 @@ export function fitSplineBySubdivision(
     );
 }
 
+/**
+ * Fit cubic Bézier segments in fixed parameter steps.
+ */
 export function fitSplineInSteps(
     pb: PathBuilder,
     curve: ParametricCurve2D,
@@ -201,6 +178,9 @@ export function fitSplineInSteps(
     }
 }
 
+/**
+ * Fit cubic Bézier pieces between explicit parameter breakpoints.
+ */
 export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: number[]) {
     for (let i = 1; i < ts.length; i++) {
         const bezier = new CubicBezierFit(curve, ts[i - 1], ts[i])
@@ -213,10 +193,16 @@ export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...
     }
 }
 
+/**
+ * Fit a spline through a curve segment at its critical parameter values (extrema and inflection points).
+ */
 export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: number, t1: number) {
     fitSplineAtParams(pb, curve, ...findCriticalTs(curve, t0, t1));
 }
 
+/**
+ * Build a Cardinal spline through provided control points.
+ */
 export function cardinalSpline(
     pb: PathBuilder, tension: number, ...controlPoints: Point2D[]
 ) {
@@ -239,6 +225,9 @@ export function cardinalSpline(
     );
 }
 
+/**
+ * Convenience function for a Catmull-Rom spline (Cardinal with tension 0.5).
+ */
 export function catmullRomSpline(
     pb: PathBuilder, ...controlPoints: Point2D[]
 ) {

@@ -1,6 +1,9 @@
 import {Point2D, Vector2D} from "../index";
 import {ParametricCurve2D} from "../parametric-curve-2D";
 
+/**
+ * Superellipse curve defined by radii a,b and exponent n.
+ */
 export class Superellipse extends ParametricCurve2D {
     private readonly exp: number;
 
@@ -13,6 +16,9 @@ export class Superellipse extends ParametricCurve2D {
         this.exp = 2 ** (1 - n);
     }
 
+    /**
+     * Sample the superellipse at parameter `t`.
+     */
     at(t: number): Point2D {
         const cosine = Math.cos(t);
         const sine = Math.sin(t);
@@ -22,6 +28,10 @@ export class Superellipse extends ParametricCurve2D {
         );
     }
 
+    /**
+     * Tangent vector at parameter `t`. Falls back to finite
+     * differences when the analytical derivative is undefined.
+     */
     tangentAt(t: number): Vector2D {
         const cosine = Math.cos(t);
         const sine = Math.sin(t);

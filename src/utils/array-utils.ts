@@ -10,6 +10,9 @@ type Pick<
   I extends readonly number[]
 > = { [K in keyof I]: T[I[K]] };
 
+/**
+ * Type-safe helper to grab selected indices from a tuple-like array.
+ */
 export function pick<
     T extends readonly [any?, ...any[]],
     I extends readonly TupleIndex<T>[]

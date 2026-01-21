@@ -16,23 +16,30 @@ import {
 } from "./path";
 import {Angle} from "./angle";
 
+/**
+ * Builder class for constructing SVG paths from geometric utilities.
+ */
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
     private commands: Command[] = [];
     private openPathStack: MoveCommand[] = [];
 
+    /** Most recently appended command. */
     get lastCommand() {
         return this.commands[this.commands.length - 1];
     }
 
+    /** Starting point of the path. */
     get pathStart(): Point2D {
         return this.firstCommand.terminalPoint;
     }
 
+    /** Current drawing cursor position (endpoint of the last command). */
     get currentPosition() {
         return this.lastCommand?.terminalPoint ?? Point2D.ORIGIN;
     }
 
+    /** Velocity at the current position (derived from the last command). */
     get currentVelocity() {
         return this.lastCommand.getEndVelocity();
     }
@@ -44,17 +51,26 @@ export class PathBuilder {
             this.firstCommand = this.m(initialPoint);
     }
 
+    /**
+     * Create a builder starting at a given point or offset vector (equivalent).
+     */
     public static m(point: Point2D): PathBuilder;
     public static m(vector: Vector2D): PathBuilder;
     public static m(point: Point2D | Vector2D): PathBuilder {
         return new PathBuilder(point);
     }
 
+    /**
+     * Append a command to the builder.
+     */
     public append<T extends Command>(command: T): T {
         this.commands.push(command);
         return command;
     }
 
+    /**
+     * Start a new subpath with a move command.
+     */
     public m(point: Point2D): MoveCommand;
     public m(vector: Vector2D): MoveCommand;
     public m(point: Point2D | Vector2D): MoveCommand {
@@ -67,6 +83,9 @@ export class PathBuilder {
         return this.append(moveCommand);
     }
 
+    /**
+     * Draw a line from the current position to a given point specified explicitly or by an offset vector.
+     */
     public l(point: Point2D): LineCommand;
     public l(vector: Vector2D): LineCommand;
     public l(point: Point2D | Vector2D): LineCommand {
@@ -77,6 +96,9 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * Draw a quadratic Bézier curve.
+     */
     public q(controlPoint: Point2D, endingPoint: Point2D): QuadraticBezierCurveCommand;
     public q(controlPointVector: Vector2D, endingPointVector: Vector2D): QuadraticBezierCurveCommand;
     public q(controlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): QuadraticBezierCurveCommand {
@@ -87,6 +109,9 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * Draw a cubic Bézier curve.
+     */
     public c(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D): CubicBezierCurveCommand;
     public c(firstControlPointVector: Vector2D, secondControlPointVector: Vector2D, endingPointVector: Vector2D): CubicBezierCurveCommand;
     public c(firstControlPoint: Point2D | Vector2D, secondControlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): CubicBezierCurveCommand {
@@ -97,6 +122,9 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * Draw a primitive-style elliptical arc by radii and flags.
+     */
     public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D): EllipticalArcWrapperCommand;
     public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D): EllipticalArcWrapperCommand;
     public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D | Vector2D): EllipticalArcWrapperCommand {
@@ -107,6 +135,10 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * This command lets you draw circular arcs with SVG path elliptical arc (A) commands without having to deal with all the confusing flags.
+     * You just have to provide the radius and parametric angle bounds or a {@link CircularArc} object.
+     */
     public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): EllipticalArcCommand;
     public circularArc(circularArc: CircularArc): EllipticalArcCommand;
     public circularArc(...args:
@@ -128,6 +160,12 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * This command lets you draw elliptical arcs with SVG path elliptical arc (A) commands without having to deal with all the confusing flags.
+     * You just have to specify the semi-axes and parametric angles or provide an {@link EllipticalArc} object.
+     *
+     * > Keep in mind that `startAngle` and `endAngle` are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the vector from the center to that point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: x(θ) = a cos(θ) and y(θ) = b sin(θ).
+     */
     public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number): EllipticalArcCommand;
     public ellipticalArc(arc: EllipticalArc): EllipticalArcCommand;
     public ellipticalArc(
@@ -142,6 +180,9 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * Draw a cubic Hermite curve parameterized by endpoint velocities.
+     */
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D): CubicBezierHermiteCurveCommand;
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Vector2D): CubicBezierHermiteCurveCommand;
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D | Vector2D): CubicBezierHermiteCurveCommand {
@@ -152,6 +193,9 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * This command gives you the closest cubic Bézier approximation of a circular arc parameterized by the radius and angle bounds.
+     */
     public bezierCircularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): CubicBezierEllipticalArc;
     public bezierCircularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
     public bezierCircularArc(...args:
@@ -173,6 +217,11 @@ export class PathBuilder {
         ));
     }
 
+    /**
+     * This command gives you the closest cubic Bézier approximation of an elliptical arc parameterized by the semi-axes and angular parameters.
+     *
+     * > Keep in mind that `startAngle` and `endAngle` are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the vector from the center to that point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: x(θ) = a cos(θ) and y(θ) = b sin(θ).
+     */
     public bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
         startAngle: number | Angle, endAngle: number | Angle,
@@ -193,11 +242,19 @@ export class PathBuilder {
         ));
     }
 
-    public chordScaledBezier(endingPoint: Point2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
-    public chordScaledBezier(endingPointVector: Vector2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
+    /**
+     * This command lets you scale cubic Bézier handles relative to the chord length and direct them by angles.
+     *
+     * - `startHandleAngle` is the angle that the first handle vector is intended to make with the x-axis.
+     * - `endHandleAngle` is the angle that the second handle vector is intended to make with the x-axis.
+     * - `startHandleScale` is the ratio of the first handle's length to the chord length.
+     * - `endHandleScale` is the ratio of the second handle's length to the chord length.
+     */
+    public chordScaledBezier(endingPoint: Point2D, startHandleAngle: number | Angle, endHandleAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
+    public chordScaledBezier(endingPointVector: Vector2D, startHandleAngle: number | Angle, endHandleAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
     public chordScaledBezier(
         endingPoint: Point2D | Vector2D,
-        startAngle: number | Angle, endAngle: number | Angle,
+        startHandleAngle: number | Angle, endHandleAngle: number | Angle,
         startHandleScale: number = 1 / 3,
         endHandleScale: number = startHandleScale
     ): ChordScaledBezierCommand {
@@ -205,18 +262,23 @@ export class PathBuilder {
             this.currentPosition,
             // @ts-expect-error
             endingPoint,
-            startAngle, endAngle, startHandleScale, endHandleScale
+            startHandleAngle, endHandleAngle, startHandleScale, endHandleScale
         ));
     }
 
+    /**
+     * Close the current subpath.
+     */
     public z(): ClosePathCommand {
         return this.append(new ClosePathCommand(this.currentPosition, this.openPathStack.pop()!));
     }
 
+    /** Build a {@link Path} from accumulated commands. */
     public toPath() {
         return new Path(this.commands);
     }
 
+    /** Serialize the built path to an SVG path string. */
     public toSVGPathString() {
         return this.toPath().toSVGPathString();
     }

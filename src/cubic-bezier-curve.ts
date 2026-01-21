@@ -2,7 +2,13 @@ import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
 import {ParametricCurve2D} from "./parametric-curve-2D";
 
+/**
+ * Cubic Bézier curve with helpers for evaluation and subdivision.
+ */
 export class CubicBezierCurve extends ParametricCurve2D {
+    /**
+     * Build a cubic Bézier with start/end points and two control points.
+     */
     constructor(
         readonly startingPoint: Point2D,
         readonly firstControlPoint: Point2D,
@@ -12,6 +18,9 @@ export class CubicBezierCurve extends ParametricCurve2D {
         super();
     }
 
+    /**
+     * Sample the curve position at parameter `t`.
+     */
     public at(t: number): Point2D {
         const u = 1 - t;
     
@@ -35,6 +44,9 @@ export class CubicBezierCurve extends ParametricCurve2D {
         return Point2D.of(x, y);
     }
 
+    /**
+     * Evaluate the first derivative (tangent) at `t`.
+     */
     public tangentAt(t: number): Vector2D {
         const u = 1 - t;
     
@@ -56,6 +68,9 @@ export class CubicBezierCurve extends ParametricCurve2D {
         return Vector2D.of(dx, dy);
     }
 
+    /**
+     * Evaluate the second derivative at `t`.
+     */
     public accelerationAt(t: number) {
         const u = 1 - t;
         const P0 = this.startingPoint;
@@ -74,6 +89,9 @@ export class CubicBezierCurve extends ParametricCurve2D {
         return Point2D.of(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
     }    
 
+    /**
+     * Split the curve at parameter `t` and return the requested side.
+     */
     public splitAt(
         t: number,
         side: 'left' | 'right' = 'left'
