@@ -14,6 +14,7 @@ import {
     MoveCommand, Path,
     QuadraticBezierCurveCommand
 } from "./path";
+import {Angle} from "./angle";
 
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
@@ -29,7 +30,7 @@ export class PathBuilder {
     }
 
     get currentPosition() {
-        return this.lastCommand.terminalPoint;
+        return this.lastCommand?.terminalPoint ?? Point2D.ORIGIN;
     }
 
     get currentVelocity() {
@@ -106,11 +107,11 @@ export class PathBuilder {
         ));
     }
 
-    public circularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): EllipticalArcCommand;
+    public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): EllipticalArcCommand;
     public circularArc(circularArc: CircularArc): EllipticalArcCommand;
     public circularArc(...args:
-                           [radius: number, startAngle: number, endAngle: number, rotation?: number] |
-                           [arc: CircularArc]
+        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number] |
+        [arc: CircularArc]
     ): EllipticalArcCommand {
         const startingPoint = this.currentPosition;
         if (args.length === 1) {
@@ -127,11 +128,11 @@ export class PathBuilder {
         ));
     }
 
-    public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number, endAngle: number, ellipseTilt?: number): EllipticalArcCommand;
+    public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number): EllipticalArcCommand;
     public ellipticalArc(arc: EllipticalArc): EllipticalArcCommand;
     public ellipticalArc(
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
-            startAngle: number, endAngle: number,
+            startAngle: number | Angle, endAngle: number | Angle,
             ellipseTilt?: number] | [arc: EllipticalArc]
     ): EllipticalArcCommand {
         return this.append(new EllipticalArcCommand(
@@ -151,11 +152,11 @@ export class PathBuilder {
         ));
     }
 
-    public bezierCircularArc(radius: number, startAngle: number, endAngle: number, rotation?: number): CubicBezierEllipticalArc;
+    public bezierCircularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): CubicBezierEllipticalArc;
     public bezierCircularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
     public bezierCircularArc(...args:
-                                 [radius: number, startAngle: number, endAngle: number, rotation?: number] |
-                                 [circularArc: CircularArc]
+        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number] |
+        [circularArc: CircularArc]
     ): CubicBezierEllipticalArc {
         const startingPoint = this.currentPosition;
         if (args.length === 1) {
@@ -174,16 +175,16 @@ export class PathBuilder {
 
     public bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
-        startAngle: number, endAngle: number,
+        startAngle: number | Angle, endAngle: number | Angle,
         ellipseTilt?: number
     ): CubicBezierEllipticalArc;
     public bezierEllipticalArc(ellipticalArc: EllipticalArc): CubicBezierEllipticalArc;
     public bezierEllipticalArc(...args:
-                                   [
-                                       semiMajorAxis: number, semiMinorAxis: number,
-                                       startAngle: number, endAngle: number,
-                                       ellipseTilt?: number
-                                   ] | [arc: EllipticalArc]
+        [
+            semiMajorAxis: number, semiMinorAxis: number,
+            startAngle: number | Angle, endAngle: number | Angle,
+            ellipseTilt?: number
+        ] | [arc: EllipticalArc]
     ): CubicBezierEllipticalArc {
         return this.append(new CubicBezierEllipticalArc(
             this.currentPosition,
@@ -192,11 +193,11 @@ export class PathBuilder {
         ));
     }
 
-    public chordScaledBezier(endingPoint: Point2D, startDirection: Vector2D, endDirection: Vector2D, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
-    public chordScaledBezier(endingPointVector: Vector2D, startDirection: Vector2D, endDirection: Vector2D, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
+    public chordScaledBezier(endingPoint: Point2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
+    public chordScaledBezier(endingPointVector: Vector2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number): ChordScaledBezierCommand;
     public chordScaledBezier(
         endingPoint: Point2D | Vector2D,
-        startDirection: Vector2D, endDirection: Vector2D,
+        startAngle: number | Angle, endAngle: number | Angle,
         startHandleScale: number = 1 / 3,
         endHandleScale: number = startHandleScale
     ): ChordScaledBezierCommand {
@@ -204,7 +205,7 @@ export class PathBuilder {
             this.currentPosition,
             // @ts-expect-error
             endingPoint,
-            startDirection, endDirection, startHandleScale, endHandleScale
+            startAngle, endAngle, startHandleScale, endHandleScale
         ));
     }
 

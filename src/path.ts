@@ -8,9 +8,11 @@ import {
     AbsoluteLinePrimitive,
     AbsoluteMovePrimitive,
     AbsoluteQuadraticBezierCurvePrimitive,
-    PrimitiveCommand, SVGPath
+    PrimitiveCommand,
+    SVGPath
 } from "./svg-path";
 import {EllipticalArc} from "./curves/ellipse";
+import {Angle} from "./angle";
 
 export interface Command {
     readonly initialPoint: Point2D;
@@ -56,6 +58,10 @@ export class LineCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+    }
+
+    get length() {
+        return Math.hypot(this.terminalPoint.x - this.initialPoint.x, this.terminalPoint.y - this.initialPoint.y);
     }
 
     public getStartVelocity(): Vector2D {
@@ -133,34 +139,21 @@ export class CubicBezierEllipticalArc implements Command {
     readonly arc: EllipticalArc;
     readonly cubicBezierCurve: CubicBezierCurve;
 
-    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number, endAngle: number, ellipseTilt?: number);
+    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number);
     constructor(initialPoint: Point2D, arc: EllipticalArc);
     constructor(
         readonly initialPoint: Point2D,
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
-        startAngle: number, endAngle: number,
+        startAngle: number | Angle, endAngle: number | Angle,
         ellipseTilt?: number] | [arc: EllipticalArc]
     ) {
-        let semiMajorAxis: number;
-        let semiMinorAxis: number;
-        let startAngle: number;
-        let endAngle: number;
-        let ellipseTilt: number | undefined;
-
         if (args.length === 1) {
             this.arc = args[0];
-            startAngle = this.arc.startAngle;
-            endAngle = this.arc.endAngle;
         } else {
-            semiMajorAxis = args[0];
-            semiMinorAxis = args[1];
-            startAngle = args[2];
-            endAngle = args[3];
-            ellipseTilt = args[4];
             this.arc = new EllipticalArc(
-                semiMajorAxis, semiMinorAxis,
-                startAngle, endAngle,
-                ellipseTilt
+                args[0], args[1],
+                args[2], args[3],
+                args[4]
             );
         }
         const startVec = this.arc.startingPointVector;
@@ -172,7 +165,7 @@ export class CubicBezierEllipticalArc implements Command {
         const endControlVector = this.arc.endingTangentVector;
 
         // scalar factor = 4 / 3 * tan((endAngle - startAngle) / 4))
-        const factor = (4.0 / 3.0) * Math.tan((endAngle - startAngle) / 4);
+        const factor = (4.0 / 3.0) * Math.tan((this.arc.endAngle.value - this.arc.startAngle.value) / 4);
         startControlVector.scale(factor);
         endControlVector.scale(-factor);
 
@@ -234,12 +227,12 @@ export class EllipticalArcCommand implements Command {
     readonly terminalPoint: Point2D;
     readonly arc: EllipticalArc;
 
-    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number, endAngle: number, ellipseTilt?: number);
+    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number);
     constructor(initialPoint: Point2D, arc: EllipticalArc);
     constructor(
         readonly initialPoint: Point2D,
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
-            startAngle: number, endAngle: number,
+            startAngle: number | Angle, endAngle: number | Angle,
             ellipseTilt?: number] | [arc: EllipticalArc]
     ) {
         if (args.length === 1) {
@@ -263,7 +256,7 @@ export class EllipticalArcCommand implements Command {
     }
 
     toSVGPathCommand(): PrimitiveCommand {
-        const angleDiff = this.arc.endAngle - this.arc.startAngle;
+        const angleDiff = this.arc.endAngle.value - this.arc.startAngle.value;
         return new AbsoluteEllipticalArcPrimitive(
             this.arc.semiMajorAxis, this.arc.semiMinorAxis,
             this.arc.ellipseTilt * 180 / Math.PI, angleDiff > Math.PI ? 1 : 0,
@@ -360,13 +353,13 @@ export class ChordScaledBezierCommand implements Command {
     readonly terminalPoint: Point2D;
     readonly cubicBezierCurve: CubicBezierCurve;
 
-    constructor(initialPoint: Point2D, terminalPoint: Point2D, startDirection: Vector2D, endDirection: Vector2D, startHandleScale?: number, endHandleScale?: number);
-    constructor(initialPoint: Point2D, terminalPointVector: Vector2D, startDirection: Vector2D, endDirection: Vector2D, startHandleScale?: number, endHandleScale?: number);
+    constructor(initialPoint: Point2D, terminalPoint: Point2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number);
+    constructor(initialPoint: Point2D, terminalPointVector: Vector2D, startAngle: number | Angle, endAngle: number | Angle, startHandleScale?: number, endHandleScale?: number);
     constructor(
         readonly initialPoint: Point2D,
         terminalPoint: Point2D | Vector2D,
-        readonly startDirection: Vector2D,
-        readonly endDirection: Vector2D,
+        readonly startAngle: number | Angle,
+        readonly endAngle: number | Angle,
         readonly startHandleScale: number = 1 / 3,
         readonly endHandleScale: number = startHandleScale
     ) {
@@ -382,10 +375,10 @@ export class ChordScaledBezierCommand implements Command {
         }
 
         const firstControlPoint = initialPoint.add(
-            startDirection.normalize().scale(chordLen * startHandleScale)
+            Vector2D.polar(chordLen * startHandleScale, startAngle)
         );
         const secondControlPoint: Point2D = this.terminalPoint.add(
-            endDirection.normalize().scale(chordLen * endHandleScale)
+            Vector2D.polar(chordLen * endHandleScale, endAngle)
         );
 
         this.cubicBezierCurve = new CubicBezierCurve(

@@ -1,6 +1,7 @@
 import {Point2D} from "../point2D";
 import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
+import {Angle} from "../angle";
 
 export class Circle extends ParametricCurve2D {
     private _center: Point2D;
@@ -36,42 +37,42 @@ export class Circle extends ParametricCurve2D {
 }
 
 export class CircularArc {
-    private readonly _startingPointVector: Vector2D;
-    private readonly _endingPointVector: Vector2D;
+    readonly startAngle: Angle;
+    readonly endAngle: Angle;
 
     constructor(
         readonly radius: number,
-        readonly startAngle: number,
-        readonly endAngle: number,
+        startAngle: number | Angle,
+        endAngle: number | Angle,
         readonly rotation: number = 0
     ) {
-        const startAngleSine = Math.sin(startAngle);
-        const startAngleCosine = Math.cos(startAngle);
-        const endAngleSine = Math.sin(endAngle);
-        const endAngleCosine = Math.cos(endAngle);
-        this._startingPointVector = Vector2D.of(
-            radius * startAngleCosine,
-            radius * startAngleSine
-        );
-        this._startingPointVector.rotate(rotation);
-        this._endingPointVector = Vector2D.of(
-            radius * endAngleCosine,
-            radius * endAngleSine
-        );
-        this._endingPointVector.rotate(rotation);
+        this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
+        this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
     }
 
     get startingPointVector(): Vector2D {
-        return this._startingPointVector.clone();
+        return Vector2D.of(
+            this.radius * this.startAngle.cosine,
+            this.radius * this.startAngle.sine
+        ).rotate(this.rotation);
     }
     get endingPointVector(): Vector2D {
-        return this._endingPointVector.clone();
+        return Vector2D.of(
+            this.radius * this.endAngle.cosine,
+            this.radius * this.endAngle.sine
+        ).rotate(this.rotation);
     }
 
     get startingTangentVector(): Vector2D {
-        return this._startingPointVector.perpendicular();
+        return Vector2D.of(
+            -this.radius * this.startAngle.sine,
+            this.radius * this.startAngle.cosine
+        ).rotate(this.rotation);
     }
     get endingTangentVector(): Vector2D {
-        return this._endingPointVector.perpendicular();
+        return Vector2D.of(
+            -this.radius * this.endAngle.sine,
+            this.radius * this.endAngle.cosine
+        ).rotate(this.rotation);
     }
 }
