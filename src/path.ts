@@ -311,6 +311,8 @@ export class EllipticalArcCommand implements Command {
 
 /**
  * Wrapper around elliptical arc (A) command.
+ *
+ * > `xAxisRotation` is entered in radians to stay in concert with the rest of the API. This is contrary to what the primitive elliptical arc (`A`) command expects—angle in degrees.
  */
 export class EllipticalArcWrapperCommand implements Command {
     readonly terminalPoint: Point2D;
