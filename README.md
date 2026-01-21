@@ -1,8 +1,12 @@
 ## SVG Path Kit
 
-A small, composable TypeScript library for building complex SVG path strings using a geometry‑oriented API.
+SVG Path Kit is a geometry-oriented TypeScript library for building complex SVG path strings with mathematical precision.
 
-Instead of manually concatenating SVG path commands, you work with `Point2D`, `Vector2D`, spline fitters, and a `PathBuilder` that outputs a valid `d` attribute for `<path>` elements.
+![Epitrochoid](https://raw.githubusercontent.com/navedm1424/svg-path-kit/fec0dded89213bf9a69e90b5b249df36eb29b69f/assets/examples/epitrochoid.svg)
+![Bulb](https://raw.githubusercontent.com/navedm1424/svg-path-kit/fec0dded89213bf9a69e90b5b249df36eb29b69f/assets/examples/bulb.svg)
+![Golf Club](https://raw.githubusercontent.com/navedm1424/svg-path-kit/ffecbb5c16116ceaa3828b5dcbdfb82d6be3caa2/assets/examples/golf_club.svg)
+
+Instead of manually entering SVG path coordinates, you work with `Point2D`, `Vector2D`, spline fitters, and a `PathBuilder` that outputs a valid `d` attribute for `<path>` elements.
 
 <br/><br/>
 
