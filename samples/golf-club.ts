@@ -17,7 +17,7 @@ pb.bezierCircularArc(12, -Math.PI / 2 + angle, -Math.PI / 2 + 2 * angle);
 
 pb.chordScaledBezier(
     shaftRightEdgeCommand.terminalPoint.add(Vector2D.polar(0.5, angle + Math.PI)),
-    pb.currentVelocity, shaftRightEdgeVector,
+    pb.currentVelocity.angle, shaftRightEdgeVector.angle,
     1 / 4, 3 / 4
 );
 pb.l(shaftRightEdgeVector.opposite());
