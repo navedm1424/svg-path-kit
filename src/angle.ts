@@ -103,6 +103,13 @@ export class Angle {
         return Angle.of(this.value - Angle.TWO_PI.value);
     }
 
+    /**
+     * Convert the radian angle to degrees.
+     */
+    public toDegrees() {
+        return this.value * 180 / Math.PI;
+    }
+
     public valueOf() {
         return this.value;
     }

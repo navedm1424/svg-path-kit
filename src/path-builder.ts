@@ -141,10 +141,10 @@ export class PathBuilder {
      * This command lets you draw circular arcs with SVG path elliptical arc (A) commands without having to deal with all the confusing flags.
      * You just have to provide the radius and parametric angle bounds or a {@link CircularArc} object.
      */
-    public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): EllipticalArcCommand;
+    public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle): EllipticalArcCommand;
     public circularArc(circularArc: CircularArc): EllipticalArcCommand;
     public circularArc(...args:
-        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number] |
+        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle] |
         [arc: CircularArc]
     ): EllipticalArcCommand {
         const startingPoint = this.currentPosition;
@@ -168,12 +168,12 @@ export class PathBuilder {
      *
      * > Keep in mind that `startAngle` and `endAngle` are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the vector from the center to that point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: x(θ) = a cos(θ) and y(θ) = b sin(θ).
      */
-    public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number): EllipticalArcCommand;
+    public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number | Angle): EllipticalArcCommand;
     public ellipticalArc(arc: EllipticalArc): EllipticalArcCommand;
     public ellipticalArc(
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
             startAngle: number | Angle, endAngle: number | Angle,
-            ellipseTilt?: number] | [arc: EllipticalArc]
+            ellipseTilt?: number | Angle] | [arc: EllipticalArc]
     ): EllipticalArcCommand {
         return this.append(new EllipticalArcCommand(
             this.currentPosition,
@@ -198,10 +198,10 @@ export class PathBuilder {
     /**
      * This command gives you the closest cubic Bézier approximation of a circular arc parameterized by the radius and angle bounds.
      */
-    public bezierCircularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number): CubicBezierEllipticalArc;
+    public bezierCircularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle): CubicBezierEllipticalArc;
     public bezierCircularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
     public bezierCircularArc(...args:
-        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number] |
+        [radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle] |
         [circularArc: CircularArc]
     ): CubicBezierEllipticalArc {
         const startingPoint = this.currentPosition;
@@ -227,14 +227,14 @@ export class PathBuilder {
     public bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
         startAngle: number | Angle, endAngle: number | Angle,
-        ellipseTilt?: number
+        ellipseTilt?: number | Angle
     ): CubicBezierEllipticalArc;
     public bezierEllipticalArc(ellipticalArc: EllipticalArc): CubicBezierEllipticalArc;
     public bezierEllipticalArc(...args:
         [
             semiMajorAxis: number, semiMinorAxis: number,
             startAngle: number | Angle, endAngle: number | Angle,
-            ellipseTilt?: number
+            ellipseTilt?: number | Angle
         ] | [arc: EllipticalArc]
     ): CubicBezierEllipticalArc {
         return this.append(new CubicBezierEllipticalArc(

@@ -93,7 +93,7 @@ export class Ellipse extends ParametricCurve2D {
  * Elliptical arc segment defined by axes, parametric angles, and rotation.
  */
 export class EllipticalArc {
-    private _ellipseTilt: number;
+    private _ellipseTilt: Angle;
     readonly startAngle: Angle;
     readonly endAngle: Angle;
 
@@ -105,14 +105,14 @@ export class EllipticalArc {
         readonly semiMinorAxis: number,
         startAngle: number | Angle,
         endAngle: number | Angle,
-        ellipseTilt: number = 0
+        ellipseTilt: number | Angle = Angle.ZERO
     ) {
-        this._ellipseTilt = ellipseTilt;
+        this._ellipseTilt = ellipseTilt instanceof Angle ? ellipseTilt : Angle.of(ellipseTilt);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
     }
     /** Current tilt of the ellipse. */
-    get ellipseTilt(): number {
+    get ellipseTilt(): Angle {
         return this._ellipseTilt;
     }
 
@@ -149,7 +149,7 @@ export class EllipticalArc {
     /**
      * Rotate the underlying ellipse by `angle`.
      */
-    public rotate(angle: number) {
-        this._ellipseTilt += angle;
+    public rotate(angle: number | Angle) {
+        this._ellipseTilt = this._ellipseTilt.add(angle);
     }
 }

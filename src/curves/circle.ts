@@ -61,6 +61,7 @@ export class Circle extends ParametricCurve2D {
 export class CircularArc {
     readonly startAngle: Angle;
     readonly endAngle: Angle;
+    readonly rotation: Angle;
 
     /**
      * Define a circular arc between two angles with an optional rotation offset.
@@ -69,8 +70,9 @@ export class CircularArc {
         readonly radius: number,
         startAngle: number | Angle,
         endAngle: number | Angle,
-        readonly rotation: number = 0
+        rotation: number | Angle = Angle.ZERO
     ) {
+        this.rotation = rotation instanceof Angle ? rotation : Angle.of(rotation);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
     }

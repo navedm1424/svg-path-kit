@@ -166,13 +166,13 @@ export class CubicBezierEllipticalArc implements Command {
     readonly arc: EllipticalArc;
     readonly cubicBezierCurve: CubicBezierCurve;
 
-    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number);
+    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number | Angle);
     constructor(initialPoint: Point2D, arc: EllipticalArc);
     constructor(
         readonly initialPoint: Point2D,
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
         startAngle: number | Angle, endAngle: number | Angle,
-        ellipseTilt?: number] | [arc: EllipticalArc]
+        ellipseTilt?: number | Angle] | [arc: EllipticalArc]
     ) {
         if (args.length === 1) {
             this.arc = args[0];
@@ -268,13 +268,13 @@ export class EllipticalArcCommand implements Command {
     readonly terminalPoint: Point2D;
     readonly arc: EllipticalArc;
 
-    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number);
+    constructor(initialPoint: Point2D, semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number | Angle);
     constructor(initialPoint: Point2D, arc: EllipticalArc);
     constructor(
         readonly initialPoint: Point2D,
         ...args: [semiMajorAxis: number, semiMinorAxis: number,
             startAngle: number | Angle, endAngle: number | Angle,
-            ellipseTilt?: number] | [arc: EllipticalArc]
+            ellipseTilt?: number | Angle] | [arc: EllipticalArc]
     ) {
         if (args.length === 1) {
             this.arc = args[0];
@@ -303,7 +303,7 @@ export class EllipticalArcCommand implements Command {
         const angleDiff = this.arc.endAngle.value - this.arc.startAngle.value;
         return new AbsoluteEllipticalArcPrimitive(
             this.arc.semiMajorAxis, this.arc.semiMinorAxis,
-            this.arc.ellipseTilt * 180 / Math.PI, angleDiff > Math.PI ? 1 : 0,
+            this.arc.ellipseTilt.toDegrees(), angleDiff > Math.PI ? 1 : 0,
             angleDiff > 0 ? 1 : 0, this.terminalPoint
         );
     }
