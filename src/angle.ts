@@ -37,14 +37,14 @@ export class Angle {
      * Return a new angle offset by the provided amount.
      */
     public add(angle: number | Angle): Angle {
-        return Angle.of(this.value + (angle instanceof Angle ? angle.value : angle));
+        return Angle.of(this.value + Number(angle));
     }
 
     /**
      * Return a new angle reduced by the provided amount.
      */
     public subtract(angle: number | Angle): Angle {
-        return Angle.of(this.value - (angle instanceof Angle ? angle.value : angle));
+        return Angle.of(this.value - Number(angle));
     }
 
     /**
@@ -101,5 +101,9 @@ export class Angle {
      */
     public revolveBackward() {
         return Angle.of(this.value - Angle.TWO_PI.value);
+    }
+
+    public valueOf() {
+        return this.value;
     }
 }
