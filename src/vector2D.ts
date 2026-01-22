@@ -17,13 +17,6 @@ export class Vector2D {
         this._magnitude = Math.hypot(_x, _y);
     }
 
-    /**
-     * Compute the angle between two vectors.
-     */
-    public static angleBetween(vectorA: Vector2D, vectorB: Vector2D): number {
-        return Math.acos(vectorA.dotProduct(vectorB) / (vectorA.magnitude * vectorB.magnitude));
-    }
-
     /** X component. */
     get x() {
         return this._x;
@@ -80,6 +73,20 @@ export class Vector2D {
      */
     public subtract(vector: Vector2D) {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
+    }
+
+    /**
+     * Compute the unsigned angle with another vector
+     */
+    public angleWith(vector: Vector2D): number {
+        return Math.acos(this.dotProduct(vector) / (this._magnitude * vector._magnitude));
+    }
+
+    /**
+     * Compute the singed angle with another vector
+     */
+    public singedAngleWith(vector: Vector2D): number {
+        return Math.atan2(this.crossProduct(vector), this.dotProduct(vector));
     }
 
     /**
@@ -149,11 +156,11 @@ export class Vector2D {
     /**
      * Rotate the vector in-place by `angle` radians.
      */
-    public rotate(angle: number): this {
-        const sine = Math.sin(angle);
-        const cosine = Math.cos(angle);
-        const newX = this.x * cosine - this.y * sine;
-        const newY = this.x * sine + this.y * cosine;
+    public rotate(angle: number | Angle): this {
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const newX = this._x * cosine - this._y * sine;
+        const newY = this._x * sine + this._y * cosine;
         this._x = newX;
         this._y = newY;
         return this;
