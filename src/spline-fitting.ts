@@ -4,6 +4,7 @@ import {Vector2D} from "./vector2D";
 import {ParametricCurve2D} from "./parametric-curve-2D";
 import {findRoots, round} from "./utils/index";
 import {CubicBezierCurve} from "./cubic-bezier-curve";
+import {CubicBezierCurveCommand, CubicBezierHermiteCurveCommand} from "./path";
 
 const roundingOrder = 8;
 const equalityThreshold = 1e-8;
@@ -132,25 +133,36 @@ export function fitSplineBySubdivision(
     curve: ParametricCurve2D,
     t0: number, t1: number,
     tolerance: number = 0.25
+): CubicBezierCurveCommand[] {
+    const spline: CubicBezierCurveCommand[] = [];
+    fitSplineBySubdivisionInternal(pb, curve, t0, t1, tolerance, spline);
+    return spline;
+}
+function fitSplineBySubdivisionInternal(
+    pb: PathBuilder,
+    curve: ParametricCurve2D,
+    t0: number, t1: number,
+    tolerance: number = 0.25,
+    spline: CubicBezierCurveCommand[]
 ) {
     const bezierFit = new CubicBezierFit(curve, t0, t1);
 
     if (bezierFit.radialError() < tolerance) {
         const bezier = bezierFit.cubicBezierCurve;
-        pb.c(
+        spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.endingPoint)
-        );
+        ));
         return;
     }
 
     const tm = (t0 + t1) / 2;
-    fitSplineBySubdivision(
-        pb, curve, t0, tm, tolerance
+    fitSplineBySubdivisionInternal(
+        pb, curve, t0, tm, tolerance, spline
     );
-    fitSplineBySubdivision(
-        pb, curve, tm, t1, tolerance
+    fitSplineBySubdivisionInternal(
+        pb, curve, tm, t1, tolerance, spline
     );
 }
 
@@ -166,38 +178,46 @@ export function fitSplineInSteps(
     const range = t1 - t0;
     let prevStep = t0;
     let currentStep = prevStep;
+    const spline: CubicBezierCurveCommand[] = [];
     while (Math.abs(t1 - currentStep) > 1e-4) {
         prevStep = currentStep;
         currentStep = currentStep + (1 / steps) * range;
         const bezier = new CubicBezierFit(curve, prevStep, currentStep).cubicBezierCurve;
-        pb.c(
+        spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.endingPoint)
-        );
+        ));
     }
+    return spline;
 }
 
 /**
  * Fit cubic Bézier pieces between explicit parameter breakpoints.
  */
-export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: number[]) {
+export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: [number, number, ...number[]]) {
+    const spline: CubicBezierCurveCommand[] = [];
     for (let i = 1; i < ts.length; i++) {
         const bezier = new CubicBezierFit(curve, ts[i - 1], ts[i])
             .cubicBezierCurve;
-        pb.c(
+        spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.endingPoint)
-        );
+        ));
     }
+    return spline;
 }
 
 /**
  * Fit a spline through a curve segment at its critical parameter values (extrema and inflection points).
  */
 export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: number, t1: number) {
-    fitSplineAtParams(pb, curve, ...findCriticalTs(curve, t0, t1));
+    let criciticalPoints = findCriticalTs(curve, t0, t1);
+    if (criciticalPoints.length < 2)
+        return fitSplineAtParams(pb, curve, t0, t1);
+
+    return fitSplineAtParams(pb, curve, criciticalPoints[0], criciticalPoints[1], ...criciticalPoints.slice(2));
 }
 
 /**
@@ -206,23 +226,25 @@ export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: numbe
 export function cardinalSpline(
     pb: PathBuilder, tension: number, ...controlPoints: Point2D[]
 ) {
+    const spline: CubicBezierHermiteCurveCommand[] = [];
     let prev: Point2D = pb.currentPosition, next: Point2D, current: Point2D = controlPoints[0];
     let lastVelocity = Vector2D.from(prev, current).scale(2 * tension);
     for (let i = 0; i < controlPoints.length - 1; i++) {
         next = controlPoints[i + 1];
         const currentVelocity = Vector2D.from(prev, next).scale(tension);
-        pb.hermiteCurve(
+        spline.push(pb.hermiteCurve(
             lastVelocity, currentVelocity,
             current
-        );
+        ));
         lastVelocity = currentVelocity;
         prev = current;
         current = next;
     }
-    pb.hermiteCurve(
+    spline.push(pb.hermiteCurve(
         lastVelocity, Vector2D.from(prev, current).scale(2 * tension),
         current
-    );
+    ));
+    return spline;
 }
 
 /**
@@ -231,7 +253,7 @@ export function cardinalSpline(
 export function catmullRomSpline(
     pb: PathBuilder, ...controlPoints: Point2D[]
 ) {
-    cardinalSpline(pb, 1 / 2, ...controlPoints);
+    return cardinalSpline(pb, 1 / 2, ...controlPoints);
 }
 
 // type SpeedSegment = {

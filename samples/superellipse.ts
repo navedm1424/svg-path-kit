@@ -15,6 +15,6 @@ for (let i = 1; i < 4; i++) {
     }
 }
 ts.push(2 * Math.PI);
-fitSplineAtParams(pb, superellipse, ...ts);
+fitSplineAtParams(pb, superellipse, ts[0], ts[1], ...ts.slice(2));
 
 console.log(pb.toSVGPathString());

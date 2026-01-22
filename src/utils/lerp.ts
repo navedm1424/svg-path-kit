@@ -18,7 +18,7 @@ export function lerp(
     return (
         (newScaleMax - newScaleMin) * standardNormalization + newScaleMin
     );
-};
+}
 
 /**
  * Range-map a value and clamp the result to the target range.
@@ -46,7 +46,7 @@ export function clampedLerp(
         newScaleMin,
         newScaleMax
     );
-};
+}
 
 /**
  * Apply clamped linear interpolation to multiple named ranges at once.
@@ -75,7 +75,7 @@ export function batchedLerp<K extends string>(
         );
         return acc;
     }, {} as Record<K, number>);
-};
+}
 
 /**
  * Interpolate along a polyline of input/output points.
@@ -106,7 +106,7 @@ export function lerpPath<
     }
 
     return 0;
-};
+}
 
 /**
  * Batch variant of {@link lerpPath} that interpolates multiple outputs in one call.
@@ -146,7 +146,7 @@ export function batchedLerpPath<
         );
         return acc;
     }, {} as Record<K, number>);
-};
+}
 
 export type Interpolator<S extends keyof any> = {
     position: number;
@@ -265,4 +265,4 @@ export function interpolator<S extends keyof any | never = never>(
         interpolator[segmentKey] = segmentInterpolator;
     };
     return interpolator as Interpolator<S>;
-};
+}
