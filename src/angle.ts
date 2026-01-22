@@ -3,9 +3,6 @@
  * and offers helpers for common rotations.
  */
 export class Angle {
-    readonly sine: number;
-    readonly cosine: number;
-
     /** Pre-constructed angle of 0 radians. */
     public static readonly ZERO = Angle.of(0);
     /** Pre-constructed angle of π/4 radians. */
@@ -17,14 +14,11 @@ export class Angle {
     /** Pre-constructed angle of 2π radians. */
     public static readonly TWO_PI = Angle.of(2 * Math.PI);
 
-    /**
-        * Create a new angle instance and cache its sine and cosine.
-        * @param value Angle in radians.
-        */
-    constructor(readonly value: number) {
-        this.sine = Math.sin(value);
-        this.cosine = Math.cos(value);
-    }
+    private constructor(
+        readonly value: number,
+        readonly sine: number = Math.sin(value),
+        readonly cosine: number = Math.cos(value)
+    ) {}
 
     /**
      * Factory for constructing an {@link Angle} from a radian value.
@@ -57,50 +51,101 @@ export class Angle {
     /**
      * Return the negated angle.
      */
-    public negative(): Angle {
-        return Angle.of(-this.value);
+    public negated(): Angle {
+        return new Angle(
+            -this.value,
+            -this.sine, this.cosine
+        );
+    }
+
+    /**
+     * Get the complement of an angle (π/2 - θ)
+     */
+    public complement() {
+        return new Angle(
+            Angle.HALF_PI.value - this.value,
+            this.cosine, this.sine
+        );
+    }
+    /**
+     * Get the supplement of an angle (π - θ)
+     */
+    public supplement() {
+        return new Angle(
+            Angle.PI.value - this.value,
+            this.sine,
+            -this.cosine
+        );
+    }
+
+    /**
+     * Get the explement of an angle (2π - θ)
+     */
+    public explement() {
+        return new Angle(
+            Angle.TWO_PI.value - this.value,
+            -this.sine, this.cosine
+        );
     }
 
     /**
      * Rotate forward by π/2.
      */
-    public turnForward() {
-        return Angle.of(this.value + Angle.HALF_PI.value);
+    public halfTurnForward() {
+        return new Angle(
+            this.value + Angle.HALF_PI.value,
+            this.cosine, -this.sine
+        );
     }
 
     /**
      * Rotate backward by π/2.
      */
-    public turnBackward() {
-        return Angle.of(this.value - Angle.HALF_PI.value);
+    public halfTurnBackward() {
+        return new Angle(
+            this.value - Angle.HALF_PI.value,
+            -this.cosine, this.sine
+        );
     }
 
     /**
      * Rotate forward by π.
      */
     public flipForward() {
-        return Angle.of(this.value + Angle.PI.value);
+        return new Angle(
+            this.value + Angle.PI.value,
+            -this.sine, -this.cosine
+        );
     }
 
     /**
      * Rotate backward by π.
      */
     public flipBackward() {
-        return Angle.of(this.value - Angle.PI.value);
+        return new Angle(
+            this.value - Angle.PI.value,
+            -this.sine, -this.cosine
+        );
     }
 
     /**
      * Rotate forward by a full revolution (2π).
      */
     public revolveForward() {
-        return Angle.of(this.value + Angle.TWO_PI.value);
+        return new Angle(
+            this.value + Angle.TWO_PI.value,
+            this.sine, this.cosine
+        );
     }
 
     /**
      * Rotate backward by a full revolution (2π).
      */
     public revolveBackward() {
-        return Angle.of(this.value - Angle.TWO_PI.value);
+        return new Angle(
+            this.value - Angle.TWO_PI.value,
+            this.sine, this.cosine
+        );
     }
 
     /**

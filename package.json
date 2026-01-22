@@ -1,6 +1,6 @@
 {
   "name": "svg-path-kit",
-  "version": "1.1.0-canary.1",
+  "version": "1.1.0-canary.2",
   "description": "Build complex SVG paths with smooth continuous splines using a geometry-oriented builder API.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",
