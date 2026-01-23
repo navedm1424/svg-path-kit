@@ -8,10 +8,12 @@ import {Angle} from "../angle";
  */
 export class Circle extends ParametricCurve2D {
     private _center: Point2D;
+    readonly radius: number;
 
-    private constructor(center: Point2D, readonly radius: number) {
+    private constructor(center: Point2D, radius: number) {
         super();
         this._center = center;
+        this.radius = Math.abs(radius);
     }
     /** Center point of the circle. */
     get center(): Point2D {
