@@ -34,20 +34,24 @@ export class Circle extends ParametricCurve2D {
     /**
      * Sample the circle at the provided angular parameter.
      */
-    public at(angle: number): Point2D {
+    public at(angle: number | Angle): Point2D {
         return this._center.add(Vector2D.polar(this.radius, angle));
     }
     /**
      * Tangent vector at the given angular parameter.
      */
-    public tangentAt(angle: number): Vector2D {
-        return Vector2D.of(-this.radius * Math.sin(angle), this.radius * Math.cos(angle));
+    public tangentAt(angle: number | Angle): Vector2D {
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        return Vector2D.of(-this.radius * sine, this.radius * cosine);
     }
     /**
      * Second derivative at the given angular parameter.
      */
-    public accelerationAt(t: number): Vector2D {
-        return Vector2D.of(-this.radius * Math.cos(t), -this.radius * Math.sin(t));
+    public accelerationAt(angle: number | Angle): Vector2D {
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        return Vector2D.of(-this.radius * cosine, -this.radius * sine);
     }
     /**
      * Translate the circle center by a vector.

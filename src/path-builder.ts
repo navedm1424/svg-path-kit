@@ -127,9 +127,9 @@ export class PathBuilder {
      *
      * > `xAxisRotation` is entered in radians to stay in concert with the rest of the API. This is contrary to what the primitive elliptical arc (`A`) command expects—angle in degrees.
      */
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D): EllipticalArcWrapperCommand;
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D): EllipticalArcWrapperCommand;
-    public a(xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D | Vector2D): EllipticalArcWrapperCommand {
+    public a(xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D): EllipticalArcWrapperCommand;
+    public a(xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D): EllipticalArcWrapperCommand;
+    public a(xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D | Vector2D): EllipticalArcWrapperCommand {
         return this.append(new EllipticalArcWrapperCommand(
             this.currentPosition, xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag,
             // @ts-expect-error

@@ -8,14 +8,14 @@ import {Angle} from "../angle";
  */
 export class Ellipse extends ParametricCurve2D {
     private _center: Point2D;
-    private _ellipseTilt: number;
+    private _ellipseTilt: Angle;
     readonly focalDistance: number;
 
     private constructor(
         center: Point2D,
         readonly semiMajorAxis: number,
         readonly semiMinorAxis: number,
-        ellipseTilt: number = 0
+        ellipseTilt: Angle = Angle.ZERO
     ) {
         super();
         this._center = center;
@@ -28,50 +28,59 @@ export class Ellipse extends ParametricCurve2D {
         return this._center;
     }
     /** Tilt of the ellipse in radians. */
-    get ellipseTilt(): number {
+    get ellipseTilt(): Angle {
         return this._ellipseTilt;
     }
 
     /**
      * Factory for creating an {@link Ellipse} optionally specifying its center.
      */
-    public static of(center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number): Ellipse;
-    public static of(semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number): Ellipse;
+    public static of(center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle): Ellipse;
+    public static of(semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle): Ellipse;
     public static of(...args: [
-        center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number
+        center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle
     ] | [
-        semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number
+        semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle
     ]) {
-        if (typeof args[0] === "number")
-            return new Ellipse(Point2D.ORIGIN, args[0], args[1], args[2]);
-        return new Ellipse(args[0], args[1], args[2]!, args[3]);
+        if (args[0] instanceof Point2D && typeof args[2] === "number") {
+            const tilt = args[3];
+            return new Ellipse(args[0], args[1], args[2], typeof tilt === "number" ? Angle.of(tilt): tilt);
+        }
+        const tilt = args[2];
+        return new Ellipse(Point2D.ORIGIN, args[0] as number, args[1], typeof tilt === "number" ? Angle.of(tilt): tilt);
     }
 
     /**
      * Sample the ellipse at an angular parameter.
      */
-    public at(angle: number): Point2D {
+    public at(angle: number | Angle): Point2D {
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
         return this.center.add(Vector2D.of(
-            this.semiMajorAxis * Math.cos(angle),
-            this.semiMinorAxis * Math.sin(angle)
+            this.semiMajorAxis * cosine,
+            this.semiMinorAxis * sine
         ).rotate(this._ellipseTilt));
     }
     /**
      * Tangent vector at an angular parameter.
      */
-    public tangentAt(angle: number): Vector2D {
+    public tangentAt(angle: number | Angle): Vector2D {
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
         return Vector2D.of(
-            -this.semiMajorAxis * Math.sin(angle),
-            this.semiMinorAxis * Math.cos(angle)
+            -this.semiMajorAxis * sine,
+            this.semiMinorAxis * cosine
         ).rotate(this._ellipseTilt);
     }
     /**
      * Second derivative at an angular parameter.
      */
-    public accelerationAt(angle: number): Vector2D {
+    public accelerationAt(angle: number | Angle): Vector2D {
+        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         return Vector2D.of(
-            -this.semiMajorAxis * Math.cos(angle),
-            -this.semiMinorAxis * Math.sin(angle)
+            -this.semiMajorAxis * cosine,
+            -this.semiMinorAxis * sine
         ).rotate(this._ellipseTilt);
     }
 
@@ -84,8 +93,8 @@ export class Ellipse extends ParametricCurve2D {
     /**
      * Rotate the ellipse by the given angle.
      */
-    public rotate(angle: number) {
-        this._ellipseTilt += angle;
+    public rotate(angle: number | Angle) {
+        this._ellipseTilt = this._ellipseTilt.add(angle);
     }
 }
 

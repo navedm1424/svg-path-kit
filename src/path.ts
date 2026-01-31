@@ -318,13 +318,13 @@ export class EllipticalArcWrapperCommand implements Command {
     readonly terminalPoint: Point2D;
     readonly arc: EllipticalArc;
 
-    constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D);
-    constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D);
+    constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D);
+    constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D);
     constructor(
         readonly initialPoint: Point2D,
         readonly xRadius: number,
         readonly yRadius: number,
-        readonly xAxisRotation: number,
+        readonly xAxisRotation: number | Angle,
         readonly largeArcFlag: boolean,
         readonly sweepFlag: boolean,
         endingPoint: Point2D | Vector2D
@@ -337,7 +337,7 @@ export class EllipticalArcWrapperCommand implements Command {
 
         // transform to arc space
         const midPointToStart = Vector2D.from(this.terminalPoint, initialPoint)
-            .scale(1 / 2).rotate(-xAxisRotation);
+            .scale(1 / 2).rotate(xAxisRotation instanceof Angle ? xAxisRotation.negated() : -xAxisRotation);
 
         // scale radii
         const lambda =
@@ -397,7 +397,7 @@ export class EllipticalArcWrapperCommand implements Command {
     }
     /** Convert to SVG arc primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
-        return new AbsoluteEllipticalArcPrimitive(this.xRadius, this.yRadius, this.xAxisRotation * 180 / Math.PI, this.largeArcFlag ? 1 : 0, this.sweepFlag ? 1 : 0, this.terminalPoint);
+        return new AbsoluteEllipticalArcPrimitive(this.xRadius, this.yRadius, this.arc.ellipseTilt.toDegrees(), this.largeArcFlag ? 1 : 0, this.sweepFlag ? 1 : 0, this.terminalPoint);
     }
 }
 

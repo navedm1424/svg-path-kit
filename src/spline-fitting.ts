@@ -68,9 +68,14 @@ export class CubicBezierFit {
         const p0Vec = p0.toVector();
         const p3Vec = p3.toVector();
         const midPoint = curve.at((t0 + t1) / 2).toVector();
+        if (![p0.x, p0.y, p3.x, p3.y, midPoint.x, midPoint.y].every(Number.isFinite))
+            throw new Error("The curve is not defined at all points.");
 
         const v0 = curve.tangentAt(t0);
         const v1 = curve.tangentAt(t1);
+        if (![v0.x, v0.y, v1.x, v1.y].every(Number.isFinite))
+            throw new Error("The tangent is not defined at all points of the curve.");
+
         const v0Unit = v0.normalize();
         const v1Unit = v1.normalize();
         const R = (
