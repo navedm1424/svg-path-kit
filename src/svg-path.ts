@@ -1,4 +1,4 @@
-import {round} from "./utils/index";
+import {round} from "./numbers/index";
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
 

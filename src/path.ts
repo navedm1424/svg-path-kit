@@ -316,6 +316,7 @@ export class EllipticalArcCommand implements Command {
  */
 export class EllipticalArcWrapperCommand implements Command {
     readonly terminalPoint: Point2D;
+    readonly xAxisRotation: Angle;
     readonly arc: EllipticalArc;
 
     constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D);
@@ -324,11 +325,12 @@ export class EllipticalArcWrapperCommand implements Command {
         readonly initialPoint: Point2D,
         readonly xRadius: number,
         readonly yRadius: number,
-        readonly xAxisRotation: number | Angle,
+        xAxisRotation: number | Angle,
         readonly largeArcFlag: boolean,
         readonly sweepFlag: boolean,
         endingPoint: Point2D | Vector2D
     ) {
+        this.xAxisRotation = xAxisRotation instanceof Angle ? xAxisRotation : Angle.of(xAxisRotation);
         this.terminalPoint = endingPoint instanceof Point2D ? endingPoint :
             initialPoint.add(endingPoint);
 
@@ -337,7 +339,7 @@ export class EllipticalArcWrapperCommand implements Command {
 
         // transform to arc space
         const midPointToStart = Vector2D.from(this.terminalPoint, initialPoint)
-            .scale(1 / 2).rotate(xAxisRotation instanceof Angle ? xAxisRotation.negated() : -xAxisRotation);
+            .scale(1 / 2).rotate(this.xAxisRotation.negated());
 
         // scale radii
         const lambda =
@@ -382,7 +384,7 @@ export class EllipticalArcWrapperCommand implements Command {
         if (!sweepFlag && theta1 < theta2)
             theta1 += 2 * Math.PI;
 
-        this.arc = new EllipticalArc(rx, ry, theta1, theta2, xAxisRotation);
+        this.arc = new EllipticalArc(rx, ry, theta1, theta2, this.xAxisRotation);
     }
 
     /** Tangent at arc start (respecting sweep direction). */

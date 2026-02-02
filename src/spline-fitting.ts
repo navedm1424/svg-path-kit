@@ -2,7 +2,7 @@ import {PathBuilder} from "./path-builder";
 import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
 import {ParametricCurve2D} from "./parametric-curve-2D";
-import {findRoots, round} from "./utils/index";
+import {findRoots, round} from "./numbers/index";
 import {CubicBezierCurve} from "./cubic-bezier-curve";
 import {CubicBezierCurveCommand, CubicBezierHermiteCurveCommand} from "./path";
 

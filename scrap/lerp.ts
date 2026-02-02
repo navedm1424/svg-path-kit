@@ -1,4 +1,4 @@
-import { clamp } from "./math";
+import { clamp } from "../src/numbers/math-utils";
 
 type Range = readonly [number, number];
 type Path = readonly [number, number, ...number[]];
@@ -169,7 +169,7 @@ export type Interpolator<S extends keyof any> = {
     clamped(outputRange: Range): number;
     parent: Interpolator<S>;
     segment: Range;
-}>;
+}>
 
 /**
  * Create an interpolation helper bound to a position `t` with optional named segments.
@@ -263,6 +263,6 @@ export function interpolator<S extends keyof any | never = never>(
             return this.parent.clamped(this.segment, outputRange);
         };
         interpolator[segmentKey] = segmentInterpolator;
-    };
+    }
     return interpolator as Interpolator<S>;
 }
