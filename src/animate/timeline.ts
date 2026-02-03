@@ -1,35 +1,33 @@
 import {remap, saturate} from "../numbers/index";
 import {EasingFunction, identity} from "./common";
 
-export class Timer {
-    private progress: number;
-    private readonly progressUnit: number;
-    private _time: number = 0;
-    private constructor(
-        readonly duration: number,
-        readonly fps: number,
-        private readonly easing: EasingFunction = identity
-    ) {
-        this.progress = 0;
-        this.progressUnit = 1 / (duration * fps - 1);
-    }
-    get time(): number {
-        return this._time;
-    }
-    public static of(duration: number, easing: EasingFunction = identity) {
-        return new Timer(duration, 60, easing);
-    }
-    public unfinished() {
-        return this.progress < 1;
-    }
-    public tick() {
-        if (this.progress >= 1)
-            throw new Error("The timer has reached its upper bound.");
+export interface Timer {
+    readonly time: number;
+    unfinished(): boolean;
+    tick(): void;
+}
 
-        this._time = saturate(
-            this.easing(this.progress += this.progressUnit)
-        );
-    }
+export function timer(duration: number, easing: EasingFunction = identity): Timer {
+    const fps = 60;
+    let progress = 0;
+    const progressUnit = 1 / (duration * fps - 1);
+    let time = 0;
+    return {
+        get time(): number {
+            return time;
+        },
+        unfinished() {
+            return progress < 1;
+        },
+        tick() {
+            if (progress >= 1)
+                throw new Error("The timer has reached its upper bound.");
+
+            time = saturate(
+                easing(progress += progressUnit)
+            );
+        }
+    };
 }
 
 export class Segment {
@@ -41,32 +39,62 @@ export class Segment {
         return this.end - this.start;
     }
     public static fromRange(start: number, end: number) {
+        if (start > end)
+            [start, end] = [end, start];
         return new Segment(saturate(start), saturate(end));
     }
     public static fromInterval(start: number, duration: number) {
-        return new Segment(saturate(start), saturate(start + Math.abs(duration)));
+        let end = start + duration;
+        if (start > end)
+            [start, end] = [end, start];
+        return new Segment(saturate(start), saturate(end));
     }
 }
 
-export function sequence() {
-    let durations: number[] = [];
+export type Sequence<S extends string> = {
+    readonly [key in S]: Segment;
+} & {
+    readonly length: number;
+    readonly [n: number]: Segment;
+    readonly start: number;
+    readonly end: number;
+};
+
+export function sequence<S extends string>(...intervals: [name: S, duration: number][]) {
     return {
-        addInterval(duration: number) {
-            durations.push(duration);
-            return this;
-        },
-        normalize(start: number, end: number) {
+        remap(start: number, end: number) {
+            start = saturate(start);
+            end = saturate(end);
+            const sequence = {
+                get start() {
+                    return this[0].start;
+                },
+                get end() {
+                    return this[this.length - 1].end;
+                }
+            } as Sequence<S>;
+            let totalTime = intervals.reduce(
+                (acc, cur) => acc + cur[1], 0
+            );
             let currentTime = 0;
-            const segments: [number, number][] = [];
-            for (const duration of durations) {
-                segments.push([currentTime, currentTime += duration]);
-            }
-            const sequence: Segment[] = [];
-            for (const segment of segments) {
-                sequence.push(Segment.fromRange(
-                    remap(segment[0], 0, currentTime, start, end),
-                    remap(segment[1], 0, currentTime, start, end)
-                ));
+            for (let i = 0; i < intervals.length; i++) {
+                const interval = intervals[i];
+                const name = interval[0];
+                const duration = Math.abs(interval[1]);
+                Object.defineProperty(sequence, name, {
+                    value: Segment.fromInterval(
+                        remap(currentTime, 0, totalTime, start, end),
+                        remap(duration, 0, totalTime, start, end)
+                    ),
+                    writable: false,
+                    configurable: false
+                });
+                Object.defineProperty(sequence, i, {
+                    value: sequence[name],
+                    writable: false,
+                    configurable: false
+                });
+                currentTime += duration;
             }
             return sequence;
         }
@@ -74,7 +102,7 @@ export function sequence() {
 }
 
 export type Timeline = {
-    timer: Timer;
+    readonly timer: Timer;
     (segment: Segment): {
         hasStarted(): boolean;
         hasFinished(): boolean;
@@ -83,7 +111,7 @@ export type Timeline = {
 };
 
 export function timeline(timer: Timer): Timeline {
-    const timeline: Timeline = function (this: Timeline, segment) {
+    const timeline = function (this: Timeline, segment) {
         return {
             hasStarted(): boolean {
                 return timer.time >= segment.start;
@@ -95,7 +123,11 @@ export function timeline(timer: Timer): Timeline {
                 return timer.time >= segment.start && timer.time < segment.end;
             }
         };
-    };
-    timeline.timer = timer;
+    } as Timeline;
+    Object.defineProperty(timeline, "timer", {
+        value: timer,
+        writable: false,
+        configurable: false
+    });
     return timeline;
 }

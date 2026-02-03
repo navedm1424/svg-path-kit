@@ -44,7 +44,7 @@ type SequenceInterpolator = {
     yield(): number;
 };
 export type Interpolator = {
-    timer: Timer;
+    readonly timer: Timer;
     (segment: Segment, outputRange: NumericRange): number;
     easeWith(segment: Segment, outputRange: NumericRange, easing: EasingFunction): number;
     easeIn(segment: Segment, outputRange: NumericRange): number;
@@ -54,15 +54,19 @@ export type Interpolator = {
 };
 
 export function interpolator(timer: Timer): Interpolator {
-    const interpolator: Interpolator = function (segment, outputRange) {
+    const interpolator = function (segment, outputRange) {
         validateRange(outputRange);
         return remap(
             timer.time,
             segment.start, segment.end,
             ...outputRange
         );
-    };
-    interpolator.timer = timer;
+    } as Interpolator;
+    Object.defineProperty(interpolator, "timer", {
+        value: timer,
+        writable: false,
+        configurable: false
+    });
     interpolator.easeWith = function (segment, outputRange, easing) {
         validateRange(outputRange);
         return lerp(
