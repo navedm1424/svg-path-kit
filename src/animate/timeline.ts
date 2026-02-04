@@ -51,28 +51,33 @@ export class Segment {
     }
 }
 
-export type Sequence<S extends string> = {
-    readonly [key in S]: Segment;
+type TupleIndex<T extends readonly any[]> = Exclude<keyof T, keyof any[]>;
+
+export type Sequence<T extends readonly string[]> = {
+    readonly [K in T[number]]: Segment;
 } & {
-    readonly length: number;
-    readonly [n: number]: Segment;
+    readonly [I in TupleIndex<T>]: Segment;
+} & {
+    readonly length: T["length"];
     readonly start: number;
     readonly end: number;
 };
 
-export function sequence<S extends string>(...intervals: [name: S, duration: number][]) {
+export function sequence<
+    const T extends readonly string[]
+>(...intervals: { [K in keyof T]: [T[K], number] }) {
     return {
         remap(start: number, end: number) {
             start = saturate(start);
             end = saturate(end);
             const sequence = {
                 get start() {
-                    return this[0].start;
+                    return this[0 as TupleIndex<T>].start;
                 },
                 get end() {
-                    return this[this.length - 1].end;
+                    return this[this.length - 1 as TupleIndex<T>].end;
                 }
-            } as Sequence<S>;
+            } as Sequence<T>;
             let totalTime = intervals.reduce(
                 (acc, cur) => acc + cur[1], 0
             );
@@ -90,7 +95,7 @@ export function sequence<S extends string>(...intervals: [name: S, duration: num
                     configurable: false
                 });
                 Object.defineProperty(sequence, i, {
-                    value: sequence[name],
+                    value: sequence[name as T[number]],
                     writable: false,
                     configurable: false
                 });

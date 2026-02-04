@@ -39,9 +39,9 @@ export const easeIn = cubicBezierEasing(0.42, 0, 1, 1);
 export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
 
-type SequenceInterpolator = {
-    and(duration: number, outputRange: NumericRange): SequenceInterpolator;
-    yield(): number;
+type InterpolationChain = {
+    then(segment: Segment, outputRangeSupplier: (currentOutput: number) => NumericRange): InterpolationChain;
+    output(): number;
 };
 export type Interpolator = {
     readonly timer: Timer;
@@ -50,7 +50,7 @@ export type Interpolator = {
     easeIn(segment: Segment, outputRange: NumericRange): number;
     easeOut(segment: Segment, outputRange: NumericRange): number;
     easeInOut(segment: Segment, outputRange: NumericRange): number;
-    sequence(startTime: number, duration: number, outputRange: NumericRange): SequenceInterpolator;
+    chain(segment: Segment, outputRange: NumericRange): InterpolationChain;
 };
 
 export function interpolator(timer: Timer): Interpolator {
@@ -86,22 +86,17 @@ export function interpolator(timer: Timer): Interpolator {
     interpolator.easeInOut = function (segment, outputRange) {
         return this.easeWith(segment, outputRange, easeInOut);
     };
-    interpolator.sequence = function (startTime, duration, outputRange) {
+    interpolator.chain = function (segment, outputRange) {
         validateRange(outputRange);
-        let currentTime = startTime + duration;
-        let currentOutput = remap(timer.time, startTime, currentTime, ...outputRange);
+        let currentOutput = remap(timer.time, segment.start, segment.end, ...outputRange);
         return {
-            and(duration, outputRange) {
+            then(segment, outputRangeSupplier) {
+                const outputRange = outputRangeSupplier(currentOutput);
                 validateRange(outputRange);
-                const time = timer.time;
-                if (time <= currentTime) {
-                    currentTime += duration;
-                    return this;
-                }
-                currentOutput = remap(time, currentTime, currentTime += duration, ...outputRange);
+                currentOutput = remap(timer.time, segment.start, segment.end, ...outputRange);
                 return this;
             },
-            yield() {
+            output() {
                 return currentOutput;
             }
         }
