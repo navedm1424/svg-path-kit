@@ -1,6 +1,9 @@
 import {invLerp, lerp, remap, saturate} from "../numbers/index";
-import {Segment, Timer} from "./timeline";
+import {Segment, Sequence} from "./timeline";
 import {EasingFunction, identity, NumericRange, validateRange} from "./common";
+import {Timer} from "./timer";
+import {TupleIndex} from "./array-utils";
+import {MapToType} from "./array-utils";
 
 const calcBezier = (t: number, a1: number, a2: number) =>
     (((1.0 - 3.0 * a2 + 3.0 * a1) * t + (3.0 * a2 - 6.0 * a1)) * t + 3.0 * a1) * t;
@@ -39,10 +42,6 @@ export const easeIn = cubicBezierEasing(0.42, 0, 1, 1);
 export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
 
-type InterpolationChain = {
-    then(segment: Segment, outputRangeSupplier: (currentOutput: number) => NumericRange): InterpolationChain;
-    output(): number;
-};
 export type Interpolator = {
     readonly timer: Timer;
     (segment: Segment, outputRange: NumericRange): number;
@@ -50,7 +49,7 @@ export type Interpolator = {
     easeIn(segment: Segment, outputRange: NumericRange): number;
     easeOut(segment: Segment, outputRange: NumericRange): number;
     easeInOut(segment: Segment, outputRange: NumericRange): number;
-    chain(segment: Segment, outputRange: NumericRange): InterpolationChain;
+    sequence<S extends readonly string[]>(sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction): number;
 };
 
 export function interpolator(timer: Timer): Interpolator {
@@ -86,20 +85,32 @@ export function interpolator(timer: Timer): Interpolator {
     interpolator.easeInOut = function (segment, outputRange) {
         return this.easeWith(segment, outputRange, easeInOut);
     };
-    interpolator.chain = function (segment, outputRange) {
-        validateRange(outputRange);
-        let currentOutput = remap(timer.time, segment.start, segment.end, ...outputRange);
-        return {
-            then(segment, outputRangeSupplier) {
-                const outputRange = outputRangeSupplier(currentOutput);
-                validateRange(outputRange);
-                currentOutput = remap(timer.time, segment.start, segment.end, ...outputRange);
-                return this;
-            },
-            output() {
-                return currentOutput;
+    interpolator.sequence = function <S extends readonly string[]>(
+        sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction
+    ) {
+        if (outputRange.length !== sequence.length + 1)
+            throw new Error(`The output range must have exactly ${sequence.length + 1} elements.`);
+
+        const time = easing ? lerp(
+            sequence.start, sequence.end,
+            easing(invLerp(
+                sequence.start, sequence.end,
+                timer.time
+            ))
+        ) : timer.time;
+        if (time <= sequence.start)
+            return outputRange[0];
+        if (time >= sequence.end)
+            return outputRange[outputRange.length - 1];
+
+        for (let i = 0; i < sequence.length; i++) {
+            const segment = sequence[i as TupleIndex<S>];
+            if (segment.start <= time && time < segment.end) {
+                return this(segment, [outputRange[i], outputRange[i + 1]]);
             }
         }
+
+        return 0;
     };
-    return interpolator as Interpolator;
+    return interpolator;
 }

@@ -1,4 +1,4 @@
-import { clamp } from "../src/numbers/math-utils";
+import { clamp } from "../src/numbers/index";
 
 type Range = readonly [number, number];
 type Path = readonly [number, number, ...number[]];

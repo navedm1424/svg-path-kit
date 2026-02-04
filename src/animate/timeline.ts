@@ -1,34 +1,6 @@
 import {remap, saturate} from "../numbers/index";
-import {EasingFunction, identity} from "./common";
-
-export interface Timer {
-    readonly time: number;
-    unfinished(): boolean;
-    tick(): void;
-}
-
-export function timer(duration: number, easing: EasingFunction = identity): Timer {
-    const fps = 60;
-    let progress = 0;
-    const progressUnit = 1 / (duration * fps - 1);
-    let time = 0;
-    return {
-        get time(): number {
-            return time;
-        },
-        unfinished() {
-            return progress < 1;
-        },
-        tick() {
-            if (progress >= 1)
-                throw new Error("The timer has reached its upper bound.");
-
-            time = saturate(
-                easing(progress += progressUnit)
-            );
-        }
-    };
-}
+import {Slice, TupleIndex} from "./array-utils";
+import {Timer} from "./timer";
 
 export class Segment {
     private constructor(
@@ -51,33 +23,92 @@ export class Segment {
     }
 }
 
-type TupleIndex<T extends readonly any[]> = Exclude<keyof T, keyof any[]>;
-
-export type Sequence<T extends readonly string[]> = {
-    readonly [K in T[number]]: Segment;
+export type Sequence<S extends readonly string[]> = {
+    readonly [K in S[number]]: Segment;
 } & {
-    readonly [I in TupleIndex<T>]: Segment;
+    readonly [I in TupleIndex<S>]: Segment;
 } & {
-    readonly length: T["length"];
+    readonly length: S["length"];
+    readonly segmentNames: S;
     readonly start: number;
     readonly end: number;
+    slice<Start extends number | S[number] = 0, End extends number | S[number] = S["length"]>(
+        start?: Start, end?: End
+    ): Sequence<Slice<S, Start, End>>;
+    toArray(): Segment[];
 };
 
+function createSequence<S extends readonly string[]>(
+    segments: [S[number], Segment][]
+): Sequence<S> {
+    const sequence = {
+        get start() {
+            return this[0 as TupleIndex<S>].start;
+        },
+        get end() {
+            return this[this.length - 1 as TupleIndex<S>].end;
+        },
+        slice<Start extends number | string, End extends number | string>(
+            this, start: Start = 0 as Start, end: End = this.length as End
+        ): Sequence<Slice<S, Start, End>> {
+            const output: [string, Segment][] = [];
+            const segmentNames = this.segmentNames;
+            let startPushing = false;
+
+            for (let i = 0; ; i++) {
+                const segmentName = segmentNames[i];
+                if (Object.is(end, i) || Object.is(end, segmentName))
+                    break;
+                if (startPushing || Object.is(start, i) || Object.is(start, segmentName)) {
+                    startPushing = true;
+                    output.push([segmentName, this[segmentName as S[number]]]);
+                }
+            }
+
+            return createSequence(output);
+        },
+        toArray() {
+            const result: Segment[] = [];
+            for (let i = 0; i < this.length; i++) {
+                result[i] = this[i as TupleIndex<S>];
+            }
+            return result;
+        }
+    } as Sequence<S>;
+    Object.defineProperty(sequence, "length", {
+        value: segments.length,
+        writable: false,
+        configurable: false
+    });
+    Object.defineProperty(sequence, "segmentNames", {
+        value: segments.map(i => i[0]),
+        writable: false,
+        configurable: false
+    });
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        Object.defineProperty(sequence, segment[0], {
+            value: segment[1],
+            writable: false,
+            configurable: false
+        });
+        Object.defineProperty(sequence, i, {
+            value: segment[1],
+            writable: false,
+            configurable: false
+        });
+    }
+    return sequence;
+}
+
 export function sequence<
-    const T extends readonly string[]
->(...intervals: { [K in keyof T]: [T[K], number] }) {
+    const S extends readonly string[]
+>(...intervals: { [K in keyof S]: [S[K], number] }) {
     return {
-        remap(start: number, end: number) {
+        remap(start: number, end: number): Sequence<S> {
             start = saturate(start);
             end = saturate(end);
-            const sequence = {
-                get start() {
-                    return this[0 as TupleIndex<T>].start;
-                },
-                get end() {
-                    return this[this.length - 1 as TupleIndex<T>].end;
-                }
-            } as Sequence<T>;
+            const sequence: [string, Segment][] = [];
             let totalTime = intervals.reduce(
                 (acc, cur) => acc + cur[1], 0
             );
@@ -86,22 +117,13 @@ export function sequence<
                 const interval = intervals[i];
                 const name = interval[0];
                 const duration = Math.abs(interval[1]);
-                Object.defineProperty(sequence, name, {
-                    value: Segment.fromInterval(
-                        remap(currentTime, 0, totalTime, start, end),
-                        remap(duration, 0, totalTime, start, end)
-                    ),
-                    writable: false,
-                    configurable: false
-                });
-                Object.defineProperty(sequence, i, {
-                    value: sequence[name as T[number]],
-                    writable: false,
-                    configurable: false
-                });
+                sequence[i] = [name, Segment.fromInterval(
+                    remap(currentTime, 0, totalTime, start, end),
+                    remap(duration, 0, totalTime, start, end)
+                )];
                 currentTime += duration;
             }
-            return sequence;
+            return createSequence(sequence);
         }
     }
 }
