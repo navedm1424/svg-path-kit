@@ -22,6 +22,7 @@ import {Angle} from "./angle";
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
     private commands: Command[] = [];
+    private commandsById: Record<string, Command> = {};
     private openPathStack: MoveCommand[] = [];
 
     /** Most recently appended command. */
@@ -66,6 +67,14 @@ export class PathBuilder {
     public append<T extends Command>(command: T): T {
         this.commands.push(command);
         return command;
+    }
+
+    public setLastCommandId(id: string): void {
+        this.commandsById[id] = this.lastCommand;
+    }
+
+    public getCommandById(id: string): Command | null {
+        return this.commandsById[id] ?? null;
     }
 
     /**

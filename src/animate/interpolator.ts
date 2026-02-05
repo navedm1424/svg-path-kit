@@ -1,8 +1,7 @@
 import {invLerp, lerp, remap, saturate} from "../numbers/index";
-import {Segment, Sequence} from "./timeline";
+import {isSequence, Segment, Sequence} from "./sequence";
 import {EasingFunction, identity, NumericRange, validateRange} from "./common";
 import {Timer} from "./timer";
-import {TupleIndex} from "./array-utils";
 import {MapToType} from "./array-utils";
 
 const calcBezier = (t: number, a1: number, a2: number) =>
@@ -49,8 +48,16 @@ export type Interpolator = {
     easeIn(segment: Segment, outputRange: NumericRange): number;
     easeOut(segment: Segment, outputRange: NumericRange): number;
     easeInOut(segment: Segment, outputRange: NumericRange): number;
-    sequence<S extends readonly string[]>(sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction): number;
+    sequence<S extends string[]>(sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction): number;
 };
+
+// export function Interpolator(this: Interpolator, timer: Timer) {
+//     Object.defineProperty(this, "timer", {
+//         value: timer,
+//         writable: false,
+//         configurable: false
+//     });
+// }
 
 export function interpolator(timer: Timer): Interpolator {
     const interpolator = function (segment, outputRange) {
@@ -85,9 +92,11 @@ export function interpolator(timer: Timer): Interpolator {
     interpolator.easeInOut = function (segment, outputRange) {
         return this.easeWith(segment, outputRange, easeInOut);
     };
-    interpolator.sequence = function <S extends readonly string[]>(
-        sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction
+    interpolator.sequence = function (
+        sequence, outputRange, easing?
     ) {
+        if (!isSequence(sequence))
+            throw new Error("The sequence object must be valid.");
         if (outputRange.length !== sequence.length + 1)
             throw new Error(`The output range must have exactly ${sequence.length + 1} elements.`);
 
@@ -104,7 +113,7 @@ export function interpolator(timer: Timer): Interpolator {
             return outputRange[outputRange.length - 1];
 
         for (let i = 0; i < sequence.length; i++) {
-            const segment = sequence[i as TupleIndex<S>];
+            const segment = sequence[i];
             if (segment.start <= time && time < segment.end) {
                 return this(segment, [outputRange[i], outputRange[i + 1]]);
             }
