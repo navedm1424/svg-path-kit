@@ -1,7 +1,7 @@
 import {invLerp, lerp, remap, saturate} from "../numbers/index";
 import {isSequence, Segment, Sequence} from "./sequence";
 import {EasingFunction, identity, NumericRange, validateRange} from "./common";
-import {Timer} from "./timer";
+import {Clock, Playhead} from "./playhead";
 import {MapToType} from "./array-utils";
 
 const calcBezier = (t: number, a1: number, a2: number) =>
@@ -42,8 +42,9 @@ export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
 
 export type Interpolator = {
-    readonly timer: Timer;
+    readonly clock: Clock;
     (segment: Segment, outputRange: NumericRange): number;
+    remap(segment: Segment, outputRange: NumericRange): number;
     easeWith(segment: Segment, outputRange: NumericRange, easing: EasingFunction): number;
     easeIn(segment: Segment, outputRange: NumericRange): number;
     easeOut(segment: Segment, outputRange: NumericRange): number;
@@ -51,48 +52,35 @@ export type Interpolator = {
     sequence<S extends string[]>(sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction): number;
 };
 
-// export function Interpolator(this: Interpolator, timer: Timer) {
-//     Object.defineProperty(this, "timer", {
-//         value: timer,
-//         writable: false,
-//         configurable: false
-//     });
-// }
-
-export function interpolator(timer: Timer): Interpolator {
-    const interpolator = function (segment, outputRange) {
+const InterpolatorPrototype = {
+    remap(segment, outputRange) {
         validateRange(outputRange);
         return remap(
-            timer.time,
+            this.clock.time,
             segment.start, segment.end,
             ...outputRange
         );
-    } as Interpolator;
-    Object.defineProperty(interpolator, "timer", {
-        value: timer,
-        writable: false,
-        configurable: false
-    });
-    interpolator.easeWith = function (segment, outputRange, easing) {
+    },
+    easeWith(segment, outputRange, easing) {
         validateRange(outputRange);
         return lerp(
             ...outputRange,
             easing(invLerp(
                 segment.start, segment.end,
-                timer.time
+                this.clock.time
             ))
         );
-    };
-    interpolator.easeIn = function (segment, outputRange) {
+    },
+    easeIn(segment, outputRange) {
         return this.easeWith(segment, outputRange, easeIn);
-    };
-    interpolator.easeOut = function (segment, outputRange) {
+    },
+    easeOut(segment, outputRange) {
         return this.easeWith(segment, outputRange, easeOut);
-    };
-    interpolator.easeInOut = function (segment, outputRange) {
+    },
+    easeInOut(segment, outputRange) {
         return this.easeWith(segment, outputRange, easeInOut);
-    };
-    interpolator.sequence = function (
+    },
+    sequence(
         sequence, outputRange, easing?
     ) {
         if (!isSequence(sequence))
@@ -104,9 +92,9 @@ export function interpolator(timer: Timer): Interpolator {
             sequence.start, sequence.end,
             easing(invLerp(
                 sequence.start, sequence.end,
-                timer.time
+                this.clock.time
             ))
-        ) : timer.time;
+        ) : this.clock.time;
         if (time <= sequence.start)
             return outputRange[0];
         if (time >= sequence.end)
@@ -119,7 +107,25 @@ export function interpolator(timer: Timer): Interpolator {
             }
         }
 
-        return 0;
-    };
-    return interpolator;
+        return -1 as never;
+    }
+} as Interpolator;
+
+Object.defineProperty(InterpolatorPrototype, Symbol.toStringTag, {
+    value: "Interpolator",
+    writable: false,
+    configurable: false
+});
+
+export function interpolator(timer: Playhead) {
+    const instance = function Interpolator(segment, outputRange) {
+        return instance.remap(segment, outputRange);
+    } as Interpolator;
+    Object.defineProperty(instance, "timer", {
+        value: timer,
+        writable: false,
+        configurable: false
+    });
+    Object.setPrototypeOf(instance, InterpolatorPrototype);
+    return instance;
 }

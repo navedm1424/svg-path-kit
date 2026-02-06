@@ -1,4 +1,4 @@
 export * from "./interpolator";
 export * from "./sequence";
-export * from "./timer";
+export * from "./playhead";
 export * from "./timeline";

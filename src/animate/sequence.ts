@@ -2,23 +2,22 @@ import {remap, saturate} from "../numbers/index";
 import {Slice} from "./array-utils";
 
 export class Segment {
-    private constructor(
-        readonly start: number,
-        readonly end: number
-    ) {}
-    get duration(): number {
-        return this.end - this.start;
-    }
-    public static fromRange(start: number, end: number) {
+    readonly start: number;
+    readonly end: number;
+    readonly duration: number;
+
+    private constructor(start: number, end: number) {
         if (start > end)
             [start, end] = [end, start];
-        return new Segment(saturate(start), saturate(end));
+        this.start = saturate(start);
+        this.end = saturate(end);
+        this.duration = this.end - this.start;
     }
-    public static fromInterval(start: number, duration: number) {
-        let end = start + duration;
-        if (start > end)
-            [start, end] = [end, start];
-        return new Segment(saturate(start), saturate(end));
+    public static ofRange(startTime: number, endTime: number) {
+        return new Segment(startTime, endTime);
+    }
+    public static ofInterval(startTime: number, duration: number) {
+        return new Segment(startTime, startTime + duration);
     }
 }
 
@@ -34,7 +33,7 @@ export type Sequence<S extends string[]> = {
 } & Readonly<Record<number, Segment>>
     & (string[] extends S ? Readonly<Record<string, unknown>> : Readonly<Record<S[number], Segment>>);
 
-const sequencePrototype = {
+const SequencePrototype = {
     get start() {
         return this[0].start;
     },
@@ -69,6 +68,12 @@ const sequencePrototype = {
     }
 } as Sequence<string[]>;
 
+Object.defineProperty(SequencePrototype, Symbol.toStringTag, {
+    value: "Sequence",
+    writable: false,
+    configurable: false
+});
+
 function createSequence<S extends string[]>(
     segments: [S[number], Segment][]
 ) {
@@ -97,7 +102,7 @@ function createSequence<S extends string[]>(
             configurable: false
         };
     }
-    return Object.create(sequencePrototype, properties) as Sequence<S>;
+    return Object.create(SequencePrototype, properties) as Sequence<S>;
 }
 
 export function sequence<
@@ -116,7 +121,7 @@ export function sequence<
                 const interval = intervals[i];
                 const name = interval[0];
                 const duration = Math.abs(interval[1]);
-                sequence[i] = [name, Segment.fromInterval(
+                sequence[i] = [name, Segment.ofInterval(
                     remap(currentTime, 0, totalTime, start, end),
                     remap(duration, 0, totalTime, start, end)
                 )];
@@ -128,5 +133,5 @@ export function sequence<
 }
 
 export function isSequence(sequence: any) {
-    return Object.is(Object.getPrototypeOf(sequence), sequencePrototype);
+    return Object.is(Object.getPrototypeOf(sequence), SequencePrototype);
 }

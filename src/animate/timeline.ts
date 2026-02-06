@@ -1,8 +1,8 @@
-import {Timer} from "./timer";
+import {Clock} from "./playhead";
 import {isSequence, Segment, Sequence} from "./sequence";
 
 export type Timeline = {
-    readonly timer: Timer;
+    readonly clock: Clock;
     (segment: Segment): {
         hasStarted(): boolean;
         hasFinished(): boolean;
@@ -15,27 +15,27 @@ export type Timeline = {
     };
 };
 
-export function timeline(timer: Timer): Timeline {
-    const timeline = function (this: Timeline, segmentOrSequence) {
+export function timeline(clock: Clock) {
+    const instance = function Timeline(segmentOrSequence) {
         if (!(segmentOrSequence instanceof Segment || isSequence(segmentOrSequence)))
             throw new Error("The argument must either be a segment or a sequence.");
 
         return {
             hasStarted(): boolean {
-                return timer.time >= segmentOrSequence.start;
+                return clock.time >= segmentOrSequence.start;
             },
             hasFinished(): boolean {
-                return timer.time >= segmentOrSequence.end;
+                return clock.time >= segmentOrSequence.end;
             },
             isActive(): boolean {
-                return timer.time >= segmentOrSequence.start && timer.time < segmentOrSequence.end;
+                return clock.time >= segmentOrSequence.start && clock.time < segmentOrSequence.end;
             }
         };
     } as Timeline;
-    Object.defineProperty(timeline, "timer", {
-        value: timer,
+    Object.defineProperty(instance, "clock", {
+        value: clock,
         writable: false,
         configurable: false
     });
-    return timeline;
+    return instance;
 }
