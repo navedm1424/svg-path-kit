@@ -1,5 +1,5 @@
 export * from "./interpolator";
 export * from "./sequence";
-export * from "./animation-engine";
+export * from "./animation-stepper";
 export * from "./timeline";
-export * from "./path-animator";
+export * from "./generate-animated-path-frames";

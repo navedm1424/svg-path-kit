@@ -1,7 +1,7 @@
 import {invLerp, lerp, remap, saturate} from "../numbers/index";
 import {isSequence, Segment, Sequence} from "./sequence";
 import {EasingFunction, NumericRange, validateRange} from "./common";
-import {AnimationClock} from "./animation-engine";
+import {AnimationProgress} from "./animation-stepper";
 import {MapToType} from "./array-utils";
 
 export const identity: EasingFunction = t => t;
@@ -44,7 +44,7 @@ export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
 
 export type Interpolator = {
-    readonly clock: AnimationClock;
+    readonly animationProgress: AnimationProgress;
     (segment: Segment, outputRange: NumericRange): number;
     remap(segment: Segment, outputRange: NumericRange): number;
     easeWith(segment: Segment, outputRange: NumericRange, easing: EasingFunction): number;
@@ -58,7 +58,7 @@ const InterpolatorPrototype = {
     remap(segment, outputRange) {
         validateRange(outputRange);
         return remap(
-            this.clock.time,
+            this.animationProgress.time,
             segment.start, segment.end,
             ...outputRange
         );
@@ -69,7 +69,7 @@ const InterpolatorPrototype = {
             ...outputRange,
             easing(invLerp(
                 segment.start, segment.end,
-                this.clock.time
+                this.animationProgress.time
             ))
         );
     },
@@ -94,9 +94,9 @@ const InterpolatorPrototype = {
             sequence.start, sequence.end,
             easing(invLerp(
                 sequence.start, sequence.end,
-                this.clock.time
+                this.animationProgress.time
             ))
-        ) : this.clock.time;
+        ) : this.animationProgress.time;
         if (time <= sequence.start)
             return outputRange[0];
         if (time >= sequence.end)
@@ -119,12 +119,12 @@ Object.defineProperty(InterpolatorPrototype, Symbol.toStringTag, {
     configurable: false
 });
 
-export function interpolator(clock: AnimationClock) {
+export function interpolator(progress: AnimationProgress) {
     const instance = function Interpolator(segment, outputRange) {
         return instance.remap(segment, outputRange);
     } as Interpolator;
-    Object.defineProperty(instance, "clock", {
-        value: clock,
+    Object.defineProperty(instance, "animationProgress", {
+        value: progress,
         writable: false,
         configurable: false
     });
