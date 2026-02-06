@@ -1,8 +1,8 @@
-import {Clock} from "./playhead";
+import {AnimationClock} from "./animation-engine";
 import {isSequence, Segment, Sequence} from "./sequence";
 
 export type Timeline = {
-    readonly clock: Clock;
+    readonly clock: AnimationClock;
     (segment: Segment): {
         hasStarted(): boolean;
         hasFinished(): boolean;
@@ -15,7 +15,7 @@ export type Timeline = {
     };
 };
 
-export function timeline(clock: Clock) {
+export function timeline(clock: AnimationClock) {
     const instance = function Timeline(segmentOrSequence) {
         if (!(segmentOrSequence instanceof Segment || isSequence(segmentOrSequence)))
             throw new Error("The argument must either be a segment or a sequence.");

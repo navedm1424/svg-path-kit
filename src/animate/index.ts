@@ -1,4 +1,5 @@
 export * from "./interpolator";
 export * from "./sequence";
-export * from "./playhead";
+export * from "./animation-engine";
 export * from "./timeline";
+export * from "./path-animator";

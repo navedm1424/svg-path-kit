@@ -1,26 +1,31 @@
-import {EasingFunction, identity} from "./common";
+import {EasingFunction} from "./common";
 import {saturate} from "../numbers/index";
 
-export interface Clock {
+export interface AnimationClock {
     readonly time: number;
 }
 
-export interface Playhead {
-    readonly clock: Clock;
+export interface AnimationEngine {
+    readonly clock: AnimationClock;
     isRunning(): boolean;
     tick(): void;
 }
 
-export function playhead(duration: number, easing: EasingFunction = identity) {
+export function animationEngine(duration: number, easing?: EasingFunction) {
     const fps = 60;
     let progress = 0;
     const progressUnit = 1 / (duration * fps - 1);
     let time = 0;
-    const clock: Clock = {
+    const clock: AnimationClock = {
         get time() {
             return time;
         }
     };
+    Object.defineProperty(clock, Symbol.toStringTag, {
+        value: "AnimationClock",
+        writable: false,
+        configurable: false
+    });
     const instance = {
         isRunning() {
             return progress < 1;
@@ -29,9 +34,8 @@ export function playhead(duration: number, easing: EasingFunction = identity) {
             if (progress >= 1)
                 throw new Error("The timer has reached its upper bound.");
 
-            time = saturate(
-                easing(progress += progressUnit)
-            );
+            progress += progressUnit;
+            time = saturate(easing ? easing(progress): progress);
         }
     };
     Object.defineProperties(instance, {
@@ -41,10 +45,10 @@ export function playhead(duration: number, easing: EasingFunction = identity) {
             configurable: false
         },
         [Symbol.toStringTag]: {
-            value: "Timer",
+            value: "AnimationEngine",
             writable: false,
             configurable: false
         }
     });
-    return instance as Playhead;
+    return instance as AnimationEngine;
 }

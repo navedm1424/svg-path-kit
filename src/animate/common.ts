@@ -13,5 +13,3 @@ export function validateRange(range: NumericRange) {
 }
 
 export type EasingFunction = (t: number) => number;
-
-export const identity: EasingFunction = t => t;

@@ -1,8 +1,10 @@
 import {invLerp, lerp, remap, saturate} from "../numbers/index";
 import {isSequence, Segment, Sequence} from "./sequence";
-import {EasingFunction, identity, NumericRange, validateRange} from "./common";
-import {Clock, Playhead} from "./playhead";
+import {EasingFunction, NumericRange, validateRange} from "./common";
+import {AnimationClock} from "./animation-engine";
 import {MapToType} from "./array-utils";
+
+export const identity: EasingFunction = t => t;
 
 const calcBezier = (t: number, a1: number, a2: number) =>
     (((1.0 - 3.0 * a2 + 3.0 * a1) * t + (3.0 * a2 - 6.0 * a1)) * t + 3.0 * a1) * t;
@@ -42,7 +44,7 @@ export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
 
 export type Interpolator = {
-    readonly clock: Clock;
+    readonly clock: AnimationClock;
     (segment: Segment, outputRange: NumericRange): number;
     remap(segment: Segment, outputRange: NumericRange): number;
     easeWith(segment: Segment, outputRange: NumericRange, easing: EasingFunction): number;
@@ -117,12 +119,12 @@ Object.defineProperty(InterpolatorPrototype, Symbol.toStringTag, {
     configurable: false
 });
 
-export function interpolator(timer: Playhead) {
+export function interpolator(clock: AnimationClock) {
     const instance = function Interpolator(segment, outputRange) {
         return instance.remap(segment, outputRange);
     } as Interpolator;
-    Object.defineProperty(instance, "timer", {
-        value: timer,
+    Object.defineProperty(instance, "clock", {
+        value: clock,
         writable: false,
         configurable: false
     });
