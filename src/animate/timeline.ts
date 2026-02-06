@@ -15,7 +15,7 @@ export type Timeline = {
     };
 };
 
-export function timeline(progress: AnimationProgress) {
+export function createTimeline(progress: AnimationProgress) {
     const instance = function Timeline(segmentOrSequence) {
         if (!(segmentOrSequence instanceof Segment || isSequence(segmentOrSequence)))
             throw new Error("The argument must either be a segment or a sequence.");

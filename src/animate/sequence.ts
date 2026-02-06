@@ -105,11 +105,11 @@ function createSequence<S extends string[]>(
     return Object.create(SequencePrototype, properties) as Sequence<S>;
 }
 
-export function sequence<
+export function buildSequence<
     const S extends string[]
 >(...intervals: { [K in keyof S]: [S[K], number] }) {
     return {
-        remap(start: number, end: number): Sequence<S> {
+        scaleToRange(start: number, end: number): Sequence<S> {
             start = saturate(start);
             end = saturate(end);
             const sequence: [string, Segment][] = [];

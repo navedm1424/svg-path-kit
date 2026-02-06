@@ -1,15 +1,15 @@
-import {timeline, Timeline} from "./timeline";
-import {interpolator, Interpolator} from "./interpolator";
+import {createTimeline, Timeline} from "./timeline";
+import {createInterpolator, Interpolator} from "./interpolator";
 import {Path} from "../path";
-import {animationStepper} from "./animation-stepper";
-import {EasingFunction} from "./common";
+import {createAnimationStepper} from "./animation-stepper";
+import {EasingFunction} from "./easing";
 
 export type AnimatedPathFunction = (tl: Timeline, interpolate: Interpolator) => Path;
 
 export function generateAnimatedPathFrames(pathFunc: AnimatedPathFunction, duration: number, easing?: EasingFunction) {
-    const stepper = animationStepper(duration, easing);
-    const tl = timeline(stepper.progress);
-    const interpolate = interpolator(stepper.progress);
+    const stepper = createAnimationStepper(duration, easing);
+    const tl = createTimeline(stepper.progress);
+    const interpolate = createInterpolator(stepper.progress);
     const paths: Path[] = [];
     do {
         paths.push(pathFunc(tl, interpolate));

@@ -1,5 +1,6 @@
-import {EasingFunction} from "./common";
 import {saturate} from "../numbers/index";
+
+import {EasingFunction} from "./easing";
 
 export interface AnimationProgress {
     readonly time: number;
@@ -11,7 +12,7 @@ export interface AnimationStepper {
     step(): void;
 }
 
-export function animationStepper(duration: number, easing?: EasingFunction) {
+export function createAnimationStepper(duration: number, easing?: EasingFunction) {
     const fps = 60;
     let progress = 0;
     const progressUnit = 1 / (duration * fps - 1);

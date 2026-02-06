@@ -1,115 +1,112 @@
-import {invLerp, lerp, remap, saturate} from "../numbers/index";
+import {invLerp, lerp, remap} from "../numbers/index";
 import {isSequence, Segment, Sequence} from "./sequence";
-import {EasingFunction, NumericRange, validateRange} from "./common";
 import {AnimationProgress} from "./animation-stepper";
 import {MapToType} from "./array-utils";
+import {EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
 
-export const identity: EasingFunction = t => t;
-
-const calcBezier = (t: number, a1: number, a2: number) =>
-    (((1.0 - 3.0 * a2 + 3.0 * a1) * t + (3.0 * a2 - 6.0 * a1)) * t + 3.0 * a1) * t;
-const subdivisionPrecision = 0.0000001;
-const subdivisionMaxIterations = 12;
-
-function binarySubdivide(x: number, lowerBound: number, upperBound: number, mX1: number, mX2: number) {
-    let currentX;
-    let currentT;
-    let i = 0;
-    do {
-        currentT = lowerBound + (upperBound - lowerBound) / 2.0;
-        currentX = calcBezier(currentT, mX1, mX2) - x;
-        if (currentX > 0.0) {
-            upperBound = currentT;
-        }
-        else {
-            lowerBound = currentT;
-        }
-    } while (Math.abs(currentX) > subdivisionPrecision && ++i < subdivisionMaxIterations);
-    return currentT;
+interface ToRangeSpecifier {
+    to(start: number, end: number): number;
 }
 
-export function cubicBezierEasing(mX1: number, mY1: number, mX2: number, mY2: number): EasingFunction {
-    mX1 = saturate(mX1);
-    mX2 = saturate(mX2);
-    // If this is a linear gradient, return linear easing
-    if (mX1 === mY1 && mX2 === mY2)
-        return identity;
-    const getTForX = (aX: number) => binarySubdivide(aX, 0, 1, mX1, mX2);
-    // If animation is at start/end, return t without easing
-    return t => t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2);
+type SegmentMapper = {
+    withEasing(easing: EasingFunction): ToRangeSpecifier;
+} & ToRangeSpecifier;
+
+interface ToSequenceSpecifier<S extends string[]> {
+    to(...sequence: [number, ...MapToType<S, number>]): number;
 }
 
-export const easeIn = cubicBezierEasing(0.42, 0, 1, 1);
-export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
-export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
+type SequenceMapper<S extends string[]> = {
+    withEasing(easing: EasingFunction): ToSequenceSpecifier<S>;
+} & ToSequenceSpecifier<S>;
 
-export type Interpolator = {
+export interface Interpolator {
     readonly animationProgress: AnimationProgress;
-    (segment: Segment, outputRange: NumericRange): number;
-    remap(segment: Segment, outputRange: NumericRange): number;
-    easeWith(segment: Segment, outputRange: NumericRange, easing: EasingFunction): number;
-    easeIn(segment: Segment, outputRange: NumericRange): number;
-    easeOut(segment: Segment, outputRange: NumericRange): number;
-    easeInOut(segment: Segment, outputRange: NumericRange): number;
-    sequence<S extends string[]>(sequence: Sequence<S>, outputRange: [number, ...MapToType<S, number>], easing?: EasingFunction): number;
-};
+    (segment: Segment): SegmentMapper;
+    segment(segment: Segment): SegmentMapper;
+    easeIn(segment: Segment): ToRangeSpecifier;
+    easeOut(segment: Segment): ToRangeSpecifier;
+    easeInOut(segment: Segment): ToRangeSpecifier;
+    sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S>;
+}
+
+type GetSegmentsFromSequence<S extends Sequence<any>> = S extends Sequence<infer T> ? T : never;
 
 const InterpolatorPrototype = {
-    remap(segment, outputRange) {
-        validateRange(outputRange);
-        return remap(
-            this.animationProgress.time,
-            segment.start, segment.end,
-            ...outputRange
-        );
+    segment(segment): SegmentMapper {
+        const time = this.animationProgress.time;
+        return {
+            withEasing(easing: EasingFunction): ToRangeSpecifier {
+                return {
+                    to(start: number, end: number) {
+                        return lerp(
+                            start, end,
+                            easing(invLerp(
+                                segment.start, segment.end,
+                                time
+                            ))
+                        );
+                    }
+                };
+            },
+            to(start: number, end: number) {
+                return remap(
+                    time,
+                    segment.start, segment.end,
+                    start, end
+                );
+            }
+        };
     },
-    easeWith(segment, outputRange, easing) {
-        validateRange(outputRange);
-        return lerp(
-            ...outputRange,
-            easing(invLerp(
-                segment.start, segment.end,
-                this.animationProgress.time
-            ))
-        );
+    easeIn(segment) {
+        return this.segment(segment)
+            .withEasing(easeIn);
     },
-    easeIn(segment, outputRange) {
-        return this.easeWith(segment, outputRange, easeIn);
+    easeOut(segment) {
+        return this.segment(segment)
+            .withEasing(easeOut);
     },
-    easeOut(segment, outputRange) {
-        return this.easeWith(segment, outputRange, easeOut);
+    easeInOut(segment) {
+        return this.segment(segment)
+            .withEasing(easeInOut);
     },
-    easeInOut(segment, outputRange) {
-        return this.easeWith(segment, outputRange, easeInOut);
-    },
-    sequence(
-        sequence, outputRange, easing?
-    ) {
+    sequence(sequence): SequenceMapper<GetSegmentsFromSequence<typeof sequence>> {
         if (!isSequence(sequence))
             throw new Error("The sequence object must be valid.");
-        if (outputRange.length !== sequence.length + 1)
-            throw new Error(`The output range must have exactly ${sequence.length + 1} elements.`);
+        let time = this.animationProgress.time;
 
-        const time = easing ? lerp(
-            sequence.start, sequence.end,
-            easing(invLerp(
-                sequence.start, sequence.end,
-                this.animationProgress.time
-            ))
-        ) : this.animationProgress.time;
-        if (time <= sequence.start)
-            return outputRange[0];
-        if (time >= sequence.end)
-            return outputRange[outputRange.length - 1];
+        const map = this;
+        const to = function to(...outputSequence) {
+            if (outputSequence.length !== sequence.length + 1)
+                throw new Error(`The output sequence must have exactly ${sequence.length + 1} elements.`);
 
-        for (let i = 0; i < sequence.length; i++) {
-            const segment = sequence[i];
-            if (segment.start <= time && time < segment.end) {
-                return this(segment, [outputRange[i], outputRange[i + 1]]);
+            if (time <= sequence.start)
+                return outputSequence[0];
+            if (time >= sequence.end)
+                return outputSequence[outputSequence.length - 1];
+
+            for (let i = 0; i < sequence.length; i++) {
+                const segment = sequence[i];
+                if (segment.start <= time && time < segment.end) {
+                    return map.segment(segment).to(outputSequence[i], outputSequence[i + 1]);
+                }
             }
-        }
 
-        return -1 as never;
+            return -1 as never;
+        } as ToSequenceSpecifier<GetSegmentsFromSequence<typeof sequence>>["to"];
+
+        return {
+            withEasing(easing: EasingFunction) {
+                time = lerp(
+                    sequence.start, sequence.end,
+                    easing(invLerp(
+                        sequence.start, sequence.end,
+                        time
+                    ))
+                );
+                return { to };
+            }, to
+        };
     }
 } as Interpolator;
 
@@ -119,9 +116,9 @@ Object.defineProperty(InterpolatorPrototype, Symbol.toStringTag, {
     configurable: false
 });
 
-export function interpolator(progress: AnimationProgress) {
-    const instance = function Interpolator(segment, outputRange) {
-        return instance.remap(segment, outputRange);
+export function createInterpolator(progress: AnimationProgress) {
+    const instance = function Interpolator(segment) {
+        return instance.segment(segment);
     } as Interpolator;
     Object.defineProperty(instance, "animationProgress", {
         value: progress,
