@@ -12,13 +12,13 @@ type SegmentMapper = {
     withEasing(easing: EasingFunction): ToRangeSpecifier;
 } & ToRangeSpecifier;
 
-interface ToSequenceSpecifier<S extends string[]> {
-    to(...sequence: [number, ...MapToType<S, number>]): number;
+interface ToAnchorsSpecifier<S extends string[]> {
+    to(...anchors: [number, ...MapToType<S, number>]): number;
 }
 
 type SequenceMapper<S extends string[]> = {
-    withEasing(easing: EasingFunction): ToSequenceSpecifier<S>;
-} & ToSequenceSpecifier<S>;
+    withEasing(easing: EasingFunction): ToAnchorsSpecifier<S>;
+} & ToAnchorsSpecifier<S>;
 
 export interface Interpolator {
     readonly animationProgress: AnimationProgress;
@@ -76,24 +76,24 @@ const InterpolatorPrototype = {
         let time = this.animationProgress.time;
 
         const map = this;
-        const to = function to(...outputSequence) {
-            if (outputSequence.length !== sequence.length + 1)
-                throw new Error(`The output sequence must have exactly ${sequence.length + 1} elements.`);
+        const to = function to(...anchors) {
+            if (anchors.length !== sequence.length + 1)
+                throw new Error(`The output anchors must be exactly ${sequence.length + 1} in number.`);
 
             if (time <= sequence.start)
-                return outputSequence[0];
+                return anchors[0];
             if (time >= sequence.end)
-                return outputSequence[outputSequence.length - 1];
+                return anchors[anchors.length - 1];
 
             for (let i = 0; i < sequence.length; i++) {
                 const segment = sequence[i];
                 if (segment.start <= time && time < segment.end) {
-                    return map.segment(segment).to(outputSequence[i], outputSequence[i + 1]);
+                    return map(segment).to(anchors[i], anchors[i + 1]);
                 }
             }
 
             return -1 as never;
-        } as ToSequenceSpecifier<GetSegmentsFromSequence<typeof sequence>>["to"];
+        } as ToAnchorsSpecifier<GetSegmentsFromSequence<typeof sequence>>["to"];
 
         return {
             withEasing(easing: EasingFunction) {

@@ -5,42 +5,34 @@ import {Angle} from "./angle";
  * Mutable 2D vector with geometric helpers and conversion utilities.
  */
 export class Vector2D {
-    private _magnitude: number;
+    #x: number;
+    #y: number;
+    #magnitude: number;
 
-    /** Shared null vector instance. */
-    static readonly NULL_VECTOR = new Vector2D(0, 0);
+    public static readonly NULL_VECTOR = new Vector2D(0, 0);
 
-    /**
-     * Create a vector with the provided coordinates.
-     */
-    constructor(private _x: number, private _y: number) {
-        this._magnitude = Math.hypot(_x, _y);
+    constructor(x: number, y: number) {
+        this.#x = x;
+        this.#y = y;
+        this.#magnitude = Math.hypot(x, y);
     }
 
-    /** X component. */
     get x() {
-        return this._x;
+        return this.#x;
     }
-    /** Y component. */
     get y() {
-        return this._y;
+        return this.#y;
     }
-    /** Euclidean length. */
     get magnitude() {
-        return this._magnitude;
+        return this.#magnitude;
     }
-    /** Slope y/x. */
     get slope() {
-        return this._y / this._x;
+        return this.#y / this.#x;
     }
-    /** Polar angle in radians. */
     get angle() {
-        return Math.atan2(this._y, this._x);
+        return Math.atan2(this.#y, this.#x);
     }
 
-    /**
-     * Create a vector with the provided coordinates.
-     */
     public static of(x: number, y: number): Vector2D {
         return new Vector2D(x, y);
     }
@@ -61,9 +53,6 @@ export class Vector2D {
         return new Vector2D(terminalPoint.x - initialPoint.x, terminalPoint.y - initialPoint.y);
     }
 
-    /**
-     * Add another vector and return the sum as a new instance.
-     */
     public add(vector: Vector2D) {
         return new Vector2D(this.x + vector.x, this.y + vector.y);
     }
@@ -75,23 +64,14 @@ export class Vector2D {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
     }
 
-    /**
-     * Compute the unsigned angle with another vector
-     */
     public angleWith(vector: Vector2D): number {
-        return Math.acos(this.dotProduct(vector) / (this._magnitude * vector._magnitude));
+        return Math.acos(this.dotProduct(vector) / (this.#magnitude * vector.#magnitude));
     }
 
-    /**
-     * Compute the singed angle with another vector
-     */
     public singedAngleWith(vector: Vector2D): number {
         return Math.atan2(this.crossProduct(vector), this.dotProduct(vector));
     }
 
-    /**
-     * Dot product with another vector.
-     */
     public dotProduct(vector: Vector2D) {
         return this.x * vector.x + this.y * vector.y;
     }
@@ -107,9 +87,9 @@ export class Vector2D {
      * Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0.
      */
     public normalize(): Vector2D {
-        if (this._magnitude === 0)
+        if (this.#magnitude === 0)
             return Vector2D.NULL_VECTOR;
-        return new Vector2D(this.x / this._magnitude, this.y / this._magnitude);
+        return new Vector2D(this.x / this.#magnitude, this.y / this.#magnitude);
     }
 
     /**
@@ -136,9 +116,6 @@ export class Vector2D {
         return new Vector2D(-this.x, -this.y);
     }
 
-    /**
-     * Create a copy of this vector.
-     */
     public clone(): Vector2D {
         return new Vector2D(this.x, this.y);
     }
@@ -147,9 +124,9 @@ export class Vector2D {
      * Scale the vector in-place by `scalar`.
      */
     public scale(scalar: number): this {
-        this._x *= scalar;
-        this._y *= scalar;
-        this._magnitude = Math.hypot(this.x, this.y);
+        this.#x *= scalar;
+        this.#y *= scalar;
+        this.#magnitude = Math.hypot(this.x, this.y);
         return this;
     }
 
@@ -159,17 +136,20 @@ export class Vector2D {
     public rotate(angle: number | Angle): this {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
-        const newX = this._x * cosine - this._y * sine;
-        const newY = this._x * sine + this._y * cosine;
-        this._x = newX;
-        this._y = newY;
+        const newX = this.#x * cosine - this.#y * sine;
+        const newY = this.#x * sine + this.#y * cosine;
+        this.#x = newX;
+        this.#y = newY;
         return this;
     }
 
-    /**
-     * Convert to a {@link Point2D} with the same coordinates.
-     */
     public toPoint(): Point2D {
-        return new Point2D(this.x, this.y);
+        return new Point2D(this.#x, this.#y);
     }
 }
+
+Object.defineProperty(Vector2D, "NULL_VECTOR", {
+    value: Vector2D.NULL_VECTOR,
+    writable: false,
+    configurable: false
+});

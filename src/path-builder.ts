@@ -21,13 +21,13 @@ import {Angle} from "./angle";
  */
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
-    private commands: Command[] = [];
-    private commandsById: Record<string, Command> = {};
-    private openPathStack: MoveCommand[] = [];
+    #commands: Command[] = [];
+    #commandsById: Record<string, Command> = {};
+    #openPathStack: MoveCommand[] = [];
 
     /** Most recently appended command. */
     get lastCommand() {
-        return this.commands[this.commands.length - 1];
+        return this.#commands[this.#commands.length - 1];
     }
 
     /** Starting point of the path. */
@@ -45,11 +45,20 @@ export class PathBuilder {
         return this.lastCommand.getEndVelocity();
     }
 
-    private constructor(initialPoint: Point2D | Vector2D) {
+    private constructor(initialPoint: any) {
+        if (!(initialPoint instanceof Point2D || initialPoint instanceof Vector2D))
+            throw new Error("Invalid argument type.");
+
         if (initialPoint instanceof Vector2D)
             this.firstCommand = this.m(initialPoint);
         else
             this.firstCommand = this.m(initialPoint);
+
+        Object.defineProperty(this, "firstCommand", {
+            value: this.firstCommand,
+            writable: false,
+            configurable: false
+        });
     }
 
     /**
@@ -65,16 +74,16 @@ export class PathBuilder {
      * Append a command to the builder.
      */
     public append<T extends Command>(command: T): T {
-        this.commands.push(command);
+        this.#commands.push(command);
         return command;
     }
 
     public setLastCommandId(id: string): void {
-        this.commandsById[id] = this.lastCommand;
+        this.#commandsById[id] = this.lastCommand;
     }
 
     public getCommandById(id: string): Command | null {
-        return this.commandsById[id] ?? null;
+        return this.#commandsById[id] ?? null;
     }
 
     /**
@@ -88,7 +97,7 @@ export class PathBuilder {
             // @ts-expect-error
             point
         );
-        this.openPathStack.push(moveCommand);
+        this.#openPathStack.push(moveCommand);
         return this.append(moveCommand);
     }
 
@@ -281,12 +290,11 @@ export class PathBuilder {
      * Close the current subpath.
      */
     public z(): ClosePathCommand {
-        return this.append(new ClosePathCommand(this.currentPosition, this.openPathStack.pop()!));
+        return this.append(new ClosePathCommand(this.currentPosition, this.#openPathStack.pop()!));
     }
 
-    /** Build a {@link Path} from accumulated commands. */
     public toPath() {
-        return new Path(this.commands);
+        return new Path(Object.freeze(this.#commands));
     }
 
     /** Serialize the built path to an SVG path string. */

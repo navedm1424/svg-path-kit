@@ -14,7 +14,6 @@ import {
 import {EllipticalArc} from "./curves/ellipse";
 import {Angle} from "./angle";
 
-/** Shared contract for drawable path commands. */
 export interface Command {
     /** Starting point of the command. */
     readonly initialPoint: Point2D;
@@ -50,7 +49,6 @@ export class MoveCommand implements Command {
     public getEndVelocity(): Vector2D {
         return Vector2D.NULL_VECTOR;
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteMovePrimitive(this.terminalPoint);
     }
@@ -82,7 +80,6 @@ export class LineCommand implements Command {
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteLinePrimitive(this.terminalPoint);
     }
@@ -106,15 +103,12 @@ export class QuadraticBezierCurveCommand implements Command {
             initialPoint.add(terminalPoint);
     }
 
-    /** Velocity at the start of the curve. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.controlPoint).scale(2);
     }
-    /** Velocity at the end of the curve. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.controlPoint, this.terminalPoint).scale(2);
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteQuadraticBezierCurvePrimitive(this.controlPoint, this.terminalPoint);
     }
@@ -142,15 +136,12 @@ export class CubicBezierCurveCommand implements Command {
             initialPoint.add(terminalPoint);
     }
 
-    /** Velocity at the start of the curve. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.firstControlPoint).scale(3);
     }
-    /** Velocity at the end of the curve. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.secondControlPoint, this.terminalPoint).scale(3);
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteCubicBezierCurvePrimitive(this.firstControlPoint, this.secondControlPoint, this.terminalPoint);
     }
@@ -205,11 +196,9 @@ export class CubicBezierEllipticalArc implements Command {
     get terminalPoint(): Point2D {
         return this.cubicBezierCurve.endingPoint;
     }
-    /** Velocity at arc start. */
     getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.cubicBezierCurve.firstControlPoint).scale(3);
     }
-    /** Velocity at arc end. */
     getEndVelocity(): Vector2D {
         return Vector2D.from(this.cubicBezierCurve.secondControlPoint, this.cubicBezierCurve.endingPoint).scale(3);
     }
@@ -239,11 +228,9 @@ export class CubicBezierHermiteCurveCommand implements Command {
             initialPoint.add(terminalPoint);
     }
 
-    /** Velocity at the start of the segment. */
     public getStartVelocity(): Vector2D {
         return this.startVelocity;
     }
-    /** Velocity at the end of the segment. */
     public getEndVelocity(): Vector2D {
         return this.endVelocity;
     }
@@ -288,12 +275,10 @@ export class EllipticalArcCommand implements Command {
         this.terminalPoint = center.add(this.arc.endingPointVector);
     }
 
-    /** Tangent at arc end. */
     getEndVelocity(): Vector2D {
         return this.arc.endingTangentVector;
     }
 
-    /** Tangent at arc start. */
     getStartVelocity(): Vector2D {
         return this.arc.startingTangentVector;
     }
@@ -387,12 +372,10 @@ export class EllipticalArcWrapperCommand implements Command {
         this.arc = new EllipticalArc(rx, ry, theta1, theta2, this.xAxisRotation);
     }
 
-    /** Tangent at arc start (respecting sweep direction). */
     public getStartVelocity(): Vector2D {
         const velocity = this.arc.startingTangentVector;
         return this.sweepFlag ? velocity : velocity.scale(-1);
     }
-    /** Tangent at arc end (respecting sweep direction). */
     public getEndVelocity(): Vector2D {
         const velocity = this.arc.endingTangentVector;
         return this.sweepFlag ? velocity : velocity.scale(-1);
@@ -444,11 +427,9 @@ export class ChordScaledBezierCommand implements Command {
         )
     }
 
-    /** Velocity at curve start. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.cubicBezierCurve.firstControlPoint).scale(3);
     }
-    /** Velocity at curve end. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.cubicBezierCurve.secondControlPoint, this.terminalPoint).scale(3);
     }
@@ -467,32 +448,29 @@ export class ClosePathCommand implements Command {
         readonly moveCommand: MoveCommand
     ) { }
 
-    /** End point coincides with the matching move command. */
     get terminalPoint(): Point2D {
         return this.moveCommand.terminalPoint;
     }
-    /** Velocity to the closing point. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.moveCommand.terminalPoint);
     }
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
     }
-    /** Convert to SVG close-path primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteClosePathPrimitive();
     }
 }
 
-/**
- * Sequence of commands representing a path.
- */
 export class Path {
-    constructor(private readonly commands: Command[]) {}
+    #commands: readonly Command[];
+    constructor(commands: readonly Command[]) {
+        this.#commands = commands;
+    }
 
     /** Convert to a serializable SVG path. */
     public toSVGPath() {
-        return new SVGPath(this.commands.map(c => c.toSVGPathCommand()));
+        return new SVGPath(Object.freeze(this.#commands.map(c => c.toSVGPathCommand())));
     }
     /** Render the path to an SVG path string. */
     public toSVGPathString() {

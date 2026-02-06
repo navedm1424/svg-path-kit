@@ -16,9 +16,6 @@ export class Superellipse extends ParametricCurve2D {
         this.exp = 2 ** (1 - n);
     }
 
-    /**
-     * Sample the superellipse at parameter `t`.
-     */
     at(t: number | Angle): Point2D {
         const cosine = t instanceof Angle ? t.cosine : Math.cos(t);
         const sine = t instanceof Angle ? t.sine : Math.sin(t);
@@ -28,10 +25,6 @@ export class Superellipse extends ParametricCurve2D {
         );
     }
 
-    /**
-     * Tangent vector at parameter `t`. Falls back to finite
-     * differences when the analytical derivative is undefined.
-     */
     tangentAt(t: number | Angle): Vector2D {
         const cosine = t instanceof Angle ? t.cosine : Math.cos(t);
         const sine = t instanceof Angle ? t.sine : Math.sin(t);

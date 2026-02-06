@@ -3,26 +3,24 @@ import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
 import {Angle} from "../angle";
 
-/**
- * Parametric circle centered at an arbitrary point.
- */
 export class Circle extends ParametricCurve2D {
-    private _center: Point2D;
+    #center: Point2D;
     readonly radius: number;
 
     private constructor(center: Point2D, radius: number) {
         super();
-        this._center = center;
+        this.#center = center;
         this.radius = Math.abs(radius);
+        Object.defineProperty(this, "radius", {
+            value: this.radius,
+            writable: false,
+            configurable: false
+        });
     }
-    /** Center point of the circle. */
     get center(): Point2D {
-        return this._center;
+        return this.#center;
     }
 
-    /**
-     * Factory for a circle with optional center argument, which defaults to the origin.
-     */
     public static of(radius: number): Circle;
     public static of(center: Point2D, radius: number): Circle;
     public static of(...args: [radius: number] | [center: Point2D, radius: number]): Circle {
@@ -31,23 +29,16 @@ export class Circle extends ParametricCurve2D {
         return new Circle(args[0], args[1]);
     }
 
-    /**
-     * Sample the circle at the provided angular parameter.
-     */
     public at(angle: number | Angle): Point2D {
-        return this._center.add(Vector2D.polar(this.radius, angle));
+        return this.#center.add(Vector2D.polar(this.radius, angle));
     }
-    /**
-     * Tangent vector at the given angular parameter.
-     */
+
     public tangentAt(angle: number | Angle): Vector2D {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
         return Vector2D.of(-this.radius * sine, this.radius * cosine);
     }
-    /**
-     * Second derivative at the given angular parameter.
-     */
+
     public accelerationAt(angle: number | Angle): Vector2D {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
@@ -57,7 +48,7 @@ export class Circle extends ParametricCurve2D {
      * Translate the circle center by a vector.
      */
     public translate(vector: Vector2D) {
-        this._center = this._center.add(vector);
+        this.#center = this.#center.add(vector);
     }
 }
 

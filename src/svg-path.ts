@@ -2,9 +2,6 @@ import {round} from "./numbers/index";
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
 
-/**
- * Format coordinates to four decimal places for SVG output.
- */
 function coordinates(point: Point2D | Vector2D) {
     return `${round(point.x, 4)} ${round(point.y, 4)}`;
 }
@@ -21,7 +18,6 @@ export abstract class PrimitiveCommand {
 export abstract class MovePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
-    /** Serialize with ending point coordinates. */
     public toString() {
         return `${this.getKey()} ${coordinates(this.getEndingPoint())}`;
     }
@@ -33,7 +29,6 @@ export class AbsoluteMovePrimitive extends MovePrimitive {
         super();
     }
 
-    /** SVG key for absolute move. */
     public getKey() {
         return "M";
     }
@@ -48,7 +43,6 @@ export class RelativeMovePrimitive extends MovePrimitive {
         super();
     }
 
-    /** SVG key for relative move. */
     public getKey() {
         return "m";
     }
@@ -61,7 +55,6 @@ export class RelativeMovePrimitive extends MovePrimitive {
 export abstract class LinePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
-    /** Serialize with ending point coordinates. */
     public toString() {
         const cmd = this.getKey();
         const end = coordinates(this.getEndingPoint());
@@ -75,7 +68,6 @@ export class AbsoluteLinePrimitive extends LinePrimitive {
         super();
     }
 
-    /** SVG key for absolute line. */
     public getKey() {
         return "L";
     }
@@ -90,7 +82,6 @@ export class RelativeLinePrimitive extends LinePrimitive {
         super();
     }
 
-    /** SVG key for relative line. */
     public getKey() {
         return "l";
     }
@@ -104,7 +95,6 @@ export abstract class QuadraticBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getControlPoint(): Point2D | Vector2D;
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
-    /** Serialize with control and ending points. */
     public toString() {
         const cmd = this.getKey();
         const cp = coordinates(this.getControlPoint());
@@ -121,7 +111,6 @@ export class AbsoluteQuadraticBezierCurvePrimitive extends QuadraticBezierCurveP
     ) {
         super();
     }
-    /** SVG key for absolute quadratic Bézier. */
     public getKey() {
         return 'Q';
     }
@@ -140,7 +129,6 @@ export class RelativeQuadraticBezierCurvePrimitive extends QuadraticBezierCurveP
     ) {
         super();
     }
-    /** SVG key for relative quadratic Bézier. */
     public getKey() {
         return "q";
     }
@@ -158,7 +146,6 @@ export abstract class CubicBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getSecondControlPoint(): Point2D | Vector2D;
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
-    /** Serialize with two control points and ending point. */
     public toString() {
         const cp1 = coordinates(this.getFirstControlPoint());
         const cp2 = coordinates(this.getSecondControlPoint());
@@ -176,7 +163,6 @@ export class AbsoluteCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive
     ) {
         super();
     }
-    /** SVG key for absolute cubic Bézier. */
     public getKey() {
         return "C";
     }
@@ -201,7 +187,6 @@ export class RelativeCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive
     ) {
         super();
     }
-    /** SVG key for relative cubic Bézier. */
     public getKey() {
         return "c";
     }
@@ -230,7 +215,6 @@ export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
     }
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
-    /** Serialize including radii, rotation, flags, and ending point. */
     public toString() {
         const ep = coordinates(this.getEndingPoint());
         return `${this.getKey()} ${this.xRadius} ${this.yRadius} ${round(this.xAxisRotation, 4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
@@ -250,7 +234,6 @@ export class AbsoluteEllipticalArcPrimitive extends EllipticalArcPrimitive {
         super(xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag);
     }
 
-    /** SVG key for absolute elliptical arc. */
     public getKey(): string {
         return 'A';
     }
@@ -272,7 +255,6 @@ export class RelativeEllipticalArcPrimitive extends EllipticalArcPrimitive {
         super(xRadius, yRadius, xAxisRotation, largeArcFlag, sweepFlag);
     }
 
-    /** SVG key for relative elliptical arc. */
     public getKey() {
         return 'a';
     }
@@ -283,12 +265,10 @@ export class RelativeEllipticalArcPrimitive extends EllipticalArcPrimitive {
 
 /** Absolute close-path (Z). */
 export class AbsoluteClosePathPrimitive extends PrimitiveCommand {
-    /** SVG key for closing a path. */
     public getKey(): string {
         return "Z";
     }
 
-    /** Close-path string. */
     public toString() {
         return this.getKey();
     }
@@ -296,24 +276,18 @@ export class AbsoluteClosePathPrimitive extends PrimitiveCommand {
 
 /** Relative close-path (z). */
 export class RelativeClosePathPrimitive extends PrimitiveCommand {
-    /** SVG key for closing a path relative to current point. */
     public getKey(): string {
         return "z";
     }
 
-    /** Close-path string. */
     public toString() {
         return this.getKey();
     }
 }
 
-/**
- * An SVG path consisting of primitive commands.
- */
 export class SVGPath {
-    constructor(readonly commands: PrimitiveCommand[]) { }
+    constructor(readonly commands: readonly PrimitiveCommand[]) { }
 
-    /** Serialize to an SVG path string. */
     public toString() {
         return this.commands.map(c => c.toString()).join(' ');
     }

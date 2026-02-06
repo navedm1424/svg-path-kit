@@ -23,18 +23,13 @@ export class Ellipse extends ParametricCurve2D {
         this.focalDistance = Math.sqrt(Math.pow(semiMajorAxis, 2) - Math.pow(semiMinorAxis, 2));
     }
 
-    /** Ellipse center. */
     get center(): Point2D {
         return this._center;
     }
-    /** Tilt of the ellipse in radians. */
     get ellipseTilt(): Angle {
         return this._ellipseTilt;
     }
 
-    /**
-     * Factory for creating an {@link Ellipse} optionally specifying its center.
-     */
     public static of(center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle): Ellipse;
     public static of(semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle): Ellipse;
     public static of(...args: [
@@ -50,9 +45,6 @@ export class Ellipse extends ParametricCurve2D {
         return new Ellipse(Point2D.ORIGIN, args[0] as number, args[1], typeof tilt === "number" ? Angle.of(tilt): tilt);
     }
 
-    /**
-     * Sample the ellipse at an angular parameter.
-     */
     public at(angle: number | Angle): Point2D {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
@@ -61,9 +53,7 @@ export class Ellipse extends ParametricCurve2D {
             this.semiMinorAxis * sine
         ).rotate(this._ellipseTilt));
     }
-    /**
-     * Tangent vector at an angular parameter.
-     */
+
     public tangentAt(angle: number | Angle): Vector2D {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
@@ -72,9 +62,7 @@ export class Ellipse extends ParametricCurve2D {
             this.semiMinorAxis * cosine
         ).rotate(this._ellipseTilt);
     }
-    /**
-     * Second derivative at an angular parameter.
-     */
+
     public accelerationAt(angle: number | Angle): Vector2D {
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
@@ -108,9 +96,6 @@ export class EllipticalArc {
     readonly endAngle: Angle;
     private _ellipseTilt: Angle;
 
-    /**
-     * Construct an elliptical arc with start/end parametric angles and tilt.
-     */
     constructor(
         semiMajorAxis: number,
         semiMinorAxis: number,
@@ -124,7 +109,6 @@ export class EllipticalArc {
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
     }
-    /** Current tilt of the ellipse. */
     get ellipseTilt(): Angle {
         return this._ellipseTilt;
     }
