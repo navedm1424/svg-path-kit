@@ -25,45 +25,70 @@ export class Segment {
         };
     }
 }
-// type TupleIndex<T extends any[]> = Exclude<keyof T, keyof any[]>;
-type ConstructSubarray<
-    Full extends any[],
-    Start extends number | any,
-    End extends number | any,
-    Remaining extends any[] = Full,
+
+type DoComputeSubarray<
+    Remaining extends any[],
+    From extends number | any,
+    To extends number | any,
     I extends null[] = [],
     Output extends any[] = [],
     Include extends boolean = false
 > = 0 extends Remaining["length"]
     ? Output
-    : End extends I["length"] | Remaining[0]
+    : To extends I["length"] | Remaining[0]
         ? Include extends true
             ? [...Output, Remaining[0]]
             : Output
         : Remaining extends [infer H, ...infer Tail]
             ? Include extends true
-                ? ConstructSubarray<Full, Start, End, Tail, [...I, null], [...Output, H], true>
-                : Start extends I["length"] | H
-                    ? ConstructSubarray<Full, Start, End, Tail, [...I, null], [...Output, H], true>
-                    : ConstructSubarray<Full, Start, End, Tail, [...I, null], Output>
+                ? DoComputeSubarray<Tail, From, To, [...I, null], [...Output, H], true>
+                : From extends I["length"] | H
+                    ? DoComputeSubarray<Tail, From, To, [...I, null], [...Output, H], true>
+                    : DoComputeSubarray<Tail, From, To, [...I, null], Output>
             : Output;
 
-// type ZeroIfNegative<N extends number> = Sign<N> extends -1 ? 0 : N;
-// type Sign<N extends number> =
-//     `${N}` extends `-${string}` ? -1
-//         : `${N}` extends "0" ? 0
-//             : 1;
-type Subsequence<S extends string[], Start extends number | S[number] = 0, End extends number | S[number] = S["length"]> =
-    string[] extends S ? Sequence<S> : Sequence<ConstructSubarray<S, Start, End>>;
+type StrToNum<S extends string> = S extends `${infer N extends number}` ? N : never;
+
+type TupleIndex<T extends readonly unknown[]> =
+    number extends T['length']
+        ? number
+        : StrToNum<Exclude<keyof T, keyof any[]> & string>;
+
+type ComputeSubarray<
+    Full extends any[],
+    From extends number | any,
+    To extends number | any
+> = To extends number
+    ? Sign<To> extends -1
+        ? []
+        : From extends To
+            ? ZeroIfNegative<From> extends TupleIndex<Full>
+                ? [Full[ZeroIfNegative<From>]]
+                : []
+            : DoComputeSubarray<Full,
+                From extends number ? ZeroIfNegative<From> : From,
+                To extends TupleIndex<Full> ? To : LengthMinusOne<Full>>
+    : DoComputeSubarray<Full, From, To>;
+
+type LengthMinusOne<L extends any[]> = string[] extends L ? number : L extends [...infer H, string] ? H["length"] : number;
+
+type ZeroIfNegative<N extends number> = Sign<N> extends -1 ? 0 : N;
+type Sign<N extends number> =
+    `${N}` extends `-${string}` ? -1
+        : `${N}` extends "0" ? 0
+            : 1;
+
+type Subsequence<S extends string[], Start extends number | S[number] = 0, End extends number | S[number] = LengthMinusOne<S>> =
+    string[] extends S ? Sequence<S> : Sequence<ComputeSubarray<S, Start, End>>;
 
 export type Sequence<S extends string[]> = {
     readonly length: S["length"] extends number ? S["length"] : number;
     readonly segmentNames: unknown extends S[number] ? readonly string[] : readonly S[number][];
     readonly start: number;
     readonly end: number;
-    subsequence<Start extends number | S[number] = 0, End extends number | S[number] = string[] extends S ? number : S extends [...infer H, string] ? H["length"] : number>(
-        start?: Start, end?: End
-    ): Subsequence<S, Start, End>;
+    subsequence<From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>>(
+        from?: From, to?: To
+    ): Subsequence<S, From, To>;
     toArray(): Segment[];
 } & {
     readonly [key: number]: Segment;
@@ -80,41 +105,41 @@ const SequencePrototype = {
     get end() {
         return this[this.length - 1]!.end;
     },
-    subsequence<Start extends number | string, End extends number | string>(
-        this, start: Start = 0 as Start, end: End = this.length - 1 as End
+    subsequence<From extends number | string, To extends number | string>(
+        this, from: From = 0 as From, to: To = this.length - 1 as To
     ) {
         const output: [string, Segment][] = [];
         const segmentNames = this.segmentNames;
         let startPushing = false;
-        if (typeof start === "number" && typeof end === "number") {
-            if (end < start)
+        if (typeof from === "number" && typeof to === "number") {
+            if (to < from)
                 return createSequence(output);
-            if (Object.is(start, end) && start >= 0 && start < segmentNames.length) {
-                const segmentName = segmentNames[start]!;
+            if (Object.is(from, to) && from >= 0 && from < segmentNames.length) {
+                const segmentName = segmentNames[from]!;
                 output.push([segmentName, this[segmentName] as Segment]);
                 return createSequence(output);
             }
         }
-        if (typeof start === "number") {
-            if (start > segmentNames.length - 1)
+        if (typeof from === "number") {
+            if (from > segmentNames.length - 1)
                 return createSequence(output);
-            if (start < 0)
-                start = 0 as Start;
+            if (from < 0)
+                from = 0 as From;
         }
-        if (typeof end === "number") {
-            if (end < 0)
+        if (typeof to === "number") {
+            if (to < 0)
                 return createSequence(output);
-            if (end > segmentNames.length - 1)
-                end = segmentNames.length - 1 as End;
+            if (to > segmentNames.length - 1)
+                to = segmentNames.length - 1 as To;
         }
 
-        for (let i = typeof start === "number" ? start : 0; i < segmentNames.length; i++) {
+        for (let i = typeof from === "number" ? from : 0; i < segmentNames.length; i++) {
             const segmentName = segmentNames[i]!;
-            if (Object.is(end, i) || Object.is(end, segmentName)) {
+            if (Object.is(to, i) || Object.is(to, segmentName)) {
                 if (startPushing) output.push([segmentName, this[segmentName] as Segment]);
                 break;
             }
-            if (startPushing || Object.is(start, i) || Object.is(start, segmentName)) {
+            if (startPushing || Object.is(from, i) || Object.is(from, segmentName)) {
                 startPushing = true;
                 output.push([segmentName, this[segmentName] as Segment]);
             }
