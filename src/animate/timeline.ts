@@ -1,5 +1,6 @@
-import {AnimationProgress} from "./animation-stepper";
-import {isSequence, Segment, Sequence} from "./sequence";
+import type {AnimationProgress} from "./animation-stepper";
+import {Segment, Sequence} from "./sequence";
+import {assignReadonlyProperties} from "../object-utils";
 
 export type Timeline = {
     readonly animationProgress: AnimationProgress;
@@ -17,7 +18,7 @@ export type Timeline = {
 
 export function createTimeline(progress: AnimationProgress) {
     const instance = function Timeline(segmentOrSequence) {
-        if (!(segmentOrSequence instanceof Segment || isSequence(segmentOrSequence)))
+        if (!(segmentOrSequence instanceof Segment || segmentOrSequence instanceof Sequence))
             throw new Error("The argument must either be a segment or a sequence.");
 
         return {
@@ -32,10 +33,6 @@ export function createTimeline(progress: AnimationProgress) {
             }
         };
     } as Timeline;
-    Object.defineProperty(instance, "animationProgress", {
-        value: progress,
-        writable: false,
-        configurable: false
-    });
+    assignReadonlyProperties(instance, {animationProgress: progress});
     return instance;
 }

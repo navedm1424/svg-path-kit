@@ -1,6 +1,7 @@
 import {round} from "./numbers/index";
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
+import {makePropertiesReadonly} from "./object-utils";
 
 function coordinates(point: Point2D | Vector2D) {
     return `${round(point.x, 4)} ${round(point.y, 4)}`;
@@ -286,7 +287,11 @@ export class RelativeClosePathPrimitive extends PrimitiveCommand {
 }
 
 export class SVGPath {
-    constructor(readonly commands: readonly PrimitiveCommand[]) { }
+    readonly commands: readonly PrimitiveCommand[];
+    constructor(commands: PrimitiveCommand[]) {
+        this.commands = Object.freeze(commands);
+        makePropertiesReadonly(this, "commands");
+    }
 
     public toString() {
         return this.commands.map(c => c.toString()).join(' ');

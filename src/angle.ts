@@ -1,3 +1,5 @@
+import {makePropertiesReadonly} from "./object-utils";
+
 /**
  * Immutable wrapper around an angle value that caches its sine and cosine
  * and offers helpers for common rotations.
@@ -14,23 +16,7 @@ export class Angle {
         readonly sine: number = Math.sin(value),
         readonly cosine: number = Math.cos(value)
     ) {
-        Object.defineProperties(this, {
-            value: {
-                value: this.value,
-                writable: false,
-                configurable: false
-            },
-            sine: {
-                value: this.sine,
-                writable: false,
-                configurable: false
-            },
-            cosine: {
-                value: this.cosine,
-                writable: false,
-                configurable: false
-            }
-        });
+        makePropertiesReadonly(this, "value", "sine", "cosine");
     }
 
     public static of(value: number) {
@@ -161,30 +147,4 @@ export class Angle {
     }
 }
 
-Object.defineProperties(Angle, {
-    ZERO: {
-        value: Angle.ZERO,
-        writable: false,
-        configurable: false
-    },
-    QUARTER_PI: {
-        value: Angle.QUARTER_PI,
-        writable: false,
-        configurable: false
-    },
-    HALF_PI: {
-        value: Angle.HALF_PI,
-        writable: false,
-        configurable: false
-    },
-    PI: {
-        value: Angle.PI,
-        writable: false,
-        configurable: false
-    },
-    TWO_PI: {
-        value: Angle.TWO_PI,
-        writable: false,
-        configurable: false
-    }
-});
+makePropertiesReadonly(Angle, "ZERO", "QUARTER_PI", "HALF_PI", "PI", "TWO_PI");

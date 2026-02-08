@@ -203,7 +203,7 @@ export function fitSplineInSteps(
 export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: [number, number, ...number[]]) {
     const spline: CubicBezierCurveCommand[] = [];
     for (let i = 1; i < ts.length; i++) {
-        const bezier = new CubicBezierFit(curve, ts[i - 1], ts[i])
+        const bezier = new CubicBezierFit(curve, ts[i - 1]!, ts[i]!)
             .cubicBezierCurve;
         spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
@@ -222,7 +222,7 @@ export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: numbe
     if (criciticalPoints.length < 2)
         return fitSplineAtParams(pb, curve, t0, t1);
 
-    return fitSplineAtParams(pb, curve, criciticalPoints[0], criciticalPoints[1], ...criciticalPoints.slice(2));
+    return fitSplineAtParams(pb, curve, criciticalPoints[0]!, criciticalPoints[1]!, ...criciticalPoints.slice(2));
 }
 
 /**
@@ -232,10 +232,13 @@ export function cardinalSpline(
     pb: PathBuilder, tension: number, ...controlPoints: Point2D[]
 ) {
     const spline: CubicBezierHermiteCurveCommand[] = [];
-    let prev: Point2D = pb.currentPosition, next: Point2D, current: Point2D = controlPoints[0];
+    if (controlPoints.length === 0)
+        return [];
+
+    let prev: Point2D = pb.currentPosition, next: Point2D, current: Point2D = controlPoints[0]!;
     let lastVelocity = Vector2D.from(prev, current).scale(2 * tension);
-    for (let i = 0; i < controlPoints.length - 1; i++) {
-        next = controlPoints[i + 1];
+    for (let i = 1; i < controlPoints.length; i++) {
+        next = controlPoints[i]!;
         const currentVelocity = Vector2D.from(prev, next).scale(tension);
         spline.push(pb.hermiteCurve(
             lastVelocity, currentVelocity,

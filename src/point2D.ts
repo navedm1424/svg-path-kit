@@ -1,4 +1,5 @@
 import { Vector2D } from "./vector2D";
+import {makePropertiesReadonly} from "./object-utils";
 
 /**
  * Immutable absolute 2D point with helpers for vector arithmetic.
@@ -7,10 +8,7 @@ export class Point2D {
     public static readonly ORIGIN = Point2D.of(0, 0);
 
     constructor(readonly x: number, readonly y: number) {
-        Object.defineProperties(this, {
-            x: { value: x, writable: false, configurable: false },
-            y: { value: y, writable: false, configurable: false }
-        });
+        makePropertiesReadonly(this, "x", "y");
     }
 
     public static of(x: number, y: number): Point2D {
@@ -29,8 +27,4 @@ export class Point2D {
     }
 }
 
-Object.defineProperty(Point2D, "ORIGIN", {
-    value: Point2D.ORIGIN,
-    writable: false,
-    configurable: false
-});
+makePropertiesReadonly(Point2D, "ORIGIN");

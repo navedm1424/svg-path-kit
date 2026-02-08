@@ -1,8 +1,8 @@
-import {createTimeline, Timeline} from "./timeline";
-import {createInterpolator, Interpolator} from "./interpolator";
-import {Path} from "../path";
 import {createAnimationStepper} from "./animation-stepper";
-import {EasingFunction} from "./easing";
+import {createTimeline, type Timeline} from "./timeline";
+import {createInterpolator, type Interpolator} from "./interpolator";
+import type {Path} from "../path";
+import type {EasingFunction} from "./easing";
 
 export type AnimatedPathFunction = (tl: Timeline, interpolate: Interpolator) => Path;
 

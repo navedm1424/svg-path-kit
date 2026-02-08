@@ -1,24 +1,27 @@
 import {invLerp, lerp, remap} from "../numbers/index";
-import {isSequence, Segment, Sequence} from "./sequence";
-import {AnimationProgress} from "./animation-stepper";
-import {MapToType} from "./array-utils";
-import {EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
+import {Segment, Sequence} from "./sequence";
+import type {AnimationProgress} from "./animation-stepper";
+import {type EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
+import {assignReadonlyProperties} from "../object-utils";
 
 interface ToRangeSpecifier {
     to(start: number, end: number): number;
 }
 
-type SegmentMapper = {
+interface SegmentMapper extends ToRangeSpecifier {
     withEasing(easing: EasingFunction): ToRangeSpecifier;
-} & ToRangeSpecifier;
+}
+
+type MapToType<IL extends readonly any[], OT> = IL extends [any, ...infer Tail] ?
+    [OT, ...MapToType<Tail, OT>] : [];
 
 interface ToAnchorsSpecifier<S extends string[]> {
     to(...anchors: [number, ...MapToType<S, number>]): number;
 }
 
-type SequenceMapper<S extends string[]> = {
+interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S> {
     withEasing(easing: EasingFunction): ToAnchorsSpecifier<S>;
-} & ToAnchorsSpecifier<S>;
+}
 
 export interface Interpolator {
     readonly animationProgress: AnimationProgress;
@@ -28,9 +31,8 @@ export interface Interpolator {
     easeOut(segment: Segment): ToRangeSpecifier;
     easeInOut(segment: Segment): ToRangeSpecifier;
     sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S>;
+    [Symbol.toStringTag]: "Interpolator";
 }
-
-type GetSegmentsFromSequence<S extends Sequence<any>> = S extends Sequence<infer T> ? T : never;
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
@@ -70,9 +72,9 @@ const InterpolatorPrototype = {
         return this.segment(segment)
             .withEasing(easeInOut);
     },
-    sequence(sequence): SequenceMapper<GetSegmentsFromSequence<typeof sequence>> {
-        if (!isSequence(sequence))
-            throw new Error("The sequence object must be valid.");
+    sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S> {
+        if (!(sequence instanceof Sequence))
+            throw new Error("Invalid sequence object! Please provide a valid sequence.");
         let time = this.animationProgress.time;
 
         const map = this;
@@ -86,14 +88,14 @@ const InterpolatorPrototype = {
                 return anchors[anchors.length - 1];
 
             for (let i = 0; i < sequence.length; i++) {
-                const segment = sequence[i];
+                const segment = sequence[i]!;
                 if (segment.start <= time && time < segment.end) {
                     return map(segment).to(anchors[i], anchors[i + 1]);
                 }
             }
 
             return -1 as never;
-        } as ToAnchorsSpecifier<GetSegmentsFromSequence<typeof sequence>>["to"];
+        } as ToAnchorsSpecifier<S>["to"];
 
         return {
             withEasing(easing: EasingFunction) {
@@ -110,21 +112,13 @@ const InterpolatorPrototype = {
     }
 } as Interpolator;
 
-Object.defineProperty(InterpolatorPrototype, Symbol.toStringTag, {
-    value: "Interpolator",
-    writable: false,
-    configurable: false
-});
+assignReadonlyProperties(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
 
 export function createInterpolator(progress: AnimationProgress) {
     const instance = function Interpolator(segment) {
         return instance.segment(segment);
     } as Interpolator;
-    Object.defineProperty(instance, "animationProgress", {
-        value: progress,
-        writable: false,
-        configurable: false
-    });
+    assignReadonlyProperties(instance, {animationProgress: progress});
     Object.setPrototypeOf(instance, InterpolatorPrototype);
     return instance;
 }

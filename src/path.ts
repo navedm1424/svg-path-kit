@@ -13,6 +13,7 @@ import {
 } from "./svg-path";
 import {EllipticalArc} from "./curves/ellipse";
 import {Angle} from "./angle";
+import {makePropertiesReadonly} from "./object-utils";
 
 export interface Command {
     /** Starting point of the command. */
@@ -463,14 +464,15 @@ export class ClosePathCommand implements Command {
 }
 
 export class Path {
-    #commands: readonly Command[];
-    constructor(commands: readonly Command[]) {
-        this.#commands = commands;
+    readonly commands: readonly Command[];
+    constructor(commands: Command[]) {
+        this.commands = Object.freeze(commands);
+        makePropertiesReadonly(this, "commands");
     }
 
     /** Convert to a serializable SVG path. */
     public toSVGPath() {
-        return new SVGPath(Object.freeze(this.#commands.map(c => c.toSVGPathCommand())));
+        return new SVGPath(this.commands.map(c => c.toSVGPathCommand()));
     }
     /** Render the path to an SVG path string. */
     public toSVGPathString() {

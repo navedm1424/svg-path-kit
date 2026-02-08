@@ -2,9 +2,9 @@ import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
 import {CircularArc, EllipticalArc} from "./curves/index";
 import {
+    type Command,
     ChordScaledBezierCommand,
     ClosePathCommand,
-    Command,
     CubicBezierCurveCommand,
     CubicBezierEllipticalArc,
     CubicBezierHermiteCurveCommand,
@@ -15,6 +15,7 @@ import {
     QuadraticBezierCurveCommand
 } from "./path";
 import {Angle} from "./angle";
+import {makePropertiesReadonly} from "./object-utils";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities.
@@ -27,7 +28,10 @@ export class PathBuilder {
 
     /** Most recently appended command. */
     get lastCommand() {
-        return this.#commands[this.#commands.length - 1];
+        if (this.#commands.length === 0)
+            throw new Error("Invalid state: PathBuilder initialized without commands.");
+
+        return this.#commands[this.#commands.length - 1]!;
     }
 
     /** Starting point of the path. */
@@ -37,7 +41,11 @@ export class PathBuilder {
 
     /** Current drawing cursor position (endpoint of the last command). */
     get currentPosition() {
-        return this.lastCommand?.terminalPoint ?? Point2D.ORIGIN;
+        try {
+            return this.lastCommand.terminalPoint;
+        } catch (e) {
+            return Point2D.ORIGIN;
+        }
     }
 
     /** Velocity at the current position (derived from the last command). */
@@ -54,11 +62,7 @@ export class PathBuilder {
         else
             this.firstCommand = this.m(initialPoint);
 
-        Object.defineProperty(this, "firstCommand", {
-            value: this.firstCommand,
-            writable: false,
-            configurable: false
-        });
+        makePropertiesReadonly(this, "firstCommand");
     }
 
     /**
@@ -294,7 +298,7 @@ export class PathBuilder {
     }
 
     public toPath() {
-        return new Path(Object.freeze(this.#commands));
+        return new Path(this.#commands);
     }
 
     /** Serialize the built path to an SVG path string. */

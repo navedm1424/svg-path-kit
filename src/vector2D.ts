@@ -1,5 +1,6 @@
 import { Point2D } from "./point2D";
 import {Angle} from "./angle";
+import {makePropertiesReadonly} from "./object-utils";
 
 /**
  * Mutable 2D vector with geometric helpers and conversion utilities.
@@ -148,8 +149,4 @@ export class Vector2D {
     }
 }
 
-Object.defineProperty(Vector2D, "NULL_VECTOR", {
-    value: Vector2D.NULL_VECTOR,
-    writable: false,
-    configurable: false
-});
+makePropertiesReadonly(Vector2D, "NULL_VECTOR");

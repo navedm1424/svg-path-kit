@@ -2,6 +2,7 @@ import {Point2D} from "../point2D";
 import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
 import {Angle} from "../angle";
+import {makePropertiesReadonly} from "../object-utils";
 
 export class Circle extends ParametricCurve2D {
     #center: Point2D;
@@ -11,11 +12,7 @@ export class Circle extends ParametricCurve2D {
         super();
         this.#center = center;
         this.radius = Math.abs(radius);
-        Object.defineProperty(this, "radius", {
-            value: this.radius,
-            writable: false,
-            configurable: false
-        });
+        makePropertiesReadonly(this, "radius");
     }
     get center(): Point2D {
         return this.#center;
