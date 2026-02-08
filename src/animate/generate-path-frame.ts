@@ -6,12 +6,12 @@ import type {EasingFunction} from "./easing";
 
 export type AnimatedPathFunction = (tl: Timeline, interpolate: Interpolator) => Path;
 
-export function generatePathData(pathFunc: AnimatedPathFunction, time: number) {
+export function generatePathFrameAt(pathFunc: AnimatedPathFunction, time: number) {
     const progress = Object.freeze({ time, [Symbol.toStringTag]: "AnimationProgress" }) as AnimationProgress;
     return pathFunc(createTimeline(progress), createInterpolator(progress));
 }
 
-export function generateAnimatedPathFrames(pathFunc: AnimatedPathFunction, duration: number, easing?: EasingFunction) {
+export function generatePathFrames(pathFunc: AnimatedPathFunction, duration: number, easing?: EasingFunction) {
     const stepper = createAnimationStepper(duration, easing);
     const tl = createTimeline(stepper.progress);
     const interpolate = createInterpolator(stepper.progress);
