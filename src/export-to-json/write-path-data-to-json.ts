@@ -1,13 +1,22 @@
 import fs from "fs";
-import { mkdir } from "fs/promises";
+import {mkdir} from "fs/promises";
 import path from "path";
-import { Path } from "../path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {Path} from "../path";
+import {fileURLToPath} from "node:url";
 
 const DEFAULT_FILE_NAME = "sample";
+
+function getInvokerPath() {
+    const originalPrepareStackTrace = Error.prepareStackTrace;
+    Error.prepareStackTrace = (_, stack) => stack;
+    const err = new Error();
+    const stack = err.stack as unknown as NodeJS.CallSite[];
+    Error.prepareStackTrace = originalPrepareStackTrace;
+
+    // stack[0] is this function, stack[1] is the caller
+    const callerFile = stack[2]!.getFileName();
+    return fileURLToPath(callerFile!);
+}
 
 export async function writePathDataToJson(pathData: Path, outputDirectoryPath: string, outputFileName: string) {
     if (typeof process === "undefined" || !process.versions?.node) {
@@ -17,6 +26,7 @@ export async function writePathDataToJson(pathData: Path, outputDirectoryPath: s
         throw new Error("Invalid Path object.");
     if (typeof (outputFileName as any) !== "string")
         outputFileName = DEFAULT_FILE_NAME;
+    const __dirname = path.dirname(getInvokerPath());
 
     const data = {
         pathData: pathData.toSVGPathString()
@@ -46,6 +56,7 @@ export async function writePathFramesToJson(durationInSeconds: number, paths: Pa
             throw new Error("Invalid Path object.");
         })
     };
+    const __dirname = path.dirname(getInvokerPath());
 
     outputFileName = outputFileName.trim();
     const outputDirectory = path.resolve(__dirname, outputDirectoryPath);
