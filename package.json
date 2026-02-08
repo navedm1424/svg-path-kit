@@ -10,7 +10,11 @@
     ".": "./dist/index.js",
     "./numbers": "./dist/numbers/index.js",
     "./curves": "./dist/curves/index.js",
-    "./animate": "./dist/animate/index.js"
+    "./animate": "./dist/animate/index.js",
+    "./export-to-json": {
+      "node": "./dist/export-to-json/index.js",
+      "default": "./dist/export-to-json/default-index.js"
+    }
   },
   "scripts": {
     "build": "tsc"
@@ -31,6 +35,7 @@
     "url": "git+https://github.com/navedm1424/svg-path-kit.git"
   },
   "devDependencies": {
+    "@types/node": "^25.2.2",
     "typescript": "^5.9.3"
   }
 }
