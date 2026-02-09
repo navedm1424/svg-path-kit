@@ -289,7 +289,7 @@ export class RelativeClosePathPrimitive extends PrimitiveCommand {
 export class SVGPath {
     readonly commands: readonly PrimitiveCommand[];
     constructor(commands: PrimitiveCommand[]) {
-        this.commands = Object.freeze(commands);
+        this.commands = Object.freeze([...commands]);
         makePropertiesReadonly(this, "commands");
     }
 

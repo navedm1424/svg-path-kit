@@ -16,6 +16,7 @@ export type Timeline = {
     };
 };
 
+/** @internal */
 export function createTimeline(clock: AnimationClock) {
     assertAuthorizedAnimationClock(clock);
     const instance = function Timeline(selection) {

@@ -466,7 +466,7 @@ export class ClosePathCommand implements Command {
 export class Path {
     readonly commands: readonly Command[];
     constructor(commands: Command[]) {
-        this.commands = Object.freeze(commands);
+        this.commands = Object.freeze([...commands]);
         makePropertiesReadonly(this, "commands");
     }
 
@@ -482,7 +482,7 @@ export class Path {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
-        const { writeJsonFile } = await import("./utils/file-utils");
+        const { writeJsonFile } = require("./utils/file-utils");
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             pathData: this.toSVGPathString()
         });

@@ -41,7 +41,7 @@ const pathFramesMethods = {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
-        const { writeJsonFile } = await import("../utils/file-utils");
+        const { writeJsonFile } = require("../utils/file-utils");
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             durationMs: this.duration * 1000,
             fps: this.fps,

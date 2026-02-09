@@ -114,6 +114,7 @@ const InterpolatorPrototype = {
 
 assignReadonlyProperties(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
 
+/** @internal */
 export function createInterpolator(clock: AnimationClock) {
     assertAuthorizedAnimationClock(clock);
     const instance = function Interpolator(segment) {
