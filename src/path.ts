@@ -11,9 +11,12 @@ import {
     PrimitiveCommand,
     SVGPath
 } from "./svg-path";
-import {EllipticalArc} from "./curves/ellipse";
+import {EllipticalArc} from "./curves/index";
 import {Angle} from "./angle";
 import {makePropertiesReadonly} from "./object-utils";
+import path from "path";
+import {mkdir} from "fs/promises";
+import fs from "fs";
 
 export interface Command {
     /** Starting point of the command. */
@@ -477,5 +480,28 @@ export class Path {
     /** Render the path to an SVG path string. */
     public toSVGPathString() {
         return this.toSVGPath().toString();
+    }
+    public async exportToJson(outputDirectoryPath: string, outputFileName: string) {
+        if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
+            throw new Error(`${this.exportToJson.name} can only run in Node.js`);
+        if (!(typeof (outputDirectoryPath as any) === "string" && outputDirectoryPath))
+            throw new Error("Invalid output directory path.");
+        if (!(typeof (outputFileName as any) === "string" && outputFileName))
+            throw new Error("Invalid output file name.");
+
+        const data = {
+            pathData: this.toSVGPathString()
+        };
+
+        const cwd = process.cwd();
+        outputDirectoryPath = outputDirectoryPath.trim();
+        outputDirectoryPath = path.resolve(cwd, outputDirectoryPath);
+        await mkdir(outputDirectoryPath, { recursive: true });
+        outputFileName = outputFileName.trim();
+
+        const filePath = path.resolve(outputDirectoryPath, `${outputFileName}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+
+        return filePath;
     }
 }

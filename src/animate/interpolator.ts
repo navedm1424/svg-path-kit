@@ -1,30 +1,30 @@
 import {invLerp, lerp, remap} from "../numbers/index";
 import {Segment, Sequence} from "./sequence";
-import type {AnimationProgress} from "./animation-stepper";
 import {type EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
 import {assignReadonlyProperties} from "../object-utils";
+import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
 
-interface ToRangeSpecifier {
+export interface ToRangeSpecifier {
     to(start: number, end: number): number;
 }
 
-interface SegmentMapper extends ToRangeSpecifier {
+export interface SegmentMapper extends ToRangeSpecifier {
     withEasing(easing: EasingFunction): ToRangeSpecifier;
 }
 
 type MapToType<IL extends readonly any[], OT> = IL extends [any, ...infer Tail] ?
     [OT, ...MapToType<Tail, OT>] : [];
 
-interface ToAnchorsSpecifier<S extends string[]> {
+export interface ToAnchorsSpecifier<S extends string[]> {
     to(...anchors: [number, ...MapToType<S, number>]): number;
 }
 
-interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S> {
+export interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S> {
     withEasing(easing: EasingFunction): ToAnchorsSpecifier<S>;
 }
 
 export interface Interpolator {
-    readonly animationProgress: AnimationProgress;
+    readonly animationClock: AnimationClock;
     (segment: Segment): SegmentMapper;
     segment(segment: Segment): SegmentMapper;
     easeIn(segment: Segment): ToRangeSpecifier;
@@ -36,7 +36,7 @@ export interface Interpolator {
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
-        const time = this.animationProgress.time;
+        const time = this.animationClock.time;
         return {
             withEasing(easing: EasingFunction): ToRangeSpecifier {
                 return {
@@ -75,7 +75,7 @@ const InterpolatorPrototype = {
     sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S> {
         if (!(sequence instanceof Sequence))
             throw new Error("Invalid sequence object! Please provide a valid sequence.");
-        let time = this.animationProgress.time;
+        let time = this.animationClock.time;
 
         const map = this;
         const to = function to(...anchors) {
@@ -114,11 +114,12 @@ const InterpolatorPrototype = {
 
 assignReadonlyProperties(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
 
-export function createInterpolator(progress: AnimationProgress) {
+export function createInterpolator(clock: AnimationClock) {
+    assertAuthorizedAnimationClock(clock);
     const instance = function Interpolator(segment) {
         return instance.segment(segment);
     } as Interpolator;
-    assignReadonlyProperties(instance, {animationProgress: progress});
+    assignReadonlyProperties(instance, {animationClock: clock});
     Object.setPrototypeOf(instance, InterpolatorPrototype);
     return instance;
 }

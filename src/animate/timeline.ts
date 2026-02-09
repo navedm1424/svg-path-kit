@@ -1,9 +1,9 @@
-import type {AnimationProgress} from "./animation-stepper";
 import {Segment, Sequence} from "./sequence";
 import {assignReadonlyProperties} from "../object-utils";
+import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
 
 export type Timeline = {
-    readonly animationProgress: AnimationProgress;
+    readonly animationClock: AnimationClock;
     (segment: Segment): {
         hasStarted(): boolean;
         hasFinished(): boolean;
@@ -16,23 +16,24 @@ export type Timeline = {
     };
 };
 
-export function createTimeline(progress: AnimationProgress) {
-    const instance = function Timeline(segmentOrSequence) {
-        if (!(segmentOrSequence instanceof Segment || segmentOrSequence instanceof Sequence))
+export function createTimeline(clock: AnimationClock) {
+    assertAuthorizedAnimationClock(clock);
+    const instance = function Timeline(selection) {
+        if (!(selection instanceof Segment || selection instanceof Sequence))
             throw new Error("The argument must either be a segment or a sequence.");
 
         return {
             hasStarted(): boolean {
-                return progress.time >= segmentOrSequence.start;
+                return clock.time >= selection.start;
             },
             hasFinished(): boolean {
-                return progress.time >= segmentOrSequence.end;
+                return clock.time >= selection.end;
             },
             isActive(): boolean {
-                return progress.time >= segmentOrSequence.start && progress.time < segmentOrSequence.end;
+                return clock.time >= selection.start && clock.time < selection.end;
             }
         };
     } as Timeline;
-    assignReadonlyProperties(instance, {animationProgress: progress});
+    assignReadonlyProperties(instance, {animationClock: clock});
     return instance;
 }

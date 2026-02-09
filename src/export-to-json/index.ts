@@ -1,1 +1,0 @@
-export * from "./write-path-data-to-json";

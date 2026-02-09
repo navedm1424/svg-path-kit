@@ -54,12 +54,14 @@ type TupleIndex<T extends readonly unknown[]> =
         ? number
         : StrToNum<Exclude<keyof T, keyof any[]> & string>;
 
+type ZeroIfNegative<N extends number> = `${N}` extends `-${number}` ? 0 : N;
+
 type ComputeSubarray<
     Full extends any[],
     From extends number | any,
     To extends number | any
 > = To extends number
-    ? Sign<To> extends -1
+    ? `${To}` extends `-${number}`
         ? []
         : From extends To
             ? ZeroIfNegative<From> extends TupleIndex<Full>
@@ -71,12 +73,6 @@ type ComputeSubarray<
     : DoComputeSubarray<Full, From, To>;
 
 type LengthMinusOne<L extends any[]> = string[] extends L ? number : L extends [...infer H, string] ? H["length"] : number;
-
-type ZeroIfNegative<N extends number> = Sign<N> extends -1 ? 0 : N;
-type Sign<N extends number> =
-    `${N}` extends `-${string}` ? -1
-        : `${N}` extends "0" ? 0
-            : 1;
 
 type Subsequence<S extends string[], Start extends number | S[number] = 0, End extends number | S[number] = LengthMinusOne<S>> =
     string[] extends S ? Sequence<S> : Sequence<ComputeSubarray<S, Start, End>>;
@@ -185,7 +181,7 @@ function createSequence<S extends string[]>(
 
 export const Sequence = class {
     private constructor() {
-        throw new Error("A sequence object can only be created using the static factory method.");
+        throw new Error("A sequence can only be created using the static factory method.");
     }
     static fromSegments<S extends string[]>(...segments: { [K in keyof S]: [S[K], number] }) {
         return {

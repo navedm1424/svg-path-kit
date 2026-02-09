@@ -1,6 +1,6 @@
 {
   "name": "svg-path-kit",
-  "version": "1.2.0-alpha.6",
+  "version": "1.2.0-alpha.7",
   "description": "Build complex SVG paths with smooth continuous splines using a geometry-oriented builder API.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",
@@ -10,11 +10,7 @@
     ".": "./dist/index.js",
     "./numbers": "./dist/numbers/index.js",
     "./curves": "./dist/curves/index.js",
-    "./animate": "./dist/animate/index.js",
-    "./export-to-json": {
-      "node": "./dist/export-to-json/index.js",
-      "default": "./dist/export-to-json/default-index.js"
-    }
+    "./animate": "./dist/animate/index.js"
   },
   "scripts": {
     "build": "tsc"
