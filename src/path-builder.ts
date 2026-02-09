@@ -15,7 +15,7 @@ import {
     QuadraticBezierCurveCommand
 } from "./path";
 import {Angle} from "./angle";
-import {makePropertiesReadonly} from "./object-utils";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities.

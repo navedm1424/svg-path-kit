@@ -1,5 +1,5 @@
 import { Vector2D } from "./vector2D";
-import {makePropertiesReadonly} from "./object-utils";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 /**
  * Immutable absolute 2D point with helpers for vector arithmetic.

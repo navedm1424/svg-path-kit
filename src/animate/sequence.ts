@@ -1,5 +1,5 @@
 import {remap, saturate} from "../numbers/index";
-import {makePropertiesReadonly} from "../object-utils";
+import {makePropertiesReadonly} from "../utils/object-utils";
 
 export class Segment {
     readonly start: number;

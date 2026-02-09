@@ -1,7 +1,7 @@
 import {round} from "./numbers/index";
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
-import {makePropertiesReadonly} from "./object-utils";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 function coordinates(point: Point2D | Vector2D) {
     return `${round(point.x, 4)} ${round(point.y, 4)}`;

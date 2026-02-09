@@ -1,7 +1,7 @@
 import {invLerp, lerp, remap} from "../numbers/index";
 import {Segment, Sequence} from "./sequence";
 import {type EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
-import {assignReadonlyProperties} from "../object-utils";
+import {assignReadonlyProperties} from "../utils/object-utils";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
 
 export interface ToRangeSpecifier {

@@ -2,7 +2,7 @@ import {Point2D} from "../point2D";
 import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
 import {Angle} from "../angle";
-import {makePropertiesReadonly} from "../object-utils";
+import {makePropertiesReadonly} from "../utils/object-utils";
 
 export class Circle extends ParametricCurve2D {
     #center: Point2D;

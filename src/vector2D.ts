@@ -1,6 +1,6 @@
 import { Point2D } from "./point2D";
 import {Angle} from "./angle";
-import {makePropertiesReadonly} from "./object-utils";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 /**
  * Mutable 2D vector with geometric helpers and conversion utilities.

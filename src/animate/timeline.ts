@@ -1,5 +1,5 @@
 import {Segment, Sequence} from "./sequence";
-import {assignReadonlyProperties} from "../object-utils";
+import {assignReadonlyProperties} from "../utils/object-utils";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
 
 export type Timeline = {

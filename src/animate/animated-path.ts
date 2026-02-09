@@ -3,10 +3,8 @@ import {createInterpolator, type Interpolator} from "./interpolator";
 import type {Path} from "../path";
 import type {EasingFunction} from "./easing";
 import {saturate} from "../numbers/index";
-import path from "path";
-import {mkdir} from "fs/promises";
-import fs from "fs";
-import {assignReadonlyProperties} from "../object-utils";
+import {assignReadonlyProperties} from "../utils/object-utils";
+import {writeJsonFile} from "../utils/file-utils";
 
 const ANIMATION_CLOCK_BRAND: unique symbol = Symbol("ANIMATION_CLOCK_BRAND");
 
@@ -43,28 +41,13 @@ const pathFramesMethods = {
     async exportToJson(outputDirectoryPath: string, outputFileName: string) {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
-        if (!(typeof (outputDirectoryPath as any) === "string" && outputDirectoryPath))
-            throw new Error("Invalid output directory path.");
-        if (!(typeof (outputFileName as any) === "string" && outputFileName))
-            throw new Error("Invalid output file name.");
 
-        const data = {
+        return writeJsonFile(outputDirectoryPath, outputFileName, {
             durationMs: this.duration * 1000,
             fps: this.fps,
             easing: "linear",
             frames: this.toSVGPathStrings()
-        };
-
-        const cwd = process.cwd();
-        outputDirectoryPath = outputDirectoryPath.trim();
-        outputDirectoryPath = path.resolve(cwd, outputDirectoryPath);
-        await mkdir(outputDirectoryPath, { recursive: true });
-        outputFileName = outputFileName.trim();
-
-        const filePath = path.resolve(outputDirectoryPath, `${outputFileName}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
-
-        return filePath;
+        });
     }
 } as PathFrames;
 
