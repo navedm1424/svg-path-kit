@@ -179,11 +179,8 @@ function createSequence<S extends string[]>(
     ) as Sequence<S>;
 }
 
-export const Sequence = class {
-    private constructor() {
-        throw new Error("A sequence can only be created using the static factory method.");
-    }
-    static fromSegments<S extends string[]>(...segments: { [K in keyof S]: [S[K], number] }) {
+export const Sequence = Object.freeze({
+    fromSegments<S extends string[]>(...segments: { [K in keyof S]: [S[K], number] }) {
         return {
             scaleToRange(start: number, end: number): Sequence<S> {
                 start = saturate(start);
@@ -207,10 +204,8 @@ export const Sequence = class {
                 return createSequence(sequence);
             }
         };
-    }
-    static [Symbol.hasInstance](object: any): object is Sequence<any> {
+    },
+    [Symbol.hasInstance](object: any): object is Sequence<any> {
         return Object.is(Object.getPrototypeOf(object), SequencePrototype)
     }
-};
-
-makePropertiesReadonly(Sequence, "fromSegments", Symbol.hasInstance);
+});
