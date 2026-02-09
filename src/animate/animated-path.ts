@@ -4,23 +4,22 @@ import type {Path} from "../path";
 import type {EasingFunction} from "./easing";
 import {saturate} from "../numbers/index";
 import {assignReadonlyProperties} from "../utils/object-utils";
-import {writeJsonFile} from "../utils/file-utils";
-
-const ANIMATION_CLOCK_BRAND: unique symbol = Symbol("ANIMATION_CLOCK_BRAND");
 
 export interface AnimationClock {
     readonly time: number;
 }
+
+const AnimationClockPrototype: AnimationClock = {
+    get time() {
+        return undefined as unknown as number;
+    }
+};
 
 export function assertAuthorizedAnimationClock(value: any): asserts value is AnimationClock {
     if (Object.is(Object.getPrototypeOf(value), AnimationClockPrototype))
         return;
     throw new Error("The animation clock is unauthorized.");
 }
-
-const AnimationClockPrototype = Object.freeze({
-    [ANIMATION_CLOCK_BRAND]: "AnimationClock" as const
-});
 
 export type AnimatedPathFunction = (clock: AnimationClock, tl: Timeline, map: Interpolator) => Path;
 
@@ -42,6 +41,7 @@ const pathFramesMethods = {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
+        const { writeJsonFile } = await import("../utils/file-utils");
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             durationMs: this.duration * 1000,
             fps: this.fps,

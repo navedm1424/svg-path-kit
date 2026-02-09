@@ -14,7 +14,6 @@ import {
 import {EllipticalArc} from "./curves/index";
 import {Angle} from "./angle";
 import {makePropertiesReadonly} from "./utils/object-utils";
-import {writeJsonFile} from "./utils/file-utils";
 
 export interface Command {
     /** Starting point of the command. */
@@ -483,6 +482,7 @@ export class Path {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
+        const { writeJsonFile } = await import("./utils/file-utils");
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             pathData: this.toSVGPathString()
         });
