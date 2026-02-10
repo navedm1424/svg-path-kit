@@ -67,8 +67,8 @@ export function solveQuartic(a: number, b: number, c: number, d: number, e: numb
         // Two quadratics: y^2 ± u*y + (z ± v) = 0
         [[1, 1], [1, -1]].forEach(([s1, s2]) => {
             const A = 1;
-            const B = s1 * u;
-            const C = z + s2 * v;
+            const B = s1! * u;
+            const C = z + s2! * v;
             const discrimQuad = B * B - 4 * A * C;
             if (discrimQuad >= 0) {
                 roots.push((-B + Math.sqrt(discrimQuad)) / 2 - b / (4 * a));

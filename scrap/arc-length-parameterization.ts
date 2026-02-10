@@ -66,7 +66,7 @@ export function arcLengthParametrize(
     const s1 = segments.reduce((acc, cur) => acc + cur.arcLength, 0);
 
     function tFromS(s: number): number {
-        let t = segments[0].t0;
+        let t = segments[0]!.t0;
         if (s === 0) return t;
         let acc = 0;
 
