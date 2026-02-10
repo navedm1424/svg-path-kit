@@ -1,6 +1,7 @@
 import {Vector2D} from "./vector2D";
 import {Point2D} from "./point2D";
 import {ParametricCurve2D} from "./parametric-curve-2D";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 /**
  * Cubic Bézier curve with helpers for evaluation and subdivision.
@@ -13,6 +14,7 @@ export class CubicBezierCurve extends ParametricCurve2D {
         readonly endingPoint: Point2D
     ) {
         super();
+        makePropertiesReadonly(this, "startingPoint", "firstControlPoint", "secondControlPoint", "endingPoint");
     }
 
     public at(t: number): Point2D {

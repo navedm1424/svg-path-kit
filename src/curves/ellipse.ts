@@ -2,14 +2,14 @@ import {Point2D} from "../point2D";
 import {Vector2D} from "../vector2D";
 import {ParametricCurve2D} from "../parametric-curve-2D";
 import {Angle} from "../angle";
+import {makePropertiesReadonly} from "../utils/object-utils";
 
 /**
  * Parametric ellipse centered at an arbitrary point with tilt.
  */
 export class Ellipse extends ParametricCurve2D {
-    private _center: Point2D;
-    private _ellipseTilt: Angle;
-    readonly focalDistance: number;
+    #center: Point2D;
+    #ellipseTilt: Angle;
 
     private constructor(
         center: Point2D,
@@ -18,16 +18,16 @@ export class Ellipse extends ParametricCurve2D {
         ellipseTilt: Angle = Angle.ZERO
     ) {
         super();
-        this._center = center;
-        this._ellipseTilt = ellipseTilt;
-        this.focalDistance = Math.sqrt(Math.pow(semiMajorAxis, 2) - Math.pow(semiMinorAxis, 2));
+        this.#center = center;
+        this.#ellipseTilt = ellipseTilt;
+        makePropertiesReadonly(this, "semiMajorAxis", "semiMinorAxis");
     }
 
     get center(): Point2D {
-        return this._center;
+        return this.#center;
     }
     get ellipseTilt(): Angle {
-        return this._ellipseTilt;
+        return this.#ellipseTilt;
     }
 
     public static of(center: Point2D, semiMajorAxis: number, semiMinorAxis: number, ellipseTilt?: number | Angle): Ellipse;
@@ -51,7 +51,7 @@ export class Ellipse extends ParametricCurve2D {
         return this.center.add(Vector2D.of(
             this.semiMajorAxis * cosine,
             this.semiMinorAxis * sine
-        ).rotate(this._ellipseTilt));
+        ).rotate(this.#ellipseTilt));
     }
 
     public tangentAt(angle: number | Angle): Vector2D {
@@ -60,7 +60,7 @@ export class Ellipse extends ParametricCurve2D {
         return Vector2D.of(
             -this.semiMajorAxis * sine,
             this.semiMinorAxis * cosine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
 
     public accelerationAt(angle: number | Angle): Vector2D {
@@ -69,20 +69,20 @@ export class Ellipse extends ParametricCurve2D {
         return Vector2D.of(
             -this.semiMajorAxis * cosine,
             -this.semiMinorAxis * sine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
 
     /**
      * Translate the ellipse center by a vector.
      */
     public translate(vector: Vector2D) {
-        this._center = this._center.add(vector);
+        this.#center = this.#center.add(vector);
     }
     /**
      * Rotate the ellipse by the given angle.
      */
     public rotate(angle: number | Angle) {
-        this._ellipseTilt = this._ellipseTilt.add(angle);
+        this.#ellipseTilt = this.#ellipseTilt.add(angle);
     }
 }
 
@@ -94,7 +94,7 @@ export class EllipticalArc {
     readonly semiMinorAxis: number;
     readonly startAngle: Angle;
     readonly endAngle: Angle;
-    private _ellipseTilt: Angle;
+    #ellipseTilt: Angle;
 
     constructor(
         semiMajorAxis: number,
@@ -105,12 +105,13 @@ export class EllipticalArc {
     ) {
         this.semiMajorAxis = Math.abs(semiMajorAxis);
         this.semiMinorAxis = Math.abs(semiMinorAxis);
-        this._ellipseTilt = ellipseTilt instanceof Angle ? ellipseTilt : Angle.of(ellipseTilt);
+        this.#ellipseTilt = ellipseTilt instanceof Angle ? ellipseTilt : Angle.of(ellipseTilt);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
+        makePropertiesReadonly(this, "semiMajorAxis", "semiMinorAxis", "startAngle", "endAngle");
     }
     get ellipseTilt(): Angle {
-        return this._ellipseTilt;
+        return this.#ellipseTilt;
     }
 
     /** Vector from center to starting point. */
@@ -118,14 +119,14 @@ export class EllipticalArc {
         return Vector2D.of(
             this.semiMajorAxis * this.startAngle.cosine,
             this.semiMinorAxis * this.startAngle.sine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
     /** Vector from center to ending point. */
     get endingPointVector(): Vector2D {
         return Vector2D.of(
             this.semiMajorAxis * this.endAngle.cosine,
             this.semiMinorAxis * this.endAngle.sine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
 
     /** Tangent at the arc start. */
@@ -133,20 +134,20 @@ export class EllipticalArc {
         return Vector2D.of(
             -this.semiMajorAxis * this.startAngle.sine,
             this.semiMinorAxis * this.startAngle.cosine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
     /** Tangent at the arc end. */
     get endingTangentVector(): Vector2D {
         return Vector2D.of(
             -this.semiMajorAxis * this.endAngle.sine,
             this.semiMinorAxis * this.endAngle.cosine
-        ).rotate(this._ellipseTilt);
+        ).rotate(this.#ellipseTilt);
     }
 
     /**
      * Rotate the underlying ellipse by `angle`.
      */
     public rotate(angle: number | Angle) {
-        this._ellipseTilt = this._ellipseTilt.add(angle);
+        this.#ellipseTilt = this.#ellipseTilt.add(angle);
     }
 }

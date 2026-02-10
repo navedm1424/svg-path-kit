@@ -41,6 +41,7 @@ export class MoveCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "terminalPoint");
     }
 
     /** Moves do not contribute velocity. */
@@ -67,6 +68,7 @@ export class LineCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "terminalPoint");
     }
 
     /** Euclidean length between initial and terminal points. */
@@ -102,6 +104,7 @@ export class QuadraticBezierCurveCommand implements Command {
             initialPoint.add(controlPoint);
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "controlPoint", "terminalPoint");
     }
 
     public getStartVelocity(): Vector2D {
@@ -135,6 +138,7 @@ export class CubicBezierCurveCommand implements Command {
             initialPoint.add(secondControlPoint);
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "firstControlPoint", "secondControlPoint", "terminalPoint");
     }
 
     public getStartVelocity(): Vector2D {
@@ -192,6 +196,7 @@ export class CubicBezierEllipticalArc implements Command {
             initialPoint, initialPoint.add(startControlVector),
             endingPoint.add(endControlVector), endingPoint
         );
+        makePropertiesReadonly(this, "initialPoint", "arc", "cubicBezierCurve");
     }
 
     get terminalPoint(): Point2D {
@@ -227,6 +232,7 @@ export class CubicBezierHermiteCurveCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "startVelocity", "endVelocity", "terminalPoint");
     }
 
     public getStartVelocity(): Vector2D {
@@ -274,6 +280,7 @@ export class EllipticalArcCommand implements Command {
         }
         const center = initialPoint.add(this.arc.startingPointVector.scale(-1));
         this.terminalPoint = center.add(this.arc.endingPointVector);
+        makePropertiesReadonly(this, "initialPoint", "arc", "terminalPoint");
     }
 
     getEndVelocity(): Vector2D {
@@ -371,6 +378,7 @@ export class EllipticalArcWrapperCommand implements Command {
             theta1 += 2 * Math.PI;
 
         this.arc = new EllipticalArc(rx, ry, theta1, theta2, this.xAxisRotation);
+        makePropertiesReadonly(this, "initialPoint", "xRadius", "yRadius", "xAxisRotation", "largeArcFlag", "sweepFlag", "arc", "terminalPoint");
     }
 
     public getStartVelocity(): Vector2D {
@@ -425,7 +433,8 @@ export class ChordScaledBezierCommand implements Command {
         this.cubicBezierCurve = new CubicBezierCurve(
             initialPoint, firstControlPoint,
             secondControlPoint, this.terminalPoint
-        )
+        );
+        makePropertiesReadonly(this, "initialPoint", "startHandleAngle", "endHandleAngle", "startHandleScale", "endHandleScale", "cubicBezierCurve", "terminalPoint");
     }
 
     public getStartVelocity(): Vector2D {
@@ -447,7 +456,9 @@ export class ClosePathCommand implements Command {
     constructor(
         readonly initialPoint: Point2D,
         readonly moveCommand: MoveCommand
-    ) { }
+    ) {
+        makePropertiesReadonly(this, "initialPoint", "moveCommand");
+    }
 
     get terminalPoint(): Point2D {
         return this.moveCommand.terminalPoint;

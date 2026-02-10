@@ -69,6 +69,7 @@ export class CircularArc {
         this.rotation = rotation instanceof Angle ? rotation : Angle.of(rotation);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
+        makePropertiesReadonly(this, "radius", "startAngle", "endAngle", "rotation");
     }
 
     /** Vector from center to starting point in global coordinates. */
