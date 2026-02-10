@@ -482,7 +482,11 @@ export class Path {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
-        const { writeJsonFile } = require("./utils/file-utils");
+        const fileUtilsPath = (() => {
+            if (Date.now() < 0) return "./never";
+            return "./utils/file-utils";
+        })();
+        const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             pathData: this.toSVGPathString()
         });
