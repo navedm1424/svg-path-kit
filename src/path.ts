@@ -11,10 +11,10 @@ import {
     PrimitiveCommand,
     SVGPath
 } from "./svg-path";
-import {EllipticalArc} from "./curves/ellipse";
+import {EllipticalArc} from "./curves/index";
 import {Angle} from "./angle";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
-/** Shared contract for drawable path commands. */
 export interface Command {
     /** Starting point of the command. */
     readonly initialPoint: Point2D;
@@ -41,6 +41,7 @@ export class MoveCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "terminalPoint");
     }
 
     /** Moves do not contribute velocity. */
@@ -50,7 +51,6 @@ export class MoveCommand implements Command {
     public getEndVelocity(): Vector2D {
         return Vector2D.NULL_VECTOR;
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteMovePrimitive(this.terminalPoint);
     }
@@ -68,6 +68,7 @@ export class LineCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "terminalPoint");
     }
 
     /** Euclidean length between initial and terminal points. */
@@ -82,7 +83,6 @@ export class LineCommand implements Command {
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteLinePrimitive(this.terminalPoint);
     }
@@ -104,17 +104,15 @@ export class QuadraticBezierCurveCommand implements Command {
             initialPoint.add(controlPoint);
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "controlPoint", "terminalPoint");
     }
 
-    /** Velocity at the start of the curve. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.controlPoint).scale(2);
     }
-    /** Velocity at the end of the curve. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.controlPoint, this.terminalPoint).scale(2);
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteQuadraticBezierCurvePrimitive(this.controlPoint, this.terminalPoint);
     }
@@ -140,17 +138,15 @@ export class CubicBezierCurveCommand implements Command {
             initialPoint.add(secondControlPoint);
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "firstControlPoint", "secondControlPoint", "terminalPoint");
     }
 
-    /** Velocity at the start of the curve. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.firstControlPoint).scale(3);
     }
-    /** Velocity at the end of the curve. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.secondControlPoint, this.terminalPoint).scale(3);
     }
-    /** Convert to SVG primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteCubicBezierCurvePrimitive(this.firstControlPoint, this.secondControlPoint, this.terminalPoint);
     }
@@ -200,16 +196,15 @@ export class CubicBezierEllipticalArc implements Command {
             initialPoint, initialPoint.add(startControlVector),
             endingPoint.add(endControlVector), endingPoint
         );
+        makePropertiesReadonly(this, "initialPoint", "arc", "cubicBezierCurve");
     }
 
     get terminalPoint(): Point2D {
         return this.cubicBezierCurve.endingPoint;
     }
-    /** Velocity at arc start. */
     getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.cubicBezierCurve.firstControlPoint).scale(3);
     }
-    /** Velocity at arc end. */
     getEndVelocity(): Vector2D {
         return Vector2D.from(this.cubicBezierCurve.secondControlPoint, this.cubicBezierCurve.endingPoint).scale(3);
     }
@@ -237,13 +232,12 @@ export class CubicBezierHermiteCurveCommand implements Command {
     ) {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
+        makePropertiesReadonly(this, "initialPoint", "startVelocity", "endVelocity", "terminalPoint");
     }
 
-    /** Velocity at the start of the segment. */
     public getStartVelocity(): Vector2D {
         return this.startVelocity;
     }
-    /** Velocity at the end of the segment. */
     public getEndVelocity(): Vector2D {
         return this.endVelocity;
     }
@@ -286,14 +280,13 @@ export class EllipticalArcCommand implements Command {
         }
         const center = initialPoint.add(this.arc.startingPointVector.scale(-1));
         this.terminalPoint = center.add(this.arc.endingPointVector);
+        makePropertiesReadonly(this, "initialPoint", "arc", "terminalPoint");
     }
 
-    /** Tangent at arc end. */
     getEndVelocity(): Vector2D {
         return this.arc.endingTangentVector;
     }
 
-    /** Tangent at arc start. */
     getStartVelocity(): Vector2D {
         return this.arc.startingTangentVector;
     }
@@ -316,6 +309,7 @@ export class EllipticalArcCommand implements Command {
  */
 export class EllipticalArcWrapperCommand implements Command {
     readonly terminalPoint: Point2D;
+    readonly xAxisRotation: Angle;
     readonly arc: EllipticalArc;
 
     constructor(initialPoint: Point2D, xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D);
@@ -324,11 +318,12 @@ export class EllipticalArcWrapperCommand implements Command {
         readonly initialPoint: Point2D,
         readonly xRadius: number,
         readonly yRadius: number,
-        readonly xAxisRotation: number | Angle,
+        xAxisRotation: number | Angle,
         readonly largeArcFlag: boolean,
         readonly sweepFlag: boolean,
         endingPoint: Point2D | Vector2D
     ) {
+        this.xAxisRotation = xAxisRotation instanceof Angle ? xAxisRotation : Angle.of(xAxisRotation);
         this.terminalPoint = endingPoint instanceof Point2D ? endingPoint :
             initialPoint.add(endingPoint);
 
@@ -337,7 +332,7 @@ export class EllipticalArcWrapperCommand implements Command {
 
         // transform to arc space
         const midPointToStart = Vector2D.from(this.terminalPoint, initialPoint)
-            .scale(1 / 2).rotate(xAxisRotation instanceof Angle ? xAxisRotation.negated() : -xAxisRotation);
+            .scale(1 / 2).rotate(this.xAxisRotation.negated());
 
         // scale radii
         const lambda =
@@ -382,15 +377,14 @@ export class EllipticalArcWrapperCommand implements Command {
         if (!sweepFlag && theta1 < theta2)
             theta1 += 2 * Math.PI;
 
-        this.arc = new EllipticalArc(rx, ry, theta1, theta2, xAxisRotation);
+        this.arc = new EllipticalArc(rx, ry, theta1, theta2, this.xAxisRotation);
+        makePropertiesReadonly(this, "initialPoint", "xRadius", "yRadius", "xAxisRotation", "largeArcFlag", "sweepFlag", "arc", "terminalPoint");
     }
 
-    /** Tangent at arc start (respecting sweep direction). */
     public getStartVelocity(): Vector2D {
         const velocity = this.arc.startingTangentVector;
         return this.sweepFlag ? velocity : velocity.scale(-1);
     }
-    /** Tangent at arc end (respecting sweep direction). */
     public getEndVelocity(): Vector2D {
         const velocity = this.arc.endingTangentVector;
         return this.sweepFlag ? velocity : velocity.scale(-1);
@@ -439,14 +433,13 @@ export class ChordScaledBezierCommand implements Command {
         this.cubicBezierCurve = new CubicBezierCurve(
             initialPoint, firstControlPoint,
             secondControlPoint, this.terminalPoint
-        )
+        );
+        makePropertiesReadonly(this, "initialPoint", "startHandleAngle", "endHandleAngle", "startHandleScale", "endHandleScale", "cubicBezierCurve", "terminalPoint");
     }
 
-    /** Velocity at curve start. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.cubicBezierCurve.firstControlPoint).scale(3);
     }
-    /** Velocity at curve end. */
     public getEndVelocity(): Vector2D {
         return Vector2D.from(this.cubicBezierCurve.secondControlPoint, this.terminalPoint).scale(3);
     }
@@ -463,30 +456,30 @@ export class ClosePathCommand implements Command {
     constructor(
         readonly initialPoint: Point2D,
         readonly moveCommand: MoveCommand
-    ) { }
+    ) {
+        makePropertiesReadonly(this, "initialPoint", "moveCommand");
+    }
 
-    /** End point coincides with the matching move command. */
     get terminalPoint(): Point2D {
         return this.moveCommand.terminalPoint;
     }
-    /** Velocity to the closing point. */
     public getStartVelocity(): Vector2D {
         return Vector2D.from(this.initialPoint, this.moveCommand.terminalPoint);
     }
     public getEndVelocity(): Vector2D {
         return this.getStartVelocity();
     }
-    /** Convert to SVG close-path primitive. */
     public toSVGPathCommand(): PrimitiveCommand {
         return new AbsoluteClosePathPrimitive();
     }
 }
 
-/**
- * Sequence of commands representing a path.
- */
 export class Path {
-    constructor(private readonly commands: Command[]) {}
+    readonly commands: readonly Command[];
+    constructor(commands: Command[]) {
+        this.commands = Object.freeze([...commands]);
+        makePropertiesReadonly(this, "commands");
+    }
 
     /** Convert to a serializable SVG path. */
     public toSVGPath() {
@@ -495,5 +488,18 @@ export class Path {
     /** Render the path to an SVG path string. */
     public toSVGPathString() {
         return this.toSVGPath().toString();
+    }
+    public async exportToJson(outputDirectoryPath: string, outputFileName: string) {
+        if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
+            throw new Error(`${this.exportToJson.name} can only run in Node.js`);
+
+        const fileUtilsPath = (() => {
+            if (Date.now() < 0) return "./never";
+            return "./utils/file-utils";
+        })();
+        const { writeJsonFile } = await import(fileUtilsPath);
+        return writeJsonFile(outputDirectoryPath, outputFileName, {
+            pathData: this.toSVGPathString()
+        });
     }
 }

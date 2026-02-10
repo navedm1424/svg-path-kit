@@ -2,9 +2,9 @@ import {Point2D} from "./point2D";
 import {Vector2D} from "./vector2D";
 import {CircularArc, EllipticalArc} from "./curves/index";
 import {
+    type Command,
     ChordScaledBezierCommand,
     ClosePathCommand,
-    Command,
     CubicBezierCurveCommand,
     CubicBezierEllipticalArc,
     CubicBezierHermiteCurveCommand,
@@ -15,18 +15,23 @@ import {
     QuadraticBezierCurveCommand
 } from "./path";
 import {Angle} from "./angle";
+import {makePropertiesReadonly} from "./utils/object-utils";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities.
  */
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
-    private commands: Command[] = [];
-    private openPathStack: MoveCommand[] = [];
+    #commands: Command[] = [];
+    #commandsById: Record<string, Command> = {};
+    #openPathStack: MoveCommand[] = [];
 
     /** Most recently appended command. */
     get lastCommand() {
-        return this.commands[this.commands.length - 1];
+        if (this.#commands.length === 0)
+            throw new Error("Invalid state: PathBuilder initialized without commands.");
+
+        return this.#commands[this.#commands.length - 1]!;
     }
 
     /** Starting point of the path. */
@@ -36,7 +41,11 @@ export class PathBuilder {
 
     /** Current drawing cursor position (endpoint of the last command). */
     get currentPosition() {
-        return this.lastCommand?.terminalPoint ?? Point2D.ORIGIN;
+        try {
+            return this.lastCommand.terminalPoint;
+        } catch (e) {
+            return Point2D.ORIGIN;
+        }
     }
 
     /** Velocity at the current position (derived from the last command). */
@@ -44,11 +53,16 @@ export class PathBuilder {
         return this.lastCommand.getEndVelocity();
     }
 
-    private constructor(initialPoint: Point2D | Vector2D) {
+    private constructor(initialPoint: any) {
+        if (!(initialPoint instanceof Point2D || initialPoint instanceof Vector2D))
+            throw new Error("Invalid argument type.");
+
         if (initialPoint instanceof Vector2D)
             this.firstCommand = this.m(initialPoint);
         else
             this.firstCommand = this.m(initialPoint);
+
+        makePropertiesReadonly(this, "firstCommand");
     }
 
     /**
@@ -64,8 +78,16 @@ export class PathBuilder {
      * Append a command to the builder.
      */
     public append<T extends Command>(command: T): T {
-        this.commands.push(command);
+        this.#commands.push(command);
         return command;
+    }
+
+    public setLastCommandId(id: string): void {
+        this.#commandsById[id] = this.lastCommand;
+    }
+
+    public getCommandById(id: string): Command | null {
+        return this.#commandsById[id] ?? null;
     }
 
     /**
@@ -79,7 +101,7 @@ export class PathBuilder {
             // @ts-expect-error
             point
         );
-        this.openPathStack.push(moveCommand);
+        this.#openPathStack.push(moveCommand);
         return this.append(moveCommand);
     }
 
@@ -272,12 +294,11 @@ export class PathBuilder {
      * Close the current subpath.
      */
     public z(): ClosePathCommand {
-        return this.append(new ClosePathCommand(this.currentPosition, this.openPathStack.pop()!));
+        return this.append(new ClosePathCommand(this.currentPosition, this.#openPathStack.pop()!));
     }
 
-    /** Build a {@link Path} from accumulated commands. */
     public toPath() {
-        return new Path(this.commands);
+        return new Path(this.#commands);
     }
 
     /** Serialize the built path to an SVG path string. */

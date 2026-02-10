@@ -1,42 +1,32 @@
+import {makePropertiesReadonly} from "./utils/object-utils";
+
 /**
  * Immutable wrapper around an angle value that caches its sine and cosine
  * and offers helpers for common rotations.
  */
 export class Angle {
-    /** Pre-constructed angle of 0 radians. */
     public static readonly ZERO = Angle.of(0);
-    /** Pre-constructed angle of π/4 radians. */
     public static readonly QUARTER_PI = Angle.of(Math.PI / 4);
-    /** Pre-constructed angle of π/2 radians. */
     public static readonly HALF_PI = Angle.of(Math.PI / 2);
-    /** Pre-constructed angle of π radians. */
     public static readonly PI = Angle.of(Math.PI);
-    /** Pre-constructed angle of 2π radians. */
     public static readonly TWO_PI = Angle.of(2 * Math.PI);
 
     private constructor(
         readonly value: number,
         readonly sine: number = Math.sin(value),
         readonly cosine: number = Math.cos(value)
-    ) {}
+    ) {
+        makePropertiesReadonly(this, "value", "sine", "cosine");
+    }
 
-    /**
-     * Factory for constructing an {@link Angle} from a radian value.
-     */
     public static of(value: number) {
         return new Angle(value);
     }
 
-    /**
-     * Return a new angle offset by the provided amount.
-     */
     public add(angle: number | Angle): Angle {
         return Angle.of(this.value + Number(angle));
     }
 
-    /**
-     * Return a new angle reduced by the provided amount.
-     */
     public subtract(angle: number | Angle): Angle {
         return Angle.of(this.value - Number(angle));
     }
@@ -148,9 +138,6 @@ export class Angle {
         );
     }
 
-    /**
-     * Convert the radian angle to degrees.
-     */
     public toDegrees() {
         return this.value * 180 / Math.PI;
     }
@@ -159,3 +146,5 @@ export class Angle {
         return this.value;
     }
 }
+
+makePropertiesReadonly(Angle, "ZERO", "QUARTER_PI", "HALF_PI", "PI", "TWO_PI");
