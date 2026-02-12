@@ -9,16 +9,25 @@ export interface AnimationClock {
     readonly time: number;
 }
 
-const AnimationClockPrototype: AnimationClock = {
-    get time() {
-        return undefined as unknown as number;
+class AuthorizedAnimationClock implements AnimationClock {
+    readonly #brand = true;
+    constructor(timeProvider: () => number) {
+        Object.setPrototypeOf(this, Object.prototype);
+        Object.defineProperty(this, "time", {
+            get: timeProvider
+        });
     }
-};
+    get time() {
+        return undefined as never;
+    }
+    static [Symbol.hasInstance](value: any): value is AuthorizedAnimationClock {
+        return #brand in value && value.#brand;
+    }
+}
 
 export function assertAuthorizedAnimationClock(value: any): asserts value is AnimationClock {
-    if (Object.is(Object.getPrototypeOf(value), AnimationClockPrototype))
-        return;
-    throw new Error("The animation clock is unauthorized.");
+    if (!(value instanceof AuthorizedAnimationClock))
+        throw new Error("The animation clock is unauthorized.");
 }
 
 export type AnimatedPathFunction = (clock: AnimationClock, tl: Timeline, map: Interpolator) => Path;
@@ -61,12 +70,7 @@ export class AnimatedPath {
         this.#animatedPathFunction = func;
     }
     computePathFrameAt(time: number) {
-        const clock: AnimationClock = {
-            get time() {
-                return time;
-            }
-        };
-        Object.setPrototypeOf(clock, AnimationClockPrototype);
+        const clock: AnimationClock = new AuthorizedAnimationClock(() => time);
         return this.#animatedPathFunction(clock, createTimeline(clock), createInterpolator(clock));
     }
     computePathFrames(duration: number, easing?: EasingFunction) {
@@ -74,12 +78,7 @@ export class AnimatedPath {
         let progress = 0;
         const progressUnit = 1 / (duration * fps - 1);
         let time = 0;
-        const clock: AnimationClock = {
-            get time() {
-                return time
-            }
-        };
-        Object.setPrototypeOf(clock, AnimationClockPrototype);
+        const clock: AnimationClock = new AuthorizedAnimationClock(() => time);
         const tl = createTimeline(clock);
         const interpolate = createInterpolator(clock);
         const paths = [] as Path[] as PathFrames;

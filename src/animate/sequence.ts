@@ -1,5 +1,5 @@
 import {remap, saturate} from "../numbers/index";
-import {makePropertiesReadonly} from "../utils/object-utils";
+import {assignReadonlyProperties, makePropertiesReadonly} from "../utils/object-utils";
 
 export class Segment {
     readonly start: number;
@@ -94,37 +94,61 @@ export type Sequence<S extends string[]> = {
     readonly [K in S[number]]: Segment;
 });
 
-const SequencePrototype = {
+class AuthorizedSequence<S extends string[]> {
+    readonly #brand = true;
+    readonly length: S["length"] extends number ? S["length"] : number;
+    readonly segmentNames: unknown extends S[number] ? readonly string[] : readonly S[number][];
+    readonly [key: number]: Segment;
+
+    constructor(segments: [S[number], Segment][]) {
+        this.length = segments.length;
+        this.segmentNames = Object.freeze(segments.map(i => i[0]));
+        const properties = {
+            length: this.length,
+            segmentNames: this.segmentNames
+        } as {
+            [K in keyof this]?: this[K]
+        };
+
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]!;
+            (properties as any)[segment[0]] = segment[1] as Sequence<S>[S[number]];
+            (properties as any)[i] = segment[1];
+        }
+
+        assignReadonlyProperties(this, properties);
+    }
+
     get start() {
         return this[0]!.start;
-    },
+    }
     get end() {
         return this[this.length - 1]!.end;
-    },
+    }
     subsequence<From extends number | string, To extends number | string>(
-        this, from: From = 0 as From, to: To = this.length - 1 as To
+        from: From = 0 as From, to: To = this.length - 1 as To
     ) {
         const output: [string, Segment][] = [];
         const segmentNames = this.segmentNames;
         let startPushing = false;
         if (typeof from === "number" && typeof to === "number") {
             if (to < from)
-                return createSequence(output);
+                return new AuthorizedSequence(output);
             if (Object.is(from, to) && from >= 0 && from < segmentNames.length) {
                 const segmentName = segmentNames[from]!;
-                output.push([segmentName, this[segmentName] as Segment]);
-                return createSequence(output);
+                output.push([segmentName, (this as any)[segmentName] as Segment]);
+                return new AuthorizedSequence(output);
             }
         }
         if (typeof from === "number") {
             if (from > segmentNames.length - 1)
-                return createSequence(output);
+                return new AuthorizedSequence(output);
             if (from < 0)
                 from = 0 as From;
         }
         if (typeof to === "number") {
             if (to < 0)
-                return createSequence(output);
+                return new AuthorizedSequence(output);
             if (to > segmentNames.length - 1)
                 to = segmentNames.length - 1 as To;
         }
@@ -132,17 +156,17 @@ const SequencePrototype = {
         for (let i = typeof from === "number" ? from : 0; i < segmentNames.length; i++) {
             const segmentName = segmentNames[i]!;
             if (Object.is(to, i) || Object.is(to, segmentName)) {
-                if (startPushing) output.push([segmentName, this[segmentName] as Segment]);
+                if (startPushing) output.push([segmentName, (this as any)[segmentName] as Segment]);
                 break;
             }
             if (startPushing || Object.is(from, i) || Object.is(from, segmentName)) {
                 startPushing = true;
-                output.push([segmentName, this[segmentName] as Segment]);
+                output.push([segmentName, (this as any)[segmentName] as Segment]);
             }
         }
 
-        return createSequence(output);
-    },
+        return new AuthorizedSequence(output);
+    }
     toArray() {
         const result: Segment[] = [];
         for (let i = 0; i < this.length; i++) {
@@ -150,34 +174,16 @@ const SequencePrototype = {
         }
         return result;
     }
-} as Sequence<string[]>;
+    static [Symbol.hasInstance](value: any): value is AuthorizedSequence<any> {
+        return #brand in value && value.#brand;
+    }
+}
 
-Object.defineProperty(SequencePrototype, Symbol.toStringTag, {
-    value: "Sequence",
+Object.defineProperty(AuthorizedSequence.prototype, "constructor", {
+    value: undefined,
     writable: false,
     configurable: false
 });
-
-function createSequence<S extends string[]>(
-    segments: [S[number], Segment][]
-) {
-    const properties = {
-        length: segments.length,
-        segmentNames: Object.freeze(segments.map(i => i[0]))
-    } as {
-        [K in keyof Sequence<S>]?: Sequence<S>[K]
-    };
-
-    for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i]!;
-        properties[segment[0]] = segment[1] as Sequence<S>[S[number]];
-        (properties as any)[i] = segment[1];
-    }
-
-    return Object.freeze(
-        Object.assign(Object.create(SequencePrototype), properties)
-    ) as Sequence<S>;
-}
 
 export const Sequence = Object.freeze({
     fromSegments<S extends string[]>(...segments: { [K in keyof S]: [S[K], number] }) {
@@ -201,11 +207,11 @@ export const Sequence = Object.freeze({
                     ];
                     currentTime += duration;
                 }
-                return createSequence(sequence);
+                return new AuthorizedSequence(sequence) as unknown as Sequence<S>;
             }
         };
     },
     [Symbol.hasInstance](object: any): object is Sequence<any> {
-        return Object.is(Object.getPrototypeOf(object), SequencePrototype)
+        return object instanceof AuthorizedSequence;
     }
 });

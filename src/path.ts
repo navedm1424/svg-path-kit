@@ -489,7 +489,7 @@ export class Path {
     public toSVGPathString() {
         return this.toSVGPath().toString();
     }
-    public async exportToJson(outputDirectoryPath: string, outputFileName: string) {
+    public async exportToJson(outputDirectoryPath: string, outputFileName: string): Promise<string> {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
