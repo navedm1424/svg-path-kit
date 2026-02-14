@@ -7,7 +7,7 @@ type DoComputeSubarray<
     To extends number | any,
     I extends null[] = [],
     Output extends any[] = [],
-    Include extends boolean = false
+    Include extends boolean = From extends I["length"] | Remaining[0] ? true : false
 > = 0 extends Remaining["length"]
     ? Output
     : To extends I["length"] | Remaining[0]
@@ -35,17 +35,23 @@ type ComputeSubarray<
     Full extends any[],
     From extends number | any,
     To extends number | any
-> = To extends number
-    ? `${To}` extends `-${number}`
-        ? []
-        : From extends To
-            ? ZeroIfNegative<From> extends TupleIndex<Full>
-                ? [Full[ZeroIfNegative<From>]]
-                : []
-            : DoComputeSubarray<Full,
-                From extends number ? ZeroIfNegative<From> : From,
-                To extends TupleIndex<Full> ? To : LengthMinusOne<Full>>
-    : DoComputeSubarray<Full, From, To>;
+> = /*Full["length"] extends 0
+    ? []
+    : */
+    To extends number
+        ? `${To}` extends `-${number}`
+            ? []
+            : From extends To
+                ? From extends TupleIndex<Full>
+                    ? [Full[From]] : []
+                : From extends number
+                    ? DoComputeSubarray<Full,
+                        From extends TupleIndex<Full> ? From : ZeroIfNegative<From>,
+                        To extends TupleIndex<Full> ? To : LengthMinusOne<Full>>
+                    : DoComputeSubarray<Full, From, To extends TupleIndex<Full> ? To : LengthMinusOne<Full>>
+        : From extends number
+            ? DoComputeSubarray<Full, From extends TupleIndex<Full> ? From : ZeroIfNegative<From>, To>
+            : DoComputeSubarray<Full, From, To>;
 
 type LengthMinusOne<L extends any[]> = string[] extends L ? number : L extends [...infer H, string] ? H["length"] : number;
 
@@ -141,6 +147,9 @@ export class Sequence<S extends string[]> {
     subsequence<From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>>(
         from: From = 0 as From, to: To = this.length - 1 as To
     ): Subsequence<S, From, To> {
+        if (this.length === 0)
+            throw new Error("Invalid state: sequence instantiated with no segments.");
+
         type Subarray = ComputeSubarray<S, From, To>;
         const output: [Subarray[number], Segment][] = [];
         const segmentNames = Object.keys(this.segments);
