@@ -1,26 +1,14 @@
-import {Segment, Sequence} from "./sequence";
 import {assignReadonlyProperties} from "../utils/object-utils";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
-
-export type Timeline = {
-    readonly animationClock: AnimationClock;
-    (segment: Segment): {
-        hasStarted(): boolean;
-        hasFinished(): boolean;
-        isActive(): boolean;
-    };
-    (sequence: Sequence<string[]>): {
-        hasStarted(): boolean;
-        hasFinished(): boolean;
-        isActive(): boolean;
-    };
-};
+import {Sequence} from "./sequence";
+import {Segment} from "./segment";
+import type {Timeline} from "./timeline.types";
 
 /** @internal */
-export function createTimeline(clock: AnimationClock) {
+export function createTimeline(clock: AnimationClock): Timeline {
     assertAuthorizedAnimationClock(clock);
     const instance = function Timeline(selection) {
-        if (!(selection instanceof Segment || selection instanceof Sequence))
+        if (!(selection instanceof Segment || (selection) instanceof Sequence))
             throw new Error("The argument must either be a segment or a sequence.");
 
         return {
@@ -36,5 +24,5 @@ export function createTimeline(clock: AnimationClock) {
         };
     } as Timeline;
     assignReadonlyProperties(instance, {animationClock: clock});
-    return instance;
+    return Object.freeze(instance);
 }

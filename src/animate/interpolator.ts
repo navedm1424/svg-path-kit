@@ -1,38 +1,15 @@
 import {invLerp, lerp, remap} from "../numbers/index";
-import {Segment, Sequence} from "./sequence";
-import {type EasingFunction, easeIn, easeInOut, easeOut} from "./easing";
+import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing";
 import {assignReadonlyProperties} from "../utils/object-utils";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
-
-export interface ToRangeSpecifier {
-    to(start: number, end: number): number;
-}
-
-export interface SegmentMapper extends ToRangeSpecifier {
-    withEasing(easing: EasingFunction): ToRangeSpecifier;
-}
-
-type MapToType<IL extends readonly any[], OT> = IL extends [any, ...infer Tail] ?
-    [OT, ...MapToType<Tail, OT>] : [];
-
-export interface ToAnchorsSpecifier<S extends string[]> {
-    to(...anchors: [number, ...MapToType<S, number>]): number;
-}
-
-export interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S> {
-    withEasing(easing: EasingFunction): ToAnchorsSpecifier<S>;
-}
-
-export interface Interpolator {
-    readonly animationClock: AnimationClock;
-    (segment: Segment): SegmentMapper;
-    segment(segment: Segment): SegmentMapper;
-    easeIn(segment: Segment): ToRangeSpecifier;
-    easeOut(segment: Segment): ToRangeSpecifier;
-    easeInOut(segment: Segment): ToRangeSpecifier;
-    sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S>;
-    [Symbol.toStringTag]: "Interpolator";
-}
+import type {
+    Interpolator,
+    SegmentMapper,
+    SequenceMapper,
+    ToAnchorsSpecifier,
+    ToRangeSpecifier
+} from "./interpolator.types";
+import {Sequence} from "./sequence";
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
@@ -73,7 +50,7 @@ const InterpolatorPrototype = {
             .withEasing(easeInOut);
     },
     sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S> {
-        if (!(sequence instanceof Sequence))
+        if (!((sequence) instanceof Sequence))
             throw new Error("Invalid sequence object! Please provide a valid sequence.");
         let time = this.animationClock.time;
 
@@ -112,7 +89,8 @@ const InterpolatorPrototype = {
     }
 } as Interpolator;
 
-assignReadonlyProperties(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
+Object.assign(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
+Object.freeze(InterpolatorPrototype);
 
 /** @internal */
 export function createInterpolator(clock: AnimationClock) {
@@ -122,5 +100,5 @@ export function createInterpolator(clock: AnimationClock) {
     } as Interpolator;
     assignReadonlyProperties(instance, {animationClock: clock});
     Object.setPrototypeOf(instance, InterpolatorPrototype);
-    return instance;
+    return Object.freeze(instance);
 }

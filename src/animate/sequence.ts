@@ -1,30 +1,5 @@
 import {remap, saturate} from "../numbers/index";
-import {assignReadonlyProperties, makePropertiesReadonly} from "../utils/object-utils";
-
-export class Segment {
-    readonly start: number;
-    readonly end: number;
-    readonly duration: number;
-
-    constructor(start: number, end: number) {
-        if (start > end)
-            [start, end] = [end, start];
-        this.start = saturate(start);
-        this.end = saturate(end);
-        this.duration = this.end - this.start;
-        makePropertiesReadonly(this, "start", "end", "duration");
-    }
-    public static from(start: number) {
-        return {
-            to(end: number) {
-                return new Segment(start, end);
-            },
-            ofDuration(duration: number) {
-                return new Segment(start, start + duration);
-            }
-        };
-    }
-}
+import {Segment} from "./segment";
 
 type DoComputeSubarray<
     Remaining extends any[],
@@ -74,130 +49,65 @@ type ComputeSubarray<
 
 type LengthMinusOne<L extends any[]> = string[] extends L ? number : L extends [...infer H, string] ? H["length"] : number;
 
-type Subsequence<S extends string[], Start extends number | S[number] = 0, End extends number | S[number] = LengthMinusOne<S>> =
-    string[] extends S ? Sequence<S> : Sequence<ComputeSubarray<S, Start, End>>;
-
-export type Sequence<S extends string[]> = {
-    readonly length: S["length"] extends number ? S["length"] : number;
-    readonly segmentNames: unknown extends S[number] ? readonly string[] : readonly S[number][];
-    readonly start: number;
-    readonly end: number;
-    subsequence<From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>>(
-        from?: From, to?: To
-    ): Subsequence<S, From, To>;
-    toArray(): Segment[];
-} & {
-    readonly [key: number]: Segment;
-} & (string[] extends S ? {
-    readonly [key: string]: unknown;
-} : {
-    readonly [K in S[number]]: Segment;
-});
+type Subsequence<S extends string[], From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>> =
+    string[] extends S ? Sequence<S> : Sequence<ComputeSubarray<S, From, To>>;
 
 class AuthorizedSequence<S extends string[]> {
     readonly #brand = true;
-    readonly length: S["length"] extends number ? S["length"] : number;
-    readonly segmentNames: unknown extends S[number] ? readonly string[] : readonly S[number][];
-    readonly [key: number]: Segment;
 
-    constructor(segments: [S[number], Segment][]) {
-        this.length = segments.length;
-        this.segmentNames = Object.freeze(segments.map(i => i[0]));
-        const properties = {
-            length: this.length,
-            segmentNames: this.segmentNames
-        } as {
-            [K in keyof this]?: this[K]
+    constructor(segmentsWithNames: { [K in keyof S]: [S[K], Segment] }) {
+        const segments = {} as {
+            [K in S[number]]: string extends K ? Segment | undefined : Segment;
         };
 
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i]!;
-            (properties as any)[segment[0]] = segment[1] as Sequence<S>[S[number]];
-            (properties as any)[i] = segment[1];
+        for (let i = 0; i < segmentsWithNames.length; i++) {
+            const segment = segmentsWithNames[i]! as [S[number], Segment];
+            segments[segment[0]] = segment[1] as Sequence<S>["segments"][S[number]];
+            (this as any)[i] = segment[1];
         }
 
-        assignReadonlyProperties(this, properties);
+        Object.assign(this, {length: segmentsWithNames.length, segments});
+        Object.setPrototypeOf(this, Sequence.prototype)
+        Object.freeze(this);
     }
 
-    get start() {
-        return this[0]!.start;
-    }
-    get end() {
-        return this[this.length - 1]!.end;
-    }
-    subsequence<From extends number | string, To extends number | string>(
-        from: From = 0 as From, to: To = this.length - 1 as To
-    ) {
-        const output: [string, Segment][] = [];
-        const segmentNames = this.segmentNames;
-        let startPushing = false;
-        if (typeof from === "number" && typeof to === "number") {
-            if (to < from)
-                return new AuthorizedSequence(output);
-            if (Object.is(from, to) && from >= 0 && from < segmentNames.length) {
-                const segmentName = segmentNames[from]!;
-                output.push([segmentName, (this as any)[segmentName] as Segment]);
-                return new AuthorizedSequence(output);
-            }
-        }
-        if (typeof from === "number") {
-            if (from > segmentNames.length - 1)
-                return new AuthorizedSequence(output);
-            if (from < 0)
-                from = 0 as From;
-        }
-        if (typeof to === "number") {
-            if (to < 0)
-                return new AuthorizedSequence(output);
-            if (to > segmentNames.length - 1)
-                to = segmentNames.length - 1 as To;
-        }
-
-        for (let i = typeof from === "number" ? from : 0; i < segmentNames.length; i++) {
-            const segmentName = segmentNames[i]!;
-            if (Object.is(to, i) || Object.is(to, segmentName)) {
-                if (startPushing) output.push([segmentName, (this as any)[segmentName] as Segment]);
-                break;
-            }
-            if (startPushing || Object.is(from, i) || Object.is(from, segmentName)) {
-                startPushing = true;
-                output.push([segmentName, (this as any)[segmentName] as Segment]);
-            }
-        }
-
-        return new AuthorizedSequence(output);
-    }
-    toArray() {
-        const result: Segment[] = [];
-        for (let i = 0; i < this.length; i++) {
-            result[i] = this[i]!;
-        }
-        return result;
-    }
-    static [Symbol.hasInstance](value: any): value is AuthorizedSequence<any> {
-        return #brand in value && value.#brand;
+    static [Symbol.hasInstance](object: any): object is Sequence<any> {
+        return #brand in object && object.#brand;
     }
 }
 
-Object.defineProperty(AuthorizedSequence.prototype, "constructor", {
-    value: undefined,
-    writable: false,
-    configurable: false
-});
+export class Sequence<S extends string[]> {
+    readonly [key: number]: Segment;
+    readonly length: S["length"] extends number ? S["length"] : number;
+    readonly segments: {
+        readonly [K in S[number]]: string extends K ? Segment | undefined : Segment;
+    };
+    private constructor() {
+        throw new Error("A sequence can only be created using the factory methods.");
+    }
+    static fromSegments<S extends [string, ...string[]]>(...segments: { [K in keyof S]: [S[K], number] }) {
+        if (!(
+            Array.isArray(segments)
+            && segments.length > 0
+            && segments.every(s =>
+                Array.isArray(s)
+                && typeof (s[0]) === "string"
+                && typeof (s[1]) === "number"
+            )
+        ))
+            throw new Error("A sequence must at least have one segment.");
 
-export const Sequence = Object.freeze({
-    fromSegments<S extends string[]>(...segments: { [K in keyof S]: [S[K], number] }) {
         return {
             scaleToRange(start: number, end: number): Sequence<S> {
                 start = saturate(start);
                 end = saturate(end);
-                const sequence: [string, Segment][] = [];
+                const sequence = [] as { [K in keyof S]: [S[K], Segment] };
                 let totalTime = segments.reduce(
                     (acc, cur) => acc + cur[1], 0
                 );
                 let currentTime = 0;
                 for (let i = 0; i < segments.length; i++) {
-                    const interval = segments[i]!;
+                    const interval = segments[i]! as [S[number], number];
                     const name = interval[0];
                     const duration = Math.abs(interval[1]);
                     sequence[i] = [
@@ -207,11 +117,78 @@ export const Sequence = Object.freeze({
                     ];
                     currentTime += duration;
                 }
-                return new AuthorizedSequence(sequence) as unknown as Sequence<S>;
+                return new AuthorizedSequence(sequence) as any;
             }
         };
-    },
-    [Symbol.hasInstance](object: any): object is Sequence<any> {
+    }
+    static [Symbol.hasInstance](object: any): object is Sequence<any> {
         return object instanceof AuthorizedSequence;
     }
-});
+
+    get start(): number {
+        if (this.length === 0)
+            throw new Error("Invalid state: sequence instantiated with no segments.");
+        return this[0]!.start;
+    }
+    get end(): number {
+        if (this.length === 0)
+            throw new Error("Invalid state: sequence instantiated with no segments.");
+        return this[this.length - 1]!.end;
+    }
+    get(name: S[number]) {
+        return this.segments[name] ?? null as (string[] extends S ? Segment | null : Segment);
+    }
+    subsequence<From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>>(
+        from: From = 0 as From, to: To = this.length - 1 as To
+    ): Subsequence<S, From, To> {
+        type Subarray = ComputeSubarray<S, From, To>;
+        const output: [Subarray[number], Segment][] = [];
+        const segmentNames = Object.keys(this.segments);
+        let startPushing = false;
+        if (typeof from === "number" && typeof to === "number") {
+            if (to < from)
+                return new AuthorizedSequence(output) as any;
+            if (Object.is(from, to) && from >= 0 && from < segmentNames.length) {
+                const segmentName = segmentNames[from]! as Subarray[number];
+                output.push([segmentName, this.segments[segmentName]!]);
+                return new AuthorizedSequence(output) as any;
+            }
+        }
+        if (typeof from === "number") {
+            if (from > segmentNames.length - 1)
+                return new AuthorizedSequence(output) as any;
+            if (from < 0)
+                from = 0 as From;
+        }
+        if (typeof to === "number") {
+            if (to < 0)
+                return new AuthorizedSequence(output) as any;
+            if (to > segmentNames.length - 1)
+                to = segmentNames.length - 1 as To;
+        }
+
+        for (let i = typeof from === "number" ? from : 0; i < segmentNames.length; i++) {
+            const segmentName = segmentNames[i]! as Subarray[number];
+            if (Object.is(to, i) || Object.is(to, segmentName)) {
+                if (startPushing) output.push([segmentName, this.segments[segmentName]!]);
+                break;
+            }
+            if (startPushing || Object.is(from, i) || Object.is(from, segmentName)) {
+                startPushing = true;
+                output.push([segmentName, this.segments[segmentName]!]);
+            }
+        }
+
+        return new AuthorizedSequence(output) as any;
+    }
+    toArray(): Segment[] {
+        const result: Segment[] = [];
+        for (let i = 0; i < this.length; i++) {
+            result[i] = this[i]!;
+        }
+        return result;
+    }
+}
+
+Object.freeze(Sequence);
+Object.freeze(Sequence.prototype);

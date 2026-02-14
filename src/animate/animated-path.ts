@@ -1,9 +1,11 @@
-import {createTimeline, type Timeline} from "./timeline";
-import {createInterpolator, type Interpolator} from "./interpolator";
+import {createTimeline} from "./timeline";
+import {createInterpolator} from "./interpolator";
 import type {Path} from "../path";
 import type {EasingFunction} from "./easing";
 import {saturate} from "../numbers/index";
 import {assignReadonlyProperties} from "../utils/object-utils";
+import type {Interpolator} from "./interpolator.types";
+import type {Timeline} from "./timeline.types";
 
 export interface AnimationClock {
     readonly time: number;
@@ -12,10 +14,11 @@ export interface AnimationClock {
 class AuthorizedAnimationClock implements AnimationClock {
     readonly #brand = true;
     constructor(timeProvider: () => number) {
-        Object.setPrototypeOf(this, Object.prototype);
         Object.defineProperty(this, "time", {
             get: timeProvider
         });
+        Object.setPrototypeOf(this, Object.prototype);
+        Object.freeze(this);
     }
     get time() {
         return undefined as never;
