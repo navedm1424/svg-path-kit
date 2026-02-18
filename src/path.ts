@@ -152,6 +152,38 @@ export class CubicBezierCurveCommand implements Command {
     }
 }
 
+export class HandleDefinedCubicBezierCurve implements Command {
+    readonly terminalPoint: Point2D;
+
+    constructor(initialPoint: Point2D, firstHandleVector: Vector2D, secondHandleVector: Vector2D, terminalPoint: Point2D);
+    constructor(initialPoint: Point2D, firstHandleVector: Vector2D, secondHandleVector: Vector2D, terminalPointVector: Vector2D);
+    constructor(
+        readonly initialPoint: Point2D,
+        readonly firstHandleVector: Vector2D,
+        readonly secondHandleVector: Vector2D,
+        terminalPoint: Point2D | Vector2D
+    ) {
+        this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
+            initialPoint.add(terminalPoint);
+    }
+
+    getEndVelocity(): Vector2D {
+        return this.firstHandleVector.clone().scale(3);
+    }
+
+    getStartVelocity(): Vector2D {
+        return this.secondHandleVector.clone().scale(-3);
+    }
+
+    toSVGPathCommand(): PrimitiveCommand {
+        return new AbsoluteCubicBezierCurvePrimitive(
+            this.initialPoint.add(this.firstHandleVector),
+            this.terminalPoint.add(this.secondHandleVector),
+            this.terminalPoint
+        );
+    }
+}
+
 /**
  * This command gives you the closest cubic Bézier approximation of an elliptical arc parameterized by the semi-axes and angular parameters.
  *

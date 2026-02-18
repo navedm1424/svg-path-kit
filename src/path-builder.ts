@@ -12,7 +12,7 @@ import {
     EllipticalArcWrapperCommand,
     LineCommand,
     MoveCommand, Path,
-    QuadraticBezierCurveCommand
+    QuadraticBezierCurveCommand, HandleDefinedCubicBezierCurve
 } from "./path";
 import {Angle} from "./angle";
 import {makePropertiesReadonly} from "./utils/object-utils";
@@ -263,6 +263,21 @@ export class PathBuilder {
             this.currentPosition,
             // @ts-expect-error
             ...args
+        ));
+    }
+
+    public handleDefinedBezier(firstHandleVector: Vector2D, secondHandleVector: Vector2D, endingPoint: Point2D): HandleDefinedCubicBezierCurve;
+    public handleDefinedBezier(firstHandleVector: Vector2D, secondHandleVector: Vector2D, endingPointVector: Vector2D): HandleDefinedCubicBezierCurve;
+    public handleDefinedBezier(
+        firstHandleVector: Vector2D,
+        secondHandleVector: Vector2D,
+        endingPoint: Point2D | Vector2D
+    ) {
+        return this.append(new HandleDefinedCubicBezierCurve(
+            this.currentPosition,
+            firstHandleVector, secondHandleVector,
+            // @ts-expect-error
+            endingPoint
         ));
     }
 
