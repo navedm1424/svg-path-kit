@@ -17,7 +17,6 @@ class AuthorizedAnimationClock implements AnimationClock {
         Object.defineProperty(this, "time", {
             get: timeProvider
         });
-        Object.setPrototypeOf(this, Object.prototype);
         Object.freeze(this);
     }
     get time() {
@@ -33,7 +32,9 @@ export function assertAuthorizedAnimationClock(value: any): asserts value is Ani
         throw new Error("The animation clock is unauthorized.");
 }
 
-export type AnimatedPathFunction = (clock: AnimationClock, tl: Timeline, map: Interpolator) => Path;
+export interface AnimatedPathFunction {
+    (clock: AnimationClock, tl: Timeline, map: Interpolator): Path;
+}
 
 export interface PathFrames extends Array<Path> {
     readonly duration: number;

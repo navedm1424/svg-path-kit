@@ -59,7 +59,7 @@ export class CubicBezierFit {
     /**
      * Compute a cubic Bézier that best matches the source curve over [t0, t1].
      */
-    private static fit(
+    public static fit(
         curve: ParametricCurve2D,
         t0: number, t1: number
     ) {

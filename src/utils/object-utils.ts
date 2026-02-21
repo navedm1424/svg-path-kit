@@ -16,7 +16,7 @@ export function makePropertiesReadonly<T>(
     const propertyDescriptorMap: PropertyDescriptorMap = {};
     for (const property of properties) {
         propertyDescriptorMap[property] = {
-            value: o[property], writable: false, configurable: false
+            ...Object.getOwnPropertyDescriptor(o, property), writable: false, configurable: false
         };
     }
     return Object.defineProperties(o, propertyDescriptorMap);

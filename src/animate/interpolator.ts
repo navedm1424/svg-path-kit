@@ -95,10 +95,10 @@ Object.freeze(InterpolatorPrototype);
 /** @internal */
 export function createInterpolator(clock: AnimationClock) {
     assertAuthorizedAnimationClock(clock);
-    const instance = function Interpolator(segment) {
-        return instance.segment(segment);
+    const map = function Interpolator(segment) {
+        return map.segment(segment);
     } as Interpolator;
-    assignReadonlyProperties(instance, {animationClock: clock});
-    Object.setPrototypeOf(instance, InterpolatorPrototype);
-    return Object.freeze(instance);
+    assignReadonlyProperties(map, {animationClock: clock});
+    Object.setPrototypeOf(map, InterpolatorPrototype);
+    return Object.freeze(map);
 }

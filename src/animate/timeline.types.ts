@@ -2,7 +2,7 @@ import type {AnimationClock} from "./animated-path";
 import type {Sequence} from "./sequence";
 import type {Segment} from "./segment";
 
-export type Timeline = {
+export interface Timeline {
     readonly animationClock: AnimationClock;
     (segment: Segment): {
         hasStarted(): boolean;
@@ -14,4 +14,4 @@ export type Timeline = {
         hasFinished(): boolean;
         isActive(): boolean;
     };
-};
+}
