@@ -17,13 +17,14 @@ class AuthorizedAnimationClock implements AnimationClock {
         Object.defineProperty(this, "time", {
             get: timeProvider
         });
+        Object.setPrototypeOf(this, Object.prototype);
         Object.freeze(this);
     }
     get time() {
         return undefined as never;
     }
     static [Symbol.hasInstance](value: any): value is AuthorizedAnimationClock {
-        return #brand in value && value.#brand;
+        return typeof value === "object" && #brand in value && value.#brand;
     }
 }
 

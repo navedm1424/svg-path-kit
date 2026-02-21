@@ -6,7 +6,7 @@ export class Segment {
     readonly end: number;
     readonly duration: number;
 
-    private constructor(start: number, end: number) {
+    constructor(start: number, end: number) {
         if (start > end)
             [start, end] = [end, start];
         this.start = saturate(start);

@@ -77,8 +77,8 @@ class AuthorizedSequence<S extends string[]> {
         Object.freeze(this);
     }
 
-    static [Symbol.hasInstance](object: any): object is Sequence<any> {
-        return #brand in object && object.#brand;
+    static [Symbol.hasInstance](value: any): value is Sequence<any> {
+        return typeof value === "object" && #brand in value && value.#brand;
     }
 }
 
@@ -91,7 +91,7 @@ export class Sequence<S extends string[]> {
     private constructor() {
         throw new Error("A sequence can only be created using the factory methods.");
     }
-    static fromSegments<S extends [string, ...string[]]>(...segments: { [K in keyof S]: [S[K], number] }) {
+    static fromSegments<S extends [string, ...string[]]>(...segments: { [K in keyof S]: [name: S[K], duration: number] }) {
         if (!(
             Array.isArray(segments)
             && segments.length > 0
