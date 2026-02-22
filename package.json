@@ -13,7 +13,7 @@
     "./animate": "./dist/animate/index.js"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && rm -rf dist/**/*.types.js && rm -rf dist/**/*.runtime.d.ts"
+    "build": "rm -rf dist/ && tsc && rm -rf dist/**/*.types.js && rm -rf dist/**/*.runtime.d.ts"
   },
   "files": [
     "dist"

@@ -2,7 +2,6 @@ import fs from "fs";
 import {mkdir} from "fs/promises";
 import path from "path";
 
-/** @internal */
 export async function writeJsonFileInternal(outputDirectoryPath: string, outputFileName: string, data: any) {
     if (!(typeof (outputDirectoryPath as any) === "string" && outputDirectoryPath))
         throw new Error("Invalid output directory path.");

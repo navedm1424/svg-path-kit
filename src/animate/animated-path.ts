@@ -3,7 +3,6 @@ import {createInterpolator} from "./interpolator.runtime.js";
 import type {Path} from "../path.js";
 import type {EasingFunction} from "./easing.js";
 import {saturate} from "../numbers/index.js";
-import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 import type {Interpolator} from "./interpolator.types.js";
 import type {Timeline} from "./timeline.types.js";
 import {writeJsonFile} from "../utils/file-utils.runtime.js";
@@ -38,7 +37,7 @@ export interface AnimatedPathFunction {
     (clock: AnimationClock, tl: Timeline, map: Interpolator): Path;
 }
 
-export interface PathFrames extends Array<Path> {
+export interface PathFrames extends ReadonlyArray<Path> {
     readonly duration: number;
     readonly fps: number;
     toSVGPathStrings(): string[];
@@ -82,15 +81,14 @@ export class AnimatedPath {
         const clock: AnimationClock = new AuthorizedAnimationClock(() => time);
         const tl = createTimeline(clock);
         const interpolate = createInterpolator(clock);
-        const paths = [] as Path[] as PathFrames;
+        const paths: Path[] = [];
         do {
             paths.push(this.#animatedPathFunction(clock, tl, interpolate));
             progress += progressUnit;
             time = saturate(easing ? easing(progress) : progress);
         } while (progress < 1);
-        assignReadonlyProperties(paths, { duration, fps });
-        assignReadonlyProperties(paths, pathFramesMethods);
+        Object.assign(paths, { ...pathFramesMethods, duration, fps });
 
-        return paths;
+        return Object.freeze(paths) as PathFrames;
     }
 }
