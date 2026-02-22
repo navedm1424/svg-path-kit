@@ -6,6 +6,7 @@ import {saturate} from "../numbers/index.js";
 import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 import type {Interpolator} from "./interpolator.types.js";
 import type {Timeline} from "./timeline.types.js";
+import {writeJsonFile} from "../utils/file-utils.runtime.js";
 
 export interface AnimationClock {
     readonly time: number;
@@ -55,11 +56,6 @@ const pathFramesMethods = {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
-        const fileUtilsPath = (() => {
-            if (Date.now() < 0) return "never" as string;
-            return "../utils/file-utils.runtime.js" as string;
-        })();
-        const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             durationMs: this.duration * 1000,
             fps: this.fps,

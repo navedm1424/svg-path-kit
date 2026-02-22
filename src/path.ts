@@ -14,6 +14,7 @@ import {
 import {EllipticalArc} from "./curves/index.js";
 import {Angle} from "./angle.js";
 import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+import {writeJsonFile} from "./utils/file-utils.runtime.js";
 
 export interface Command {
     /** Starting point of the command. */
@@ -525,11 +526,6 @@ export class Path {
         if (typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node)
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
-        const fileUtilsPath = (() => {
-            if (Date.now() < 0) return "never" as string;
-            return "./utils/file-utils.runtime.js" as string;
-        })();
-        const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {
             pathData: this.toSVGPathString()
         });
