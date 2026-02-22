@@ -1,6 +1,6 @@
 import {invLerp, lerp, remap} from "../numbers/index.js";
 import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
-import {assignReadonlyProperties} from "../utils/object-utils.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path.js";
 import type {
     Interpolator,

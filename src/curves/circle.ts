@@ -2,7 +2,7 @@ import {Point2D} from "../point2D.js";
 import {Vector2D} from "../vector2D.js";
 import {ParametricCurve2D} from "../parametric-curve-2D.js";
 import {Angle} from "../angle.js";
-import {makePropertiesReadonly} from "../utils/object-utils.js";
+import {makePropertiesReadonly} from "../utils/object-utils.runtime.js";
 
 export class Circle extends ParametricCurve2D {
     #center: Point2D;

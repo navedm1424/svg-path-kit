@@ -1,4 +1,4 @@
-import {assignReadonlyProperties} from "../utils/object-utils.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path.js";
 import {Sequence} from "./sequence.js";
 import {Segment} from "./segment.js";

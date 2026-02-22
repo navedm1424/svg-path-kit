@@ -1,5 +1,5 @@
 import { Vector2D } from "./vector2D.js";
-import {makePropertiesReadonly} from "./utils/object-utils.js";
+import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
 
 /**
  * Immutable absolute 2D point with helpers for vector arithmetic.

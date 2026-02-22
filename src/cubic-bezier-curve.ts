@@ -1,7 +1,7 @@
 import {Vector2D} from "./vector2D.js";
 import {Point2D} from "./point2D.js";
 import {ParametricCurve2D} from "./parametric-curve-2D.js";
-import {makePropertiesReadonly} from "./utils/object-utils.js";
+import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
 
 /**
  * Cubic Bézier curve with helpers for evaluation and subdivision.

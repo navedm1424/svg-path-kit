@@ -15,7 +15,7 @@ import {
     QuadraticBezierCurveCommand, HandleDefinedCubicBezierCurve
 } from "./path.js";
 import {Angle} from "./angle.js";
-import {makePropertiesReadonly} from "./utils/object-utils.js";
+import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities.

@@ -1,9 +1,9 @@
-import {createTimeline} from "./timeline.js";
-import {createInterpolator} from "./interpolator.js";
+import {createTimeline} from "./timeline.runtime.js";
+import {createInterpolator} from "./interpolator.runtime.js";
 import type {Path} from "../path.js";
 import type {EasingFunction} from "./easing.js";
 import {saturate} from "../numbers/index.js";
-import {assignReadonlyProperties} from "../utils/object-utils.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 import type {Interpolator} from "./interpolator.types.js";
 import type {Timeline} from "./timeline.types.js";
 
@@ -56,8 +56,8 @@ const pathFramesMethods = {
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
         const fileUtilsPath = (() => {
-            if (Date.now() < 0) return undefined as never;
-            return "../utils/file-utils.js";
+            if (Date.now() < 0) return "never" as string;
+            return "../utils/file-utils.runtime.js" as string;
         })();
         const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {
