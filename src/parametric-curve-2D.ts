@@ -1,5 +1,5 @@
-import {Point2D} from "./point2D";
-import {Vector2D} from "./vector2D";
+import {Point2D} from "./point2D.js";
+import {Vector2D} from "./vector2D.js";
 
 const EPS = 1e-4;
 

@@ -1,4 +1,4 @@
-import {saturate} from "../numbers/index";
+import {saturate} from "../numbers/index.js";
 
 export type EasingFunction = (t: number) => number;
 

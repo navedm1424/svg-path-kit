@@ -1,6 +1,6 @@
-export type * from "./interpolator.types";
-export type * from "./timeline.types";
-export * from "./sequence";
-export * from "./animated-path";
-export * from "./easing";
-export * from "./segment";
+export type * from "./interpolator.types.ts";
+export type * from "./timeline.types.ts";
+export * from "./sequence.js";
+export * from "./animated-path.js";
+export * from "./easing.js";
+export * from "./segment.js";

@@ -1,8 +1,8 @@
-import {assignReadonlyProperties} from "../utils/object-utils";
-import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
-import {Sequence} from "./sequence";
-import {Segment} from "./segment";
-import type {Timeline} from "./timeline.types";
+import {assignReadonlyProperties} from "../utils/object-utils.js";
+import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path.js";
+import {Sequence} from "./sequence.js";
+import {Segment} from "./segment.js";
+import type {Timeline} from "./timeline.types.ts";
 
 /** @internal */
 export function createTimeline(clock: AnimationClock): Timeline {

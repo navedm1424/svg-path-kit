@@ -1,6 +1,6 @@
-import {Point2D} from "./point2D";
-import {Vector2D} from "./vector2D";
-import {CubicBezierCurve} from "./cubic-bezier-curve";
+import {Point2D} from "./point2D.js";
+import {Vector2D} from "./vector2D.js";
+import {CubicBezierCurve} from "./cubic-bezier-curve.js";
 import {
     AbsoluteClosePathPrimitive,
     AbsoluteCubicBezierCurvePrimitive,
@@ -10,10 +10,10 @@ import {
     AbsoluteQuadraticBezierCurvePrimitive,
     PrimitiveCommand,
     SVGPath
-} from "./svg-path";
-import {EllipticalArc} from "./curves/index";
-import {Angle} from "./angle";
-import {makePropertiesReadonly} from "./utils/object-utils";
+} from "./svg-path.js";
+import {EllipticalArc} from "./curves/index.js";
+import {Angle} from "./angle.js";
+import {makePropertiesReadonly} from "./utils/object-utils.js";
 
 export interface Command {
     /** Starting point of the command. */
@@ -526,8 +526,8 @@ export class Path {
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
         const fileUtilsPath = (() => {
-            if (Date.now() < 0) return "./never";
-            return "./utils/file-utils";
+            if (Date.now() < 0) return undefined as never;
+            return "./utils/file-utils.js";
         })();
         const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {

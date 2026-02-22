@@ -1,7 +1,7 @@
-import type {AnimationClock} from "./animated-path";
-import type {EasingFunction} from "./easing";
-import type {Sequence} from "./sequence";
-import type {Segment} from "./segment";
+import type {AnimationClock} from "./animated-path.ts";
+import type {EasingFunction} from "./easing.ts";
+import type {Sequence} from "./sequence.ts";
+import type {Segment} from "./segment.ts";
 
 export interface ToRangeSpecifier {
     to(start: number, end: number): number;

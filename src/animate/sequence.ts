@@ -1,5 +1,5 @@
-import {remap, saturate} from "../numbers/index";
-import {Segment} from "./segment";
+import {remap, saturate} from "../numbers/index.js";
+import {Segment} from "./segment.js";
 
 type DoComputeSubarray<
     Remaining extends any[],

@@ -1,4 +1,4 @@
-import {CubicBezierCurve, Point2D, Vector2D} from "../src/index";
+import {CubicBezierCurve, Point2D, Vector2D} from "../src/index.js";
 
 function midPoint(pointA: Point2D, pointB: Point2D) {
     return Point2D.of((pointA.x + pointB.x) / 2, (pointA.y + pointB.y) / 2);

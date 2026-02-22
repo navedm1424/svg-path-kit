@@ -1,4 +1,4 @@
-import {ParametricCurve2D, Point2D, Vector2D} from "../src/index";
+import {ParametricCurve2D, Point2D, Vector2D} from "../src/index.js";
 
 type SpeedSegment = {
     t0: number;

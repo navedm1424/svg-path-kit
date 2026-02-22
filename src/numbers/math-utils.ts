@@ -1,4 +1,4 @@
-import {clamp, saturate} from "./number-utils";
+import {clamp, saturate} from "./number-utils.js";
 
 /**
  * Round a number to the specified decimal places.

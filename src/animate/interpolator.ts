@@ -1,15 +1,15 @@
-import {invLerp, lerp, remap} from "../numbers/index";
-import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing";
-import {assignReadonlyProperties} from "../utils/object-utils";
-import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path";
+import {invLerp, lerp, remap} from "../numbers/index.js";
+import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
+import {assignReadonlyProperties} from "../utils/object-utils.js";
+import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path.js";
 import type {
     Interpolator,
     SegmentMapper,
     SequenceMapper,
     ToAnchorsSpecifier,
     ToRangeSpecifier
-} from "./interpolator.types";
-import {Sequence} from "./sequence";
+} from "./interpolator.types.ts";
+import {Sequence} from "./sequence.js";
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {

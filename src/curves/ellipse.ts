@@ -1,8 +1,8 @@
-import {Point2D} from "../point2D";
-import {Vector2D} from "../vector2D";
-import {ParametricCurve2D} from "../parametric-curve-2D";
-import {Angle} from "../angle";
-import {makePropertiesReadonly} from "../utils/object-utils";
+import {Point2D} from "../point2D.js";
+import {Vector2D} from "../vector2D.js";
+import {ParametricCurve2D} from "../parametric-curve-2D.js";
+import {Angle} from "../angle.js";
+import {makePropertiesReadonly} from "../utils/object-utils.js";
 
 /**
  * Parametric ellipse centered at an arbitrary point with tilt.

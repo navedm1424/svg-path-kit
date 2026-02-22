@@ -1,11 +1,11 @@
-import {createTimeline} from "./timeline";
-import {createInterpolator} from "./interpolator";
-import type {Path} from "../path";
-import type {EasingFunction} from "./easing";
-import {saturate} from "../numbers/index";
-import {assignReadonlyProperties} from "../utils/object-utils";
-import type {Interpolator} from "./interpolator.types";
-import type {Timeline} from "./timeline.types";
+import {createTimeline} from "./timeline.js";
+import {createInterpolator} from "./interpolator.js";
+import type {Path} from "../path.js";
+import type {EasingFunction} from "./easing.js";
+import {saturate} from "../numbers/index.js";
+import {assignReadonlyProperties} from "../utils/object-utils.js";
+import type {Interpolator} from "./interpolator.types.js";
+import type {Timeline} from "./timeline.types.js";
 
 export interface AnimationClock {
     readonly time: number;
@@ -56,8 +56,8 @@ const pathFramesMethods = {
             throw new Error(`${this.exportToJson.name} can only run in Node.js`);
 
         const fileUtilsPath = (() => {
-            if (Date.now() < 0) return "./never";
-            return "../utils/file-utils";
+            if (Date.now() < 0) return undefined as never;
+            return "../utils/file-utils.js";
         })();
         const { writeJsonFile } = await import(fileUtilsPath);
         return writeJsonFile(outputDirectoryPath, outputFileName, {

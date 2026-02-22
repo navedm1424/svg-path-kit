@@ -1,5 +1,5 @@
-import {saturate} from "../numbers/index";
-import {makePropertiesReadonly} from "../utils/object-utils";
+import {saturate} from "../numbers/index.js";
+import {makePropertiesReadonly} from "../utils/object-utils.js";
 
 export class Segment {
     readonly start: number;

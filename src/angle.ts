@@ -1,4 +1,4 @@
-import {makePropertiesReadonly} from "./utils/object-utils";
+import {makePropertiesReadonly} from "./utils/object-utils.js";
 
 /**
  * Immutable wrapper around an angle value that caches its sine and cosine

@@ -1,6 +1,6 @@
-import {Point2D} from "./point2D";
-import {Vector2D} from "./vector2D";
-import {CircularArc, EllipticalArc} from "./curves/index";
+import {Point2D} from "./point2D.js";
+import {Vector2D} from "./vector2D.js";
+import {CircularArc, EllipticalArc} from "./curves/index.js";
 import {
     type Command,
     ChordScaledBezierCommand,
@@ -13,9 +13,9 @@ import {
     LineCommand,
     MoveCommand, Path,
     QuadraticBezierCurveCommand, HandleDefinedCubicBezierCurve
-} from "./path";
-import {Angle} from "./angle";
-import {makePropertiesReadonly} from "./utils/object-utils";
+} from "./path.js";
+import {Angle} from "./angle.js";
+import {makePropertiesReadonly} from "./utils/object-utils.js";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities.

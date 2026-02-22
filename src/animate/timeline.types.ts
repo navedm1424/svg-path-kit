@@ -1,6 +1,6 @@
-import type {AnimationClock} from "./animated-path";
-import type {Sequence} from "./sequence";
-import type {Segment} from "./segment";
+import type {AnimationClock} from "./animated-path.ts";
+import type {Sequence} from "./sequence.ts";
+import type {Segment} from "./segment.ts";
 
 export interface Timeline {
     readonly animationClock: AnimationClock;

@@ -1,5 +1,5 @@
-import {Angle, Point2D, Vector2D} from "../index";
-import {ParametricCurve2D} from "../parametric-curve-2D";
+import {Angle, Point2D, Vector2D} from "../index.js";
+import {ParametricCurve2D} from "../parametric-curve-2D.js";
 
 export class Superellipse extends ParametricCurve2D {
     readonly #exp: number;
