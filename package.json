@@ -1,6 +1,6 @@
 {
   "name": "svg-path-kit",
-  "version": "1.2.0-beta.4",
+  "version": "1.2.0-beta.5",
   "description": "A geometry-oriented library for building and animating complex SVG paths.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",
