@@ -32,15 +32,11 @@ export function cubicBezierEasing(mX1: number, mY1: number, mX2: number, mY2: nu
         return t => t;
     const getTForX = (aX: number) => binarySubdivide(aX, 0, 1, mX1, mX2);
     // If animation is at start/end, return t without easing
-    return t => t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2);
+    const easing: EasingFunction = t => t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2);
+    Object.defineProperty(easing, "name", { value: `cubic-bezier(${mX1}, ${mY1}, ${mX2}, ${mY2})` });
+    return easing;
 }
 
 export const easeIn = cubicBezierEasing(0.42, 0, 1, 1);
 export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
-
-const propertyKey = "name";
-const descriptorProperties = { writable: false, enumerable: false, configurable: false };
-Object.defineProperty(easeIn, propertyKey, { value: "easeIn", ...descriptorProperties });
-Object.defineProperty(easeOut, propertyKey, { value: "easeOut", ...descriptorProperties });
-Object.defineProperty(easeInOut, propertyKey, { value: "easeInOut", ...descriptorProperties });

@@ -92,16 +92,14 @@ export class Sequence<S extends string[]> {
         throw new Error("A sequence can only be created using the factory methods.");
     }
     static fromRatios<const S extends [string, ...string[]]>(...ratios: { [K in keyof S]: [name: S[K], duration: number] }) {
-        if (!(
-            Array.isArray(ratios)
-            && ratios.length > 0
-            && ratios.every(s =>
-                Array.isArray(s)
-                && typeof (s[0]) === "string"
-                && typeof (s[1]) === "number"
-            )
-        ))
+        if (!(Array.isArray(ratios) && ratios.length > 0))
             throw new Error("A sequence must at least have one element.");
+        if (!ratios.every(s =>
+            Array.isArray(s)
+            && typeof (s[0]) === "string"
+            && typeof (s[1]) === "number"
+        ))
+            throw new Error("Invalid inputs.");
 
         return {
             scaleToRange(start: number, end: number): Sequence<S> {
@@ -121,9 +119,8 @@ export class Sequence<S extends string[]> {
                     sequence[i] = [
                         name,
                         Segment.from(remap(currentTime, 0, totalTime, start, end))
-                            .ofDuration(remap(duration, 0, totalTime, start, end))
+                            .to(remap(currentTime += duration, 0, totalTime, start, end))
                     ];
-                    currentTime += duration;
                 }
                 return new AuthorizedSequence(sequence) as any;
             }

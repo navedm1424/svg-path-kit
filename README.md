@@ -24,16 +24,177 @@ The library is written in TypeScript and ships with type definitions.
 
 <br/><br/>
 
-## This library allows you to...
+## Features
 
-- Draw circular and elliptical arcs without having to deal with cubic Bézier control point coordinates or the confusing flags of the elliptical arc (`A`) command. You just have to specify the radii and angular parameters.
-- Draw Hermite curves—curves that interpolate between velocities.
-- Draw complex parametric curves like epitrochoids and hypotrochoids simply by extending the `ParametricCurve2D` class and providing the parametric equations.
-- Draw vectors with polar coordinates, rotate and scale vectors, and obtain their angles and slopes using the `angle` and `slope` state accessors.
-- Get the initial and terminal points of the last command or earlier commands in the sequence.
-- Get the initial and terminal velocities of the last command or earlier commands in the sequence (using the `getStartVelocity` and `getEndVelocity`) to build continuous shapes and curves.
+### Circular & Elliptical Arcs
 
-You can find the code samples in the GitHub repository inside the `samples` directory: the golf club icon, the bulb icon, and the epitrochoid.
+Draw circular and elliptical arcs without having to deal with cubic Bézier control point coordinates or the confusing flags of the elliptical arc (`A`) command. You just have to specify:
+
+- radius for circular arcs; semi-axes for elliptical arcs
+- angular parameters (start angle and end angle)
+
+```ts
+const pb = PathBuilder.m(Point2D.ORIGIN);
+
+// circular arc with the `A` command
+// sweeping from 0 to π/2 radians
+pb.circularArc(5, Angle.ZERO, Angle.HALF_PI);
+// circular arc with the `C` command
+// sweeping from π/2 to π radians
+pb.bezierCircularArc(5, Angle.HALF_PI, Angle.PI);
+```
+
+---
+
+### Hermite curves
+
+Draw Hermite curves—curves that interpolate between velocities.
+
+```ts
+const pb = PathBuilder.m(Point2D.ORIGIN);
+
+pb.hermiteCurve(
+    Vector2D.polar(2, Angle.HALF_PI), // start velocity
+    Vector2D.polar(3, Angle.QUARTER_PI), // end velocity
+    Vector2D.of(5, 6) // vector to endpoint
+);
+```
+
+---
+
+### Parametric Curve Splines
+
+Draw complex parametric curves like epitrochoids and hypotrochoids simply by extending the `ParametricCurve2D` class and providing the parametric equations.
+
+```ts
+class Epitrochoid extends ParametricCurve2D {
+    constructor(
+        readonly statorRadius: number,
+        readonly rotorRadius: number,
+        readonly penDistance: number
+    ) {
+        super();
+    }
+
+    at(t: number): Point2D {
+        const radiiSum = this.statorRadius + this.rotorRadius;
+        const quotient = radiiSum / this.rotorRadius;
+        return Point2D.of(
+            radiiSum * Math.cos(t) - this.penDistance * Math.cos(t * quotient),
+            radiiSum * Math.sin(t) - this.penDistance * Math.sin(t * quotient)
+        );
+    }
+
+    // optionally write formula methods for the first and second derivatives at t
+    tangentAt(t: number): Vector2D {
+        // return velocity vector at t
+    }
+    accelerationAt(t: number): Vector2D {
+        // return acceleration vector at t 
+    }
+}
+
+const epitrochoid = new Epitrochoid(10, 6, 7);
+
+const pb = PathBuilder.m(Point2D.ORIGIN);
+fitSplineTo(pb, epitrochoid, 0, 12 * Math.PI);
+```
+
+---
+
+### Vector Geometry
+
+Draw vectors with polar coordinates, rotate and scale vectors, and obtain their angles and slopes using the `angle` and `slope` state accessors.
+
+```ts
+const vector = Vector2D.of(2, 3);
+vector.slope // `y / x`
+vector.angle // `atan2(y, x)`
+
+// (5 * cos(π/6), 5 * sin(π/6)) 
+const angledVector = Vector2D.polar(5, Math.PI / 6);
+
+angledVector.rotate(Angle.QUARTER_PI);
+// or `.rotate(Math.PI / 4)`
+
+// doubles the length of the vector
+angledVector.scale(2);
+```
+
+---
+
+### Command Referencing
+
+Reference the last command or earlier commands in the sequence and obtain their:
+
+- initial and terminal points
+- initial and terminal velocities
+- along with other command-specific properties
+
+```ts
+const pb = PathBuilder.m(Point2D.ORIGIN);
+
+const arcCommand = pb.circularArc(5, Angle.QUARTER_PI, Angle.PI);
+
+// gives you the velocity at the endpoint of the arc
+arcCommand.getEndVelocity();
+```
+
+You can also attach IDs to command using `setLastCommandId`:
+
+```ts
+pb.l(5, 0);
+pb.setLastCommandId("shaft");
+
+// ...other commands...
+
+const shaftLineCommand = pb.getCommandById("shaft");
+```
+
+---
+
+### Computing Path Animations
+
+Compute and store path animations using the `FrameRenderer` utility:
+
+```ts
+import {PathBuilder, Point2D} from "svg-path-kit";
+import {createFrameRenderer, Sequence, cubicBezierEasing} from "svg-path-kit/animate";
+
+const sequence = Sequence.fromRatios(
+    ["arc1", 1],
+    ["arc2", 1]
+).scaleToRange(0, 1);
+const s = sequence.segments;
+
+const renderer = createFrameRenderer((tl: Timeline, map: Interpolator) => {
+    const pb = PathBuilder.m(Point2D.ORIGIN);
+
+    const arc1Radius = map(s.arc1).to(1, 5);
+    const arc1EndAngle = map(s.arc1).to(0, 3 * Math.PI / 4);
+    pb.bezierCircularArc(arc1Radius, Angle.ZERO, arc1EndAngle);
+    pb.l(pb.lastCommand.getEndVelocity());
+
+    const arc2Radius = map(s.arc2).to(1, 5);
+    const arc2EndAngle = map(s.arc2).to(0, -Math.PI);
+    const lineAngle = pb.lastCommand.getEndVelocity().angle;
+    pb.bezierCircularArc(arc2Radius, Angle.of(lineAngle).halfTurnBackward(), arc2EndAngle);
+
+    return pb.toSVGPathString();
+});
+
+renderer.renderFrames({
+    duration: 3,
+    fps: 120,
+    easing: cubicBezierEasing(0.55, 0.085, 0.68, 0.53)
+}).exportToJson(
+    // this path should be relative to `process.cwd()`
+    "../json-exports",
+    "path-data"
+); // This will store the animation frames in a `path-data.json` file
+```
+
+> Note: `exportToJson` will only work in Node.js.
 
 <br/><br/>
 
@@ -78,6 +239,7 @@ All these methods have at least two overloads: one with an absolute endpoint par
 - `circularArc`, `ellipticalArc` – these methods just take the radii and angular parameters and create a primitive elliptical arc (`A`) command by calculating the large-arc and sweep flags.
 - `bezierCircularArc`, `bezierEllipticalArc` – these methods take the radii and angular parameters and give you the closest cubic Bézier approximations of circular and elliptical arcs.
 - `hermiteCurve` – this method creates a cubic Bézier curve that interpolates between the endpoint velocities.
+- `handleDefinedBezier` – this method lets you specify the handle vectors (`start -> first control point` and `end -> second control points`) rather than the offset vectors of the control points.
 - `chordScaledBezier` – this method gives you a cubic Bézier curve with handle lengths scaled relative to the chord length and directed by angles.
 
 ---
@@ -95,13 +257,16 @@ After constructing your commands with `PathBuilder`:
 
 - `toPath()` – create a `Path` instance with the appended commands.
 - `toSVGPathString()` – serialize to an SVG `d` string.
+- `exportToJson()` – create a JSON file with the path data. *Can only run in Node.js*.
 
 <br/><br/>
+
+You can find the code samples in the GitHub repository inside the `samples` directory: the golf club icon, the bulb icon, the epitrochoid, and more.
 
 ## Note from Author
 
 This library turned out to be really helpful for me when I was coding shapes. I think coding shapes gives us a degree of control over the mathematical details of a shape that we do not get in many of the graphic design software. I like to keep everything calculated and doing that in SVG is hard. Drawing a mere angled line with polar coordinates can be quite challenging. Therefore, I think the point and vector utilities can prove to be useful anytime you're working with coordinates, not just when working with SVG paths.
 
-I'm aiming to expand this library and to expand the geometry. I want the consumers of this library, primarily myself, to be able to perform a wide range of geometric operations on the lines and curves and all kinds of shapes they're working on. If you have any ideas or suggestions or corrections, well, the library is open-source on GitHub.
+I'm aiming to expand this library and to expand the geometry. I want the consumers of this library, primarily myself, to be able to perform a wide range of geometric operations on the lines and curves and all kinds of shapes they're working on, such as rotating, reflecting, and transforming shapes, finding intersections, and so on. If you have any ideas or suggestions or corrections, well, the library is open-source on GitHub.
 
 Thanks a lot!
