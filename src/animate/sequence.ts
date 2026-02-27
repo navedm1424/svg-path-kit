@@ -91,29 +91,31 @@ export class Sequence<S extends string[]> {
     private constructor() {
         throw new Error("A sequence can only be created using the factory methods.");
     }
-    static fromSegments<S extends [string, ...string[]]>(...segments: { [K in keyof S]: [name: S[K], duration: number] }) {
+    static fromRatios<const S extends [string, ...string[]]>(...ratios: { [K in keyof S]: [name: S[K], duration: number] }) {
         if (!(
-            Array.isArray(segments)
-            && segments.length > 0
-            && segments.every(s =>
+            Array.isArray(ratios)
+            && ratios.length > 0
+            && ratios.every(s =>
                 Array.isArray(s)
                 && typeof (s[0]) === "string"
                 && typeof (s[1]) === "number"
             )
         ))
-            throw new Error("A sequence must at least have one segment.");
+            throw new Error("A sequence must at least have one element.");
 
         return {
             scaleToRange(start: number, end: number): Sequence<S> {
+                if (start > end)
+                    [start, end] = [end, start];
                 start = saturate(start);
                 end = saturate(end);
                 const sequence = [] as { [K in keyof S]: [S[K], Segment] };
-                let totalTime = segments.reduce(
-                    (acc, cur) => acc + cur[1], 0
+                let totalTime = ratios.reduce(
+                    (acc, cur) => acc + Math.abs(cur[1]), 0
                 );
                 let currentTime = 0;
-                for (let i = 0; i < segments.length; i++) {
-                    const interval = segments[i]! as [S[number], number];
+                for (let i = 0; i < ratios.length; i++) {
+                    const interval = ratios[i]! as [S[number], number];
                     const name = interval[0];
                     const duration = Math.abs(interval[1]);
                     sequence[i] = [
@@ -140,9 +142,6 @@ export class Sequence<S extends string[]> {
         if (this.length === 0)
             throw new Error("Invalid state: sequence instantiated with no segments.");
         return this[this.length - 1]!.end;
-    }
-    get(name: S[number]) {
-        return this.segments[name] ?? null as (string[] extends S ? Segment | null : Segment);
     }
     subsequence<From extends number | S[number] = 0, To extends number | S[number] = LengthMinusOne<S>>(
         from: From = 0 as From, to: To = this.length - 1 as To

@@ -1,7 +1,6 @@
 import {invLerp, lerp, remap} from "../numbers/index.js";
 import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
-import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
-import {type AnimationClock, assertAuthorizedAnimationClock} from "./animated-path.js";
+import type {AnimationClock} from "./frame-renderer.js";
 import type {
     Interpolator,
     SegmentMapper,
@@ -13,7 +12,7 @@ import {Sequence} from "./sequence.js";
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
-        const time = this.animationClock.time;
+        const time = this.time;
         return {
             withEasing(easing: EasingFunction): ToRangeSpecifier {
                 return {
@@ -52,7 +51,7 @@ const InterpolatorPrototype = {
     sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S> {
         if (!((sequence) instanceof Sequence))
             throw new Error("Invalid sequence object! Please provide a valid sequence.");
-        let time = this.animationClock.time;
+        let time = this.time;
 
         const map = this;
         const to = function to(...anchors) {
@@ -71,7 +70,7 @@ const InterpolatorPrototype = {
                 }
             }
 
-            return -1 as never;
+            return undefined as never;
         } as ToAnchorsSpecifier<S>["to"];
 
         return {
@@ -94,11 +93,15 @@ Object.freeze(InterpolatorPrototype);
 
 /** @internal */
 export function createInterpolator(clock: AnimationClock) {
-    assertAuthorizedAnimationClock(clock);
     const map = function Interpolator(segment) {
         return map.segment(segment);
     } as Interpolator;
-    assignReadonlyProperties(map, {animationClock: clock});
+    const timePropertyKey: keyof Interpolator = "time";
+    const time = Object.getOwnPropertyDescriptor(clock, timePropertyKey);
+    if (!time)
+        throw new Error(`Invalid clock! Please provide a valid clock!`);
+
+    Object.defineProperties(map, { time });
     Object.setPrototypeOf(map, InterpolatorPrototype);
     return Object.freeze(map);
 }

@@ -2,9 +2,13 @@ export function assignReadonlyProperties<T>(
     o: T, properties: { [P in keyof T]?: T[P] }
 ) {
     const propertyDescriptorMap: PropertyDescriptorMap = {};
-    for (const [property, value] of Object.entries(properties)) {
+    for (const [property, propertyDescriptor] of Object.entries(Object.getOwnPropertyDescriptors(properties))) {
+        if (typeof propertyDescriptor?.get === 'function' || typeof propertyDescriptor?.set === 'function') {
+            propertyDescriptorMap[property] = { ...propertyDescriptor, configurable: false };
+            continue;
+        }
         propertyDescriptorMap[property] = {
-            value, writable: false, configurable: false
+            ...propertyDescriptor, writable: false, configurable: false
         };
     }
     return Object.defineProperties(o, propertyDescriptorMap);
@@ -15,8 +19,13 @@ export function makePropertiesReadonly<T>(
 ) {
     const propertyDescriptorMap: PropertyDescriptorMap = {};
     for (const property of properties) {
+        const propertyDescriptor = Object.getOwnPropertyDescriptor(o, property);
+        if (typeof propertyDescriptor?.get === 'function' || typeof propertyDescriptor?.set === 'function') {
+            propertyDescriptorMap[property] = { ...propertyDescriptor, configurable: false };
+            continue;
+        }
         propertyDescriptorMap[property] = {
-            ...Object.getOwnPropertyDescriptor(o, property), writable: false, configurable: false
+            ...propertyDescriptor, writable: false, configurable: false
         };
     }
     return Object.defineProperties(o, propertyDescriptorMap);

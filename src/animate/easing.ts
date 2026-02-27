@@ -1,4 +1,5 @@
 import {saturate} from "../numbers/index.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 
 export type EasingFunction = (t: number) => number;
 
@@ -37,3 +38,9 @@ export function cubicBezierEasing(mX1: number, mY1: number, mX2: number, mY2: nu
 export const easeIn = cubicBezierEasing(0.42, 0, 1, 1);
 export const easeOut = cubicBezierEasing(0, 0, 0.58, 1);
 export const easeInOut = cubicBezierEasing(0.42, 0, 0.58, 1);
+
+const propertyKey = "name";
+const descriptorProperties = { writable: false, enumerable: false, configurable: false };
+Object.defineProperty(easeIn, propertyKey, { value: "easeIn", ...descriptorProperties });
+Object.defineProperty(easeOut, propertyKey, { value: "easeOut", ...descriptorProperties });
+Object.defineProperty(easeInOut, propertyKey, { value: "easeInOut", ...descriptorProperties });

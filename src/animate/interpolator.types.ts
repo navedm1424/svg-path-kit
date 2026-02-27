@@ -1,4 +1,3 @@
-import type {AnimationClock} from "./animated-path.ts";
 import type {EasingFunction} from "./easing.ts";
 import type {Sequence} from "./sequence.ts";
 import type {Segment} from "./segment.ts";
@@ -23,7 +22,7 @@ export interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S
 }
 
 export interface Interpolator {
-    readonly animationClock: AnimationClock;
+    get time(): number;
     (segment: Segment): SegmentMapper;
     segment(segment: Segment): SegmentMapper;
     easeIn(segment: Segment): ToRangeSpecifier;

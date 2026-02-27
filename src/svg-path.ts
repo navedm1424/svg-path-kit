@@ -13,6 +13,13 @@ export abstract class PrimitiveCommand {
     public abstract getKey(): string;
     /** Serialize the command to SVG path syntax. */
     public abstract toString(): string;
+
+    public valueOf(): string {
+        return this.toString();
+    }
+    public [Symbol.toPrimitive]() {
+        return this.toString();
+    }
 }
 
 /** Base class for move commands. */
@@ -218,7 +225,7 @@ export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
 
     public toString() {
         const ep = coordinates(this.getEndingPoint());
-        return `${this.getKey()} ${this.xRadius} ${this.yRadius} ${round(this.xAxisRotation, 4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
+        return `${this.getKey()} ${round(this.xRadius, 4)} ${round(this.yRadius, 4)} ${round(this.xAxisRotation, 4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
     }
 }
 
@@ -294,6 +301,6 @@ export class SVGPath {
     }
 
     public toString() {
-        return this.commands.map(c => c.toString()).join(' ');
+        return this.commands.map(c => String(c)).join(' ');
     }
 }

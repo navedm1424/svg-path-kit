@@ -161,6 +161,10 @@ export class Angle {
     public valueOf() {
         return this.value;
     }
+
+    [Symbol.toPrimitive]() {
+        return this.value;
+    }
 }
 
 makePropertiesReadonly(Angle, "ZERO", "QUARTER_PI", "HALF_PI", "PI", "TWO_PI");
