@@ -15,9 +15,7 @@ export class Point2D {
         return new Point2D(x, y);
     }
 
-    /**
-     * Translate the point by the given vector.
-     */
+    /** Translate the point by the given vector. */
     public add(vector: Vector2D): Point2D {
         return new Point2D(this.x + vector.x, this.y + vector.y);
     }

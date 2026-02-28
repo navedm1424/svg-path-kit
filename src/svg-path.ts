@@ -7,7 +7,6 @@ function coordinates(point: Point2D | Vector2D) {
     return `${round(point.x, 4)} ${round(point.y, 4)}`;
 }
 
-/** Base SVG primitive command. */
 export abstract class PrimitiveCommand {
     /** Single-letter SVG command key. */
     public abstract getKey(): string;
@@ -22,7 +21,6 @@ export abstract class PrimitiveCommand {
     }
 }
 
-/** Base class for move commands. */
 export abstract class MovePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
@@ -31,7 +29,6 @@ export abstract class MovePrimitive extends PrimitiveCommand {
     }
 }
 
-/** Absolute move-to (M). */
 export class AbsoluteMovePrimitive extends MovePrimitive {
     constructor(readonly endingPoint: Point2D) {
         super();
@@ -45,7 +42,6 @@ export class AbsoluteMovePrimitive extends MovePrimitive {
     }
 }
 
-/** Relative move-to (m). */
 export class RelativeMovePrimitive extends MovePrimitive {
     constructor(readonly endingPoint: Vector2D) {
         super();
@@ -59,7 +55,6 @@ export class RelativeMovePrimitive extends MovePrimitive {
     }
 }
 
-/** Base class for line commands. */
 export abstract class LinePrimitive extends PrimitiveCommand {
     protected abstract getEndingPoint(): Point2D | Vector2D;
 
@@ -70,7 +65,6 @@ export abstract class LinePrimitive extends PrimitiveCommand {
     }
 }
 
-/** Absolute line-to (L). */
 export class AbsoluteLinePrimitive extends LinePrimitive {
     constructor(readonly endingPoint: Point2D) {
         super();
@@ -84,7 +78,6 @@ export class AbsoluteLinePrimitive extends LinePrimitive {
     }
 }
 
-/** Relative line-to (l). */
 export class RelativeLinePrimitive extends LinePrimitive {
     constructor(readonly endingPoint: Vector2D) {
         super();
@@ -98,7 +91,6 @@ export class RelativeLinePrimitive extends LinePrimitive {
     }
 }
 
-/** Base class for quadratic Bézier commands. */
 export abstract class QuadraticBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getControlPoint(): Point2D | Vector2D;
     protected abstract getEndingPoint(): Point2D | Vector2D;
@@ -111,7 +103,6 @@ export abstract class QuadraticBezierCurvePrimitive extends PrimitiveCommand {
     }
 }
 
-/** Absolute quadratic Bézier (Q). */
 export class AbsoluteQuadraticBezierCurvePrimitive extends QuadraticBezierCurvePrimitive {
     constructor(
         readonly controlPoint: Point2D,
@@ -129,7 +120,7 @@ export class AbsoluteQuadraticBezierCurvePrimitive extends QuadraticBezierCurveP
         return this.endingPoint;
     }
 }
-/** Relative quadratic Bézier (q). */
+
 export class RelativeQuadraticBezierCurvePrimitive extends QuadraticBezierCurvePrimitive {
     constructor(
         readonly controlPoint: Vector2D,
@@ -148,7 +139,6 @@ export class RelativeQuadraticBezierCurvePrimitive extends QuadraticBezierCurveP
     }
 }
 
-/** Base class for cubic Bézier commands. */
 export abstract class CubicBezierCurvePrimitive extends PrimitiveCommand {
     protected abstract getFirstControlPoint(): Point2D | Vector2D;
     protected abstract getSecondControlPoint(): Point2D | Vector2D;
@@ -162,7 +152,6 @@ export abstract class CubicBezierCurvePrimitive extends PrimitiveCommand {
     }
 }
 
-/** Absolute cubic Bézier (C). */
 export class AbsoluteCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive {
     constructor(
         readonly firstControlPoint: Point2D,
@@ -186,7 +175,6 @@ export class AbsoluteCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive
     }
 }
 
-/** Relative cubic Bézier (c). */
 export class RelativeCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive {
     constructor(
         readonly firstControlPoint: Vector2D,
@@ -210,7 +198,6 @@ export class RelativeCubicBezierCurvePrimitive extends CubicBezierCurvePrimitive
     }
 }
 
-/** Base class for elliptical arc commands. */
 export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
     protected constructor(
         readonly xRadius: number,
@@ -229,7 +216,6 @@ export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
     }
 }
 
-/** Absolute elliptical arc (A). */
 export class AbsoluteEllipticalArcPrimitive extends EllipticalArcPrimitive {
     constructor(
         xRadius: number,
@@ -250,7 +236,6 @@ export class AbsoluteEllipticalArcPrimitive extends EllipticalArcPrimitive {
     }
 }
 
-/** Relative elliptical arc (a). */
 export class RelativeEllipticalArcPrimitive extends EllipticalArcPrimitive {
     constructor(
         xRadius: number,
@@ -271,7 +256,6 @@ export class RelativeEllipticalArcPrimitive extends EllipticalArcPrimitive {
     }
 }
 
-/** Absolute close-path (Z). */
 export class AbsoluteClosePathPrimitive extends PrimitiveCommand {
     public getKey(): string {
         return "Z";
@@ -282,7 +266,6 @@ export class AbsoluteClosePathPrimitive extends PrimitiveCommand {
     }
 }
 
-/** Relative close-path (z). */
 export class RelativeClosePathPrimitive extends PrimitiveCommand {
     public getKey(): string {
         return "z";

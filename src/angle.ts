@@ -37,17 +37,13 @@ export class Angle {
         return Angle.of(this.value - Number(angle));
     }
 
-    /**
-     * Scale the angle by a numeric factor.
-     */
+    /** θ × `scalar` */
     public multiply(scalar: number): Angle {
         return Angle.of(scalar * this.value);
     }
 
-    /**
-     * Return the negated angle.
-     */
-    public negated(): Angle {
+    /** -θ (negated angle) */
+    public negated() {
         Angle.#allow = true;
         return new Angle(
             -this.value,
@@ -55,9 +51,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Get the complement of an angle (π/2 - θ)
-     */
+    /** π/2 - θ (complement of the angle) */
     public complement() {
         Angle.#allow = true;
         return new Angle(
@@ -65,9 +59,7 @@ export class Angle {
             this.cosine, this.sine
         );
     }
-    /**
-     * Get the supplement of an angle (π - θ)
-     */
+    /** π - θ (supplement of the angle) */
     public supplement() {
         Angle.#allow = true;
         return new Angle(
@@ -77,9 +69,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Get the explement of an angle (2π - θ)
-     */
+    /** 2π - θ (explement of the angle) */
     public explement() {
         Angle.#allow = true;
         return new Angle(
@@ -88,9 +78,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate forward by π/2.
-     */
+    /** θ + π/2 */
     public halfTurnForward() {
         Angle.#allow = true;
         return new Angle(
@@ -99,9 +87,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate backward by π/2.
-     */
+    /** θ - π/2. */
     public halfTurnBackward() {
         Angle.#allow = true;
         return new Angle(
@@ -110,9 +96,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate forward by π.
-     */
+    /** θ + π */
     public flipForward() {
         Angle.#allow = true;
         return new Angle(
@@ -121,9 +105,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate backward by π.
-     */
+    /** θ - π */
     public flipBackward() {
         Angle.#allow = true;
         return new Angle(
@@ -132,9 +114,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate forward by a full revolution (2π).
-     */
+    /** θ + 2π */
     public revolveForward() {
         Angle.#allow = true;
         return new Angle(
@@ -143,9 +123,7 @@ export class Angle {
         );
     }
 
-    /**
-     * Rotate backward by a full revolution (2π).
-     */
+    /** θ - 2π */
     public revolveBackward() {
         Angle.#allow = true;
         return new Angle(

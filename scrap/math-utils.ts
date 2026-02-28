@@ -1,3 +1,49 @@
+/**
+ * Return `fallback` if `num` is NaN.
+ */
+export function ifNaN(num: number, fallback: number) {
+    return num === num ? num : fallback;
+}
+
+/**
+ * Map negative values through `mapper`; return the original otherwise.
+ */
+export function ifNegative(num: number, mapper: (num: number) => number) {
+    return num < 0 ? mapper(num) : num;
+}
+
+
+const TWO_PI = 2.0 * Math.PI;
+const EPS = 1e-5;
+
+/**
+ * Unwrap `theta1` to its equivalent angle closest to `theta0`.
+ */
+export function continuousAngle(theta0: number, theta1: number): number {
+    // unwrap theta1 to be closest to theta0
+    let d = theta1 - theta0;
+    d = (d + Math.PI) % TWO_PI;
+    if (d < 0) d += TWO_PI;
+    d -= Math.PI;
+
+    theta1 = theta0 + d;
+
+    // kill near-π numerical flips
+    if (Math.abs(Math.abs(theta1 - theta0) - Math.PI) < EPS) {
+        theta1 = theta0;
+    }
+
+    return theta1;
+}
+
+/**
+ * Get the base-10 order of magnitude of `n`.
+ */
+export function orderOfMagnitude(n: number): number {
+    if (n === 0) return 0;
+    return Math.floor(Math.log10(Math.abs(n)));
+}
+
 export function solveCubic(a: number, b: number, c: number, d: number): number[] {
     if (a === 0) throw new Error("Not a cubic equation");
 

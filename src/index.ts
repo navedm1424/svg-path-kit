@@ -1,5 +1,5 @@
 export * from "./cubic-bezier-curve.js";
-export * from "./svg-path.js";
+export {PrimitiveCommand, SVGPath} from "./svg-path.js";
 export * from "./point2D.js";
 export * from "./vector2D.js";
 export * from "./path.js";

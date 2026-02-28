@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ParametricCurve2D } from "../src/parametric-curve-2D.js";
 import { Point2D } from "../src/point2D.js";
-import { Vector2D } from "../src/vector2D.js";
 
 /** Simple line curve for testing base class finite-difference methods. */
 class LineCurve extends ParametricCurve2D {

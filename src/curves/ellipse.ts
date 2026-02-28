@@ -72,15 +72,10 @@ export class Ellipse extends ParametricCurve2D {
         ).rotate(this.#ellipseTilt);
     }
 
-    /**
-     * Translate the ellipse center by a vector.
-     */
+    /** Translate the ellipse center by a vector. */
     public translate(vector: Vector2D) {
         this.#center = this.#center.add(vector);
     }
-    /**
-     * Rotate the ellipse by the given angle.
-     */
     public rotate(angle: number | Angle) {
         this.#ellipseTilt = this.#ellipseTilt.add(angle);
     }
@@ -144,9 +139,7 @@ export class EllipticalArc {
         ).rotate(this.#ellipseTilt);
     }
 
-    /**
-     * Rotate the underlying ellipse by `angle`.
-     */
+    /** Rotate the underlying ellipse by `angle`. */
     public rotate(angle: number | Angle) {
         this.#ellipseTilt = this.#ellipseTilt.add(angle);
     }

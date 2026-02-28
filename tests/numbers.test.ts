@@ -2,11 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   clamp,
   saturate,
-  ifNaN,
-  ifNegative,
   round,
-  continuousAngle,
-  orderOfMagnitude,
   findRoots,
   lerp,
   invLerp,
@@ -51,28 +47,28 @@ describe("number-utils", () => {
     });
   });
 
-  describe("ifNaN", () => {
-    it("returns num when it is not NaN", () => {
-      expect(ifNaN(0, 42)).toBe(0);
-      expect(ifNaN(1.5, 42)).toBe(1.5);
-      expect(ifNaN(Infinity, 42)).toBe(Infinity);
-    });
-    it("returns fallback when num is NaN", () => {
-      expect(ifNaN(NaN, 42)).toBe(42);
-      expect(ifNaN(NaN, 0)).toBe(0);
-    });
-  });
+  // describe("ifNaN", () => {
+  //   it("returns num when it is not NaN", () => {
+  //     expect(ifNaN(0, 42)).toBe(0);
+  //     expect(ifNaN(1.5, 42)).toBe(1.5);
+  //     expect(ifNaN(Infinity, 42)).toBe(Infinity);
+  //   });
+  //   it("returns fallback when num is NaN", () => {
+  //     expect(ifNaN(NaN, 42)).toBe(42);
+  //     expect(ifNaN(NaN, 0)).toBe(0);
+  //   });
+  // });
 
-  describe("ifNegative", () => {
-    it("returns num when num >= 0", () => {
-      expect(ifNegative(0, (n) => n * 2)).toBe(0);
-      expect(ifNegative(5, (n) => n * 2)).toBe(5);
-    });
-    it("returns mapper(num) when num < 0", () => {
-      expect(ifNegative(-3, (n) => -n)).toBe(3);
-      expect(ifNegative(-1, (n) => n + 10)).toBe(9);
-    });
-  });
+  // describe("ifNegative", () => {
+  //   it("returns num when num >= 0", () => {
+  //     expect(ifNegative(0, (n) => n * 2)).toBe(0);
+  //     expect(ifNegative(5, (n) => n * 2)).toBe(5);
+  //   });
+  //   it("returns mapper(num) when num < 0", () => {
+  //     expect(ifNegative(-3, (n) => -n)).toBe(3);
+  //     expect(ifNegative(-1, (n) => n + 10)).toBe(9);
+  //   });
+  // });
 });
 
 describe("math-utils", () => {
@@ -88,30 +84,30 @@ describe("math-utils", () => {
     });
   });
 
-  describe("continuousAngle", () => {
-    it("returns theta1 when already close to theta0", () => {
-      expect(continuousAngle(0, 0.1)).toBeCloseTo(0.1);
-      expect(continuousAngle(Math.PI, Math.PI + 0.1)).toBeCloseTo(Math.PI + 0.1);
-    });
-    it("unwraps theta1 to be closest to theta0", () => {
-      const result = continuousAngle(0, 2 * Math.PI + 0.1);
-      expect(Math.abs(result - 0.1)).toBeLessThan(0.01);
-    });
-  });
+  // describe("continuousAngle", () => {
+  //   it("returns theta1 when already close to theta0", () => {
+  //     expect(continuousAngle(0, 0.1)).toBeCloseTo(0.1);
+  //     expect(continuousAngle(Math.PI, Math.PI + 0.1)).toBeCloseTo(Math.PI + 0.1);
+  //   });
+  //   it("unwraps theta1 to be closest to theta0", () => {
+  //     const result = continuousAngle(0, 2 * Math.PI + 0.1);
+  //     expect(Math.abs(result - 0.1)).toBeLessThan(0.01);
+  //   });
+  // });
 
-  describe("orderOfMagnitude", () => {
-    it("returns 0 for zero", () => {
-      expect(orderOfMagnitude(0)).toBe(0);
-    });
-    it("returns floor of log10(|n|) for non-zero", () => {
-      expect(orderOfMagnitude(1)).toBe(0);
-      expect(orderOfMagnitude(10)).toBe(1);
-      expect(orderOfMagnitude(100)).toBe(2);
-      expect(orderOfMagnitude(0.1)).toBe(-1);
-      expect(orderOfMagnitude(0.01)).toBe(-2);
-      expect(orderOfMagnitude(-1000)).toBe(3);
-    });
-  });
+  // describe("orderOfMagnitude", () => {
+  //   it("returns 0 for zero", () => {
+  //     expect(orderOfMagnitude(0)).toBe(0);
+  //   });
+  //   it("returns floor of log10(|n|) for non-zero", () => {
+  //     expect(orderOfMagnitude(1)).toBe(0);
+  //     expect(orderOfMagnitude(10)).toBe(1);
+  //     expect(orderOfMagnitude(100)).toBe(2);
+  //     expect(orderOfMagnitude(0.1)).toBe(-1);
+  //     expect(orderOfMagnitude(0.01)).toBe(-2);
+  //     expect(orderOfMagnitude(-1000)).toBe(3);
+  //   });
+  // });
 
   describe("findRoots", () => {
     it("throws on invalid arguments", () => {

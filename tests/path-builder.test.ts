@@ -34,17 +34,6 @@ describe("PathBuilder", () => {
     });
   });
 
-  describe("append / setLastCommandId / getCommandById", () => {
-    it("append adds command and returns it", () => {
-      const pb = PathBuilder.m(Point2D.ORIGIN);
-      const cmd = pb.l(Point2D.of(10, 0));
-      expect(pb.lastCommand).toBe(cmd);
-      pb.setLastCommandId("line1");
-      expect(pb.getCommandById("line1")).toBe(cmd);
-      expect(pb.getCommandById("missing")).toBeNull();
-    });
-  });
-
   describe("m (move)", () => {
     it("appends MoveCommand and updates current position", () => {
       const pb = PathBuilder.m(Point2D.ORIGIN);

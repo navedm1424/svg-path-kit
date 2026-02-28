@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { assignReadonlyProperties, makePropertiesReadonly } from "../src/utils/object-utils.runtime.js";
 import { writeJsonFileInternal } from "../src/utils/file-utils-internal.runtime.js";
-import { readFileSync, existsSync, rmSync, mkdirSync } from "fs";
+import { readFileSync, existsSync, rmSync } from "fs";
 import { join } from "path";
 
 describe("object-utils", () => {

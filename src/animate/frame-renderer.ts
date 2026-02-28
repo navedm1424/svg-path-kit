@@ -32,7 +32,9 @@ export interface Frames<T extends FrameValueType> extends ReadonlyArray<T> {
 }
 
 export interface FrameRenderer<T extends FrameValueType> {
+    /** render frame at `time` */
     renderFrameAt(time: number): Frame<T>;
+    /** render all frames with the optionally specified options (`duration`, `easing`, `fps`) */
     renderFrames(options?: { duration?: number, easing?: EasingFunction, fps?: number }): Frames<T>;
 }
 

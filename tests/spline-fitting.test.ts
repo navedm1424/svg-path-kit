@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   findCriticalTs,
-  CubicBezierFit,
   fitSplineBySubdivision,
   fitSplineInSteps,
   fitSplineAtParams,
@@ -11,7 +10,7 @@ import {
 } from "../src/spline-fitting.js";
 import { PathBuilder } from "../src/path-builder.js";
 import { Point2D } from "../src/point2D.js";
-import { CubicBezierCurve } from "../src/cubic-bezier-curve.js";
+import {CubicBezierCurve} from "../src/cubic-bezier-curve.js";
 import { Circle } from "../src/curves/index.js";
 
 describe("findCriticalTs", () => {
@@ -32,35 +31,6 @@ describe("findCriticalTs", () => {
     const circle = Circle.of(10);
     const ts = findCriticalTs(circle, 0, 2 * Math.PI);
     expect(ts.length).toBeGreaterThanOrEqual(2);
-  });
-});
-
-describe("CubicBezierFit", () => {
-  it("constructs fit for segment", () => {
-    const curve = Circle.of(10);
-    const fit = new CubicBezierFit(curve, 0, Math.PI / 2);
-    expect(fit.targetParametricCurve).toBe(curve);
-    expect(fit.segmentStart).toBe(0);
-    expect(fit.segmentEnd).toBeCloseTo(Math.PI / 2);
-    expect(fit.cubicBezierCurve).toBeDefined();
-    expect(fit.cubicBezierCurve.startingPoint.x).toBeCloseTo(10);
-    expect(fit.cubicBezierCurve.startingPoint.y).toBeCloseTo(0);
-    expect(fit.cubicBezierCurve.endingPoint.x).toBeCloseTo(0);
-    expect(fit.cubicBezierCurve.endingPoint.y).toBeCloseTo(10);
-  });
-  it("radialError returns non-negative number", () => {
-    const curve = Circle.of(10);
-    const fit = new CubicBezierFit(curve, 0, Math.PI / 2);
-    const err = fit.radialError(20);
-    expect(err).toBeGreaterThanOrEqual(0);
-    expect(Number.isFinite(err)).toBe(true);
-  });
-  it("throws when curve undefined at segment", () => {
-    const curve = {
-      at: () => Point2D.of(NaN, 0),
-      tangentAt: () => ({ x: 1, y: 0, normalize: () => ({ x: 1, y: 0 }), scale: () => ({ x: 1, y: 0 }) }),
-    } as any;
-    expect(() => new CubicBezierFit(curve, 0, 1)).toThrow("not defined");
   });
 });
 

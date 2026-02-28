@@ -38,18 +38,14 @@ export class Vector2D {
         return new Vector2D(x, y);
     }
 
-    /**
-     * Create a vector from polar coordinates—`radius` and `angle`.
-     */
+    /** Vector from polar coordinates—`radius` and `angle` */
     public static polar(radius: number, angle: number | Angle): Vector2D {
         if (angle instanceof Angle)
             return new Vector2D(radius * angle.cosine, radius * angle.sine);
         return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
     }
 
-    /**
-     * Construct a vector from `initialPoint` to `terminalPoint`.
-     */
+    /** Vector from `initialPoint` to `terminalPoint` */
     public static from(initialPoint: Point2D, terminalPoint: Point2D): Vector2D {
         return new Vector2D(terminalPoint.x - initialPoint.x, terminalPoint.y - initialPoint.y);
     }
@@ -58,9 +54,6 @@ export class Vector2D {
         return new Vector2D(this.x + vector.x, this.y + vector.y);
     }
 
-    /**
-     * Subtract another vector and return the difference as a new instance.
-     */
     public subtract(vector: Vector2D) {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
     }
@@ -77,16 +70,12 @@ export class Vector2D {
         return this.x * vector.x + this.y * vector.y;
     }
 
-    /**
-     * Scalar cross product with another vector.
-     */
+    /** Scalar cross product with another vector. */
     public crossProduct(vector: Vector2D): number {
         return this.x * vector.y - this.y * vector.x;
     }
 
-    /**
-     * Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0.
-     */
+    /** Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0. */
     public normalize(): Vector2D {
         if (this.#magnitude === 0)
             return Vector2D.NULL_VECTOR;
@@ -110,9 +99,6 @@ export class Vector2D {
         return new Vector2D(sign * -1 * this.y, sign * this.x);
     }
 
-    /**
-     * Return the vector pointing in the opposite direction—the negated vector.
-     */
     public opposite(): Vector2D {
         return new Vector2D(-this.x, -this.y);
     }
@@ -121,9 +107,7 @@ export class Vector2D {
         return new Vector2D(this.x, this.y);
     }
 
-    /**
-     * Scale the vector in-place by `scalar`.
-     */
+    /** Scale the vector in-place by `scalar`. */
     public scale(scalar: number): this {
         this.#x *= scalar;
         this.#y *= scalar;
@@ -131,9 +115,7 @@ export class Vector2D {
         return this;
     }
 
-    /**
-     * Rotate the vector in-place by `angle` radians.
-     */
+    /** Rotate the vector in-place by `angle` radians. */
     public rotate(angle: number | Angle): this {
         const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);

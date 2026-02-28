@@ -19,7 +19,7 @@ import { EllipticalArc } from "../src/curves/index.js";
 
 const origin = Point2D.ORIGIN;
 const p100 = Point2D.of(100, 0);
-const p010 = Point2D.of(0, 10);
+// const p010 = Point2D.of(0, 10);
 
 describe("MoveCommand", () => {
   it("constructor(Point2D, Point2D)", () => {

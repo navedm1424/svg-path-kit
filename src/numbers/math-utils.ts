@@ -1,42 +1,8 @@
 import {clamp, saturate} from "./number-utils.js";
 
-/**
- * Round a number to the specified decimal places.
- */
-export function round(num: number, decimalPlaces: number): number {
+export function round(num: number, decimalPlaces: number = 0): number {
     const factor = Math.pow(10, decimalPlaces);
     return Math.round(num * factor) / factor;
-}
-
-const TWO_PI = 2.0 * Math.PI;
-const EPS = 1e-5;
-
-/**
- * Unwrap `theta1` to its equivalent angle closest to `theta0`.
- */
-export function continuousAngle(theta0: number, theta1: number): number {
-    // unwrap theta1 to be closest to theta0
-    let d = theta1 - theta0;
-    d = (d + Math.PI) % TWO_PI;
-    if (d < 0) d += TWO_PI;
-    d -= Math.PI;
-
-    theta1 = theta0 + d;
-
-    // kill near-π numerical flips
-    if (Math.abs(Math.abs(theta1 - theta0) - Math.PI) < EPS) {
-        theta1 = theta0;
-    }
-
-    return theta1;
-}
-
-/**
- * Get the base-10 order of magnitude of `n`.
- */
-export function orderOfMagnitude(n: number): number {
-    if (n === 0) return 0; // zero is a philosophical problem
-    return Math.floor(Math.log10(Math.abs(n)));
 }
 
 const equalityThreshold = 1e-8;

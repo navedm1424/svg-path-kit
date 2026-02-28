@@ -140,15 +140,21 @@ const arcCommand = pb.circularArc(5, Angle.QUARTER_PI, Angle.PI);
 arcCommand.getEndVelocity();
 ```
 
-You can also attach IDs to command using `setLastCommandId`:
+Or store commands in an object:
 
 ```ts
-pb.l(5, 0);
-pb.setLastCommandId("shaft");
+const commands: {
+    shaft?: LineCommand
+} = {};
+
+// ...commands...
+
+commands.shaft = pb.l(5, 6);
 
 // ...other commands...
 
-const shaftLineCommand = pb.getCommandById("shaft");
+// access the line's length
+commands.shaft!.length;
 ```
 
 ---
@@ -243,6 +249,10 @@ All these methods have at least two overloads: one with an absolute endpoint par
 - `hermiteCurve` – this method creates a cubic Bézier curve that interpolates between the endpoint velocities.
 - `handleDefinedBezier` – this method lets you specify the handle vectors (`start -> first control point` and `end -> second control points`) rather than the offset vectors of the control points.
 - `chordScaledBezier` – this method gives you a cubic Bézier curve with handle lengths scaled relative to the chord length and directed by angles.
+
+> Keep in mind that the `startAngle` and `endAngle` parameters on the arc command methods are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the radial vector of the point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: `x(θ) = a cos(θ)` and `y(θ) = b sin(θ)`.
+>
+> In the case of a circle, however, the parametric angles and the central angles are the same.
 
 ---
 

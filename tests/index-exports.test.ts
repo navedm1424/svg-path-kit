@@ -10,7 +10,6 @@ import {
   findCriticalTs,
   fitSplineBySubdivision,
   fitSplineAtParams,
-  CubicBezierFit,
   cardinalSpline,
   catmullRomSpline,
   fitSplineTo,
@@ -39,7 +38,6 @@ describe("Main index exports", () => {
     expect(typeof findCriticalTs).toBe("function");
     expect(typeof fitSplineBySubdivision).toBe("function");
     expect(typeof fitSplineAtParams).toBe("function");
-    expect(CubicBezierFit).toBeDefined();
     expect(typeof cardinalSpline).toBe("function");
     expect(typeof catmullRomSpline).toBe("function");
     expect(typeof fitSplineTo).toBe("function");

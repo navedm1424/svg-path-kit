@@ -1,5 +1,4 @@
 import {saturate} from "../numbers/index.js";
-import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 
 export type EasingFunction = (t: number) => number;
 

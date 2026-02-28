@@ -3,11 +3,10 @@ import {Point2D} from "./point2D.js";
 import {Vector2D} from "./vector2D.js";
 import {ParametricCurve2D} from "./parametric-curve-2D.js";
 import {findRoots, round} from "./numbers/index.js";
-import {CubicBezierCurve} from "./cubic-bezier-curve.js";
+import {CubicBezierCurve, fitCubicBezier} from "./cubic-bezier-curve.js";
 import {CubicBezierCurveCommand, CubicBezierHermiteCurveCommand} from "./path.js";
 
 const roundingOrder = 8;
-const equalityThreshold = 1e-8;
 
 /**
  * Collect parameter values where a parametric curve has extrema or inflection points.
@@ -42,92 +41,29 @@ export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: n
     return Array.from(criticalTs).sort((a, b) => a - b);
 }
 
-/**
- * Encapsulates a cubic Bézier approximation of a curve segment.
- */
-export class CubicBezierFit {
-    readonly cubicBezierCurve: CubicBezierCurve;
+function cubicBezierFitRadialError(
+    bezierFit: CubicBezierCurve,
+    targetCurve: ParametricCurve2D,
+    t0: number, t1: number,
+    samples = 10
+): number {
+    let maxError = 0;
 
-    constructor(
-        readonly targetParametricCurve: ParametricCurve2D,
-        readonly segmentStart: number,
-        readonly segmentEnd: number
-    ) {
-        this.cubicBezierCurve = CubicBezierFit.fit(targetParametricCurve, segmentStart, segmentEnd);
+    for (let i = 0; i <= samples; i++) {
+        const t = t0 + (i / samples) * (t1 - t0);
+
+        const b = bezierFit.at(t);
+        const c = targetCurve.at(t);
+
+        const dx = b.x - c.x;
+        const dy = b.y - c.y;
+
+        const error = Math.hypot(dx, dy);
+        if (error > maxError)
+            maxError = error;
     }
 
-    /**
-     * Compute a cubic Bézier that best matches the source curve over [t0, t1].
-     */
-    public static fit(
-        curve: ParametricCurve2D,
-        t0: number, t1: number
-    ) {
-        const p0 = curve.at(t0);
-        const p3 = curve.at(t1);
-        const p0Vec = p0.toVector();
-        const p3Vec = p3.toVector();
-        const midPoint = curve.at((t0 + t1) / 2).toVector();
-        if (![p0.x, p0.y, p3.x, p3.y, midPoint.x, midPoint.y].every(Number.isFinite))
-            throw new Error("The curve is not defined at all points.");
-
-        const v0 = curve.tangentAt(t0);
-        const v1 = curve.tangentAt(t1);
-        if (![v0.x, v0.y, v1.x, v1.y].every(Number.isFinite))
-            throw new Error("The tangent is not defined at all points of the curve.");
-
-        const v0Unit = v0.normalize();
-        const v1Unit = v1.normalize();
-        const R = (
-            midPoint.scale(2)
-                .subtract(p0Vec)
-                .subtract(p3Vec)
-        ).scale(4 / 3);
-        const c = v0Unit.dotProduct(v1Unit);
-        const denominator = 1 - c * c;
-        if (Math.abs(denominator) < equalityThreshold) {
-            const scale = (t1 - t0) / 3;
-            return new CubicBezierCurve(
-                p0,
-                p0.add(v0.scale(scale)),
-                p3.add(v1.scale(-scale)),
-                p3
-            );
-        }
-
-        const s0 = (R.dotProduct(v0Unit) - c * (R.dotProduct(v1Unit))) / denominator;
-        const s1 = (c * R.dotProduct(v0Unit) - (R.dotProduct(v1Unit))) / denominator;
-
-        return new CubicBezierCurve(
-            p0,
-            p0.add(v0Unit.scale(s0)),
-            p3.add(v1Unit.scale(-s1)),
-            p3
-        );
-    }
-
-    /**
-     * Measure maximum radial error against the source curve by sampling.
-     */
-    public radialError(samples = 10): number {
-        let maxError = 0;
-
-        for (let i = 0; i <= samples; i++) {
-            const t = this.segmentStart + (i / samples) * (this.segmentEnd - this.segmentStart);
-
-            const b = this.cubicBezierCurve.at(t);
-            const c = this.targetParametricCurve.at(t);
-
-            const dx = b.x - c.x;
-            const dy = b.y - c.y;
-
-            const error = Math.hypot(dx, dy);
-            if (error > maxError)
-                maxError = error;
-        }
-
-        return maxError;
-    }
+    return maxError;
 }
 
 /**
@@ -150,10 +86,9 @@ function fitSplineBySubdivisionInternal(
     tolerance: number = 0.25,
     spline: CubicBezierCurveCommand[]
 ) {
-    const bezierFit = new CubicBezierFit(curve, t0, t1);
+    const bezier = fitCubicBezier(curve, t0, t1);
 
-    if (bezierFit.radialError() < tolerance) {
-        const bezier = bezierFit.cubicBezierCurve;
+    if (cubicBezierFitRadialError(bezier, curve, t0, t1) < tolerance) {
         spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
@@ -187,7 +122,7 @@ export function fitSplineInSteps(
     while (Math.abs(t1 - currentStep) > 1e-4) {
         prevStep = currentStep;
         currentStep = currentStep + (1 / steps) * range;
-        const bezier = new CubicBezierFit(curve, prevStep, currentStep).cubicBezierCurve;
+        const bezier = fitCubicBezier(curve, prevStep, currentStep);
         spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),
@@ -203,8 +138,7 @@ export function fitSplineInSteps(
 export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...ts: [number, number, ...number[]]) {
     const spline: CubicBezierCurveCommand[] = [];
     for (let i = 1; i < ts.length; i++) {
-        const bezier = new CubicBezierFit(curve, ts[i - 1]!, ts[i]!)
-            .cubicBezierCurve;
+        const bezier = fitCubicBezier(curve, ts[i - 1]!, ts[i]!);
         spline.push(pb.c(
             Vector2D.from(bezier.startingPoint, bezier.firstControlPoint),
             Vector2D.from(bezier.startingPoint, bezier.secondControlPoint),

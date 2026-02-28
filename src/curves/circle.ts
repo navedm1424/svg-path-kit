@@ -41,9 +41,7 @@ export class Circle extends ParametricCurve2D {
         const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
         return Vector2D.of(-this.radius * cosine, -this.radius * sine);
     }
-    /**
-     * Translate the circle center by a vector.
-     */
+    /** Translate the circle center by a vector. */
     public translate(vector: Vector2D) {
         this.#center = this.#center.add(vector);
     }
@@ -57,9 +55,7 @@ export class CircularArc {
     readonly endAngle: Angle;
     readonly rotation: Angle;
 
-    /**
-     * Define a circular arc between two angles with an optional rotation offset.
-     */
+    /** Define a circular arc between two angles with an optional rotation offset. */
     constructor(
         readonly radius: number,
         startAngle: number | Angle,
@@ -72,14 +68,14 @@ export class CircularArc {
         makePropertiesReadonly(this, "radius", "startAngle", "endAngle", "rotation");
     }
 
-    /** Vector from center to starting point in global coordinates. */
+    /** Vector from center to starting point. */
     get startingPointVector(): Vector2D {
         return Vector2D.of(
             this.radius * this.startAngle.cosine,
             this.radius * this.startAngle.sine
         ).rotate(this.rotation);
     }
-    /** Vector from center to ending point in global coordinates. */
+    /** Vector from center to ending point. */
     get endingPointVector(): Vector2D {
         return Vector2D.of(
             this.radius * this.endAngle.cosine,
