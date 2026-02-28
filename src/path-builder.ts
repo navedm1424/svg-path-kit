@@ -1,10 +1,10 @@
-import {Point2D} from "./point2D";
-import {Vector2D} from "./vector2D";
-import {CircularArc, EllipticalArc} from "./curves/index";
+import {Point2D} from "./point2D.js";
+import {Vector2D} from "./vector2D.js";
+import {CircularArc, EllipticalArc} from "./curves/index.js";
 import {
+    type Command,
     ChordScaledBezierCommand,
     ClosePathCommand,
-    Command,
     CubicBezierCurveCommand,
     CubicBezierEllipticalArc,
     CubicBezierHermiteCurveCommand,
@@ -12,65 +12,72 @@ import {
     EllipticalArcWrapperCommand,
     LineCommand,
     MoveCommand, Path,
-    QuadraticBezierCurveCommand
-} from "./path";
-import {Angle} from "./angle";
+    QuadraticBezierCurveCommand, HandleDefinedCubicBezierCurve
+} from "./path.js";
+import {Angle} from "./angle.js";
+import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
 
 /**
- * Builder class for constructing SVG paths from geometric utilities.
+ * Builder class for constructing SVG paths from geometric utilities
  */
 export class PathBuilder {
     readonly firstCommand: MoveCommand;
-    private commands: Command[] = [];
-    private openPathStack: MoveCommand[] = [];
+    #commands: Command[] = [];
+    #openPathStack: MoveCommand[] = [];
 
-    /** Most recently appended command. */
+    /** Most recently appended command */
     get lastCommand() {
-        return this.commands[this.commands.length - 1];
+        if (this.#commands.length === 0)
+            throw new Error("Invalid state: PathBuilder initialized without commands.");
+
+        return this.#commands[this.#commands.length - 1]!;
     }
 
-    /** Starting point of the path. */
+    /** Starting point of the path */
     get pathStart(): Point2D {
         return this.firstCommand.terminalPoint;
     }
 
-    /** Current drawing cursor position (endpoint of the last command). */
+    /** Current drawing cursor position (endpoint of the last command) */
     get currentPosition() {
-        return this.lastCommand?.terminalPoint ?? Point2D.ORIGIN;
+        try {
+            return this.lastCommand.terminalPoint;
+        } catch (e) {
+            return Point2D.ORIGIN;
+        }
     }
 
-    /** Velocity at the current position (derived from the last command). */
+    /** Velocity at the current position (derived from the last command) */
     get currentVelocity() {
         return this.lastCommand.getEndVelocity();
     }
 
-    private constructor(initialPoint: Point2D | Vector2D) {
+    private constructor(initialPoint: any) {
+        if (!(initialPoint instanceof Point2D || initialPoint instanceof Vector2D))
+            throw new Error("Invalid argument type.");
+
         if (initialPoint instanceof Vector2D)
             this.firstCommand = this.m(initialPoint);
         else
             this.firstCommand = this.m(initialPoint);
+
+        makePropertiesReadonly(this, "firstCommand");
     }
 
-    /**
-     * Create a builder starting at a given point or offset vector (equivalent).
-     */
+    /** Create a builder starting at a given point or offset vector (equivalent) */
     public static m(point: Point2D): PathBuilder;
     public static m(vector: Vector2D): PathBuilder;
     public static m(point: Point2D | Vector2D): PathBuilder {
         return new PathBuilder(point);
     }
 
-    /**
-     * Append a command to the builder.
-     */
+    /** Append a command to the builder. */
     public append<T extends Command>(command: T): T {
-        this.commands.push(command);
+        this.#commands.push(command);
         return command;
     }
 
-    /**
-     * Start a new subpath with a move command.
-     */
+    /** Start a new subpath with a move command. */
     public m(point: Point2D): MoveCommand;
     public m(vector: Vector2D): MoveCommand;
     public m(point: Point2D | Vector2D): MoveCommand {
@@ -79,13 +86,11 @@ export class PathBuilder {
             // @ts-expect-error
             point
         );
-        this.openPathStack.push(moveCommand);
+        this.#openPathStack.push(moveCommand);
         return this.append(moveCommand);
     }
 
-    /**
-     * Draw a line from the current position to a given point specified explicitly or by an offset vector.
-     */
+    /** Line command (`L`/`l`) */
     public l(point: Point2D): LineCommand;
     public l(vector: Vector2D): LineCommand;
     public l(point: Point2D | Vector2D): LineCommand {
@@ -96,9 +101,7 @@ export class PathBuilder {
         ));
     }
 
-    /**
-     * Draw a quadratic Bézier curve.
-     */
+    /** Quadratic Bézier curve command (`Q`/`q`) */
     public q(controlPoint: Point2D, endingPoint: Point2D): QuadraticBezierCurveCommand;
     public q(controlPointVector: Vector2D, endingPointVector: Vector2D): QuadraticBezierCurveCommand;
     public q(controlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): QuadraticBezierCurveCommand {
@@ -109,9 +112,7 @@ export class PathBuilder {
         ));
     }
 
-    /**
-     * Draw a cubic Bézier curve.
-     */
+    /** Cubic Bézier curve command (`C`/`c`) */
     public c(firstControlPoint: Point2D, secondControlPoint: Point2D, endingPoint: Point2D): CubicBezierCurveCommand;
     public c(firstControlPointVector: Vector2D, secondControlPointVector: Vector2D, endingPointVector: Vector2D): CubicBezierCurveCommand;
     public c(firstControlPoint: Point2D | Vector2D, secondControlPoint: Point2D | Vector2D, endingPoint: Point2D | Vector2D): CubicBezierCurveCommand {
@@ -123,9 +124,9 @@ export class PathBuilder {
     }
 
     /**
-     * Draw a primitive-style elliptical arc by radii and flags.
+     * Elliptical arc command (`A`/`a`)
      *
-     * > `xAxisRotation` is entered in radians to stay in concert with the rest of the API. This is contrary to what the primitive elliptical arc (`A`) command expects—angle in degrees.
+     * > `xAxisRotation` is entered in radians to stay in concert with the rest of the API. This is contrary to what the primitive elliptical arc command expects—angle in degrees.
      */
     public a(xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPoint: Point2D): EllipticalArcWrapperCommand;
     public a(xRadius: number, yRadius: number, xAxisRotation: number | Angle, largeArcFlag: boolean, sweepFlag: boolean, endingPointVector: Vector2D): EllipticalArcWrapperCommand;
@@ -138,8 +139,9 @@ export class PathBuilder {
     }
 
     /**
-     * This command lets you draw circular arcs with SVG path elliptical arc (A) commands without having to deal with all the confusing flags.
-     * You just have to provide the radius and parametric angle bounds or a {@link CircularArc} object.
+     * - Lets you draw circular arcs
+     * - Uses the elliptical arc (`A`/`a`) command under the hood
+     * - Spares you from its confusing flags
      */
     public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle): EllipticalArcCommand;
     public circularArc(circularArc: CircularArc): EllipticalArcCommand;
@@ -163,10 +165,9 @@ export class PathBuilder {
     }
 
     /**
-     * This command lets you draw elliptical arcs with SVG path elliptical arc (A) commands without having to deal with all the confusing flags.
-     * You just have to specify the semi-axes and parametric angles or provide an {@link EllipticalArc} object.
-     *
-     * > Keep in mind that `startAngle` and `endAngle` are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the vector from the center to that point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: x(θ) = a cos(θ) and y(θ) = b sin(θ).
+     * - Lets you draw elliptical arcs
+     * - Uses the `A`/`a` command under the hood
+     * - Spares you from its confusing flags
      */
     public ellipticalArc(semiMajorAxis: number, semiMinorAxis: number, startAngle: number | Angle, endAngle: number | Angle, ellipseTilt?: number | Angle): EllipticalArcCommand;
     public ellipticalArc(arc: EllipticalArc): EllipticalArcCommand;
@@ -183,7 +184,8 @@ export class PathBuilder {
     }
 
     /**
-     * Draw a cubic Hermite curve parameterized by endpoint velocities.
+     * - Lets you draw a cubic Hermite curve—curve that interpolates between velocities.
+     * - Uses the `C`/`c` command under the hood
      */
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Point2D): CubicBezierHermiteCurveCommand;
     public hermiteCurve(startVelocity: Vector2D, endVelocity: Vector2D, endingPoint: Vector2D): CubicBezierHermiteCurveCommand;
@@ -196,7 +198,8 @@ export class PathBuilder {
     }
 
     /**
-     * This command gives you the closest cubic Bézier approximation of a circular arc parameterized by the radius and angle bounds.
+     * - Gives you the closest cubic Bézier approximation of a circular arc
+     * - Spares you from having to calculate the raw coordinates
      */
     public bezierCircularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle): CubicBezierEllipticalArc;
     public bezierCircularArc(circularArc: CircularArc): CubicBezierEllipticalArc;
@@ -220,9 +223,8 @@ export class PathBuilder {
     }
 
     /**
-     * This command gives you the closest cubic Bézier approximation of an elliptical arc parameterized by the semi-axes and angular parameters.
-     *
-     * > Keep in mind that `startAngle` and `endAngle` are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the vector from the center to that point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: x(θ) = a cos(θ) and y(θ) = b sin(θ).
+     * - Gives you the closest cubic Bézier approximation of an elliptical arc
+     * - Spares you from having to calculate the raw coordinates
      */
     public bezierEllipticalArc(
         semiMajorAxis: number, semiMinorAxis: number,
@@ -245,10 +247,32 @@ export class PathBuilder {
     }
 
     /**
+     * Lets you specify the handle vectors:
+     * - `start -> first control point`
+     * - `end -> second control point`
+     *
+     * rather than the offset vectors of the control points.
+     * */
+    public handleDefinedBezier(firstHandleVector: Vector2D, secondHandleVector: Vector2D, endingPoint: Point2D): HandleDefinedCubicBezierCurve;
+    public handleDefinedBezier(firstHandleVector: Vector2D, secondHandleVector: Vector2D, endingPointVector: Vector2D): HandleDefinedCubicBezierCurve;
+    public handleDefinedBezier(
+        firstHandleVector: Vector2D,
+        secondHandleVector: Vector2D,
+        endingPoint: Point2D | Vector2D
+    ) {
+        return this.append(new HandleDefinedCubicBezierCurve(
+            this.currentPosition,
+            firstHandleVector, secondHandleVector,
+            // @ts-expect-error
+            endingPoint
+        ));
+    }
+
+    /**
      * This command lets you scale cubic Bézier handles relative to the chord length and direct them by angles.
      *
-     * - `startHandleAngle` is the angle that the first handle vector is intended to make with the x-axis.
-     * - `endHandleAngle` is the angle that the second handle vector is intended to make with the x-axis.
+     * - `startHandleAngle` is the angle that the first handle vector should make with the x-axis.
+     * - `endHandleAngle` is the angle that the second handle vector should make with the x-axis.
      * - `startHandleScale` is the ratio of the first handle's length to the chord length.
      * - `endHandleScale` is the ratio of the second handle's length to the chord length.
      */
@@ -268,19 +292,15 @@ export class PathBuilder {
         ));
     }
 
-    /**
-     * Close the current subpath.
-     */
+    /** Close the current subpath */
     public z(): ClosePathCommand {
-        return this.append(new ClosePathCommand(this.currentPosition, this.openPathStack.pop()!));
+        return this.append(new ClosePathCommand(this.currentPosition, this.#openPathStack.pop()!));
     }
 
-    /** Build a {@link Path} from accumulated commands. */
     public toPath() {
-        return new Path(this.commands);
+        return new Path(this.#commands);
     }
 
-    /** Serialize the built path to an SVG path string. */
     public toSVGPathString() {
         return this.toPath().toSVGPathString();
     }

@@ -1,76 +1,67 @@
+import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+
 /**
  * Immutable wrapper around an angle value that caches its sine and cosine
  * and offers helpers for common rotations.
  */
 export class Angle {
-    /** Pre-constructed angle of 0 radians. */
+    static #allow = false;
     public static readonly ZERO = Angle.of(0);
-    /** Pre-constructed angle of π/4 radians. */
     public static readonly QUARTER_PI = Angle.of(Math.PI / 4);
-    /** Pre-constructed angle of π/2 radians. */
     public static readonly HALF_PI = Angle.of(Math.PI / 2);
-    /** Pre-constructed angle of π radians. */
     public static readonly PI = Angle.of(Math.PI);
-    /** Pre-constructed angle of 2π radians. */
     public static readonly TWO_PI = Angle.of(2 * Math.PI);
 
     private constructor(
         readonly value: number,
         readonly sine: number = Math.sin(value),
         readonly cosine: number = Math.cos(value)
-    ) {}
+    ) {
+        if (!Angle.#allow)
+            throw new Error('Illegal constructor: use the factory method.');
 
-    /**
-     * Factory for constructing an {@link Angle} from a radian value.
-     */
+        makePropertiesReadonly(this, "value", "sine", "cosine");
+        Angle.#allow = false;
+    }
+
     public static of(value: number) {
+        Angle.#allow = true;
         return new Angle(value);
     }
 
-    /**
-     * Return a new angle offset by the provided amount.
-     */
     public add(angle: number | Angle): Angle {
         return Angle.of(this.value + Number(angle));
     }
 
-    /**
-     * Return a new angle reduced by the provided amount.
-     */
     public subtract(angle: number | Angle): Angle {
         return Angle.of(this.value - Number(angle));
     }
 
-    /**
-     * Scale the angle by a numeric factor.
-     */
+    /** θ × `scalar` */
     public multiply(scalar: number): Angle {
         return Angle.of(scalar * this.value);
     }
 
-    /**
-     * Return the negated angle.
-     */
-    public negated(): Angle {
+    /** -θ (negated angle) */
+    public negated() {
+        Angle.#allow = true;
         return new Angle(
             -this.value,
             -this.sine, this.cosine
         );
     }
 
-    /**
-     * Get the complement of an angle (π/2 - θ)
-     */
+    /** π/2 - θ (complement of the angle) */
     public complement() {
+        Angle.#allow = true;
         return new Angle(
             Angle.HALF_PI.value - this.value,
             this.cosine, this.sine
         );
     }
-    /**
-     * Get the supplement of an angle (π - θ)
-     */
+    /** π - θ (supplement of the angle) */
     public supplement() {
+        Angle.#allow = true;
         return new Angle(
             Angle.PI.value - this.value,
             this.sine,
@@ -78,79 +69,69 @@ export class Angle {
         );
     }
 
-    /**
-     * Get the explement of an angle (2π - θ)
-     */
+    /** 2π - θ (explement of the angle) */
     public explement() {
+        Angle.#allow = true;
         return new Angle(
             Angle.TWO_PI.value - this.value,
             -this.sine, this.cosine
         );
     }
 
-    /**
-     * Rotate forward by π/2.
-     */
+    /** θ + π/2 */
     public halfTurnForward() {
+        Angle.#allow = true;
         return new Angle(
             this.value + Angle.HALF_PI.value,
             this.cosine, -this.sine
         );
     }
 
-    /**
-     * Rotate backward by π/2.
-     */
+    /** θ - π/2. */
     public halfTurnBackward() {
+        Angle.#allow = true;
         return new Angle(
             this.value - Angle.HALF_PI.value,
             -this.cosine, this.sine
         );
     }
 
-    /**
-     * Rotate forward by π.
-     */
+    /** θ + π */
     public flipForward() {
+        Angle.#allow = true;
         return new Angle(
             this.value + Angle.PI.value,
             -this.sine, -this.cosine
         );
     }
 
-    /**
-     * Rotate backward by π.
-     */
+    /** θ - π */
     public flipBackward() {
+        Angle.#allow = true;
         return new Angle(
             this.value - Angle.PI.value,
             -this.sine, -this.cosine
         );
     }
 
-    /**
-     * Rotate forward by a full revolution (2π).
-     */
+    /** θ + 2π */
     public revolveForward() {
+        Angle.#allow = true;
         return new Angle(
             this.value + Angle.TWO_PI.value,
             this.sine, this.cosine
         );
     }
 
-    /**
-     * Rotate backward by a full revolution (2π).
-     */
+    /** θ - 2π */
     public revolveBackward() {
+        Angle.#allow = true;
         return new Angle(
             this.value - Angle.TWO_PI.value,
             this.sine, this.cosine
         );
     }
 
-    /**
-     * Convert the radian angle to degrees.
-     */
     public toDegrees() {
         return this.value * 180 / Math.PI;
     }
@@ -158,4 +139,10 @@ export class Angle {
     public valueOf() {
         return this.value;
     }
+
+    [Symbol.toPrimitive]() {
+        return this.value;
+    }
 }
+
+makePropertiesReadonly(Angle, "ZERO", "QUARTER_PI", "HALF_PI", "PI", "TWO_PI");
