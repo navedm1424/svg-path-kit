@@ -46,7 +46,7 @@ pb.bezierCircularArc(5, Angle.HALF_PI, Angle.PI);
 
 ---
 
-### Hermite curves
+### Hermite Curves
 
 Draw Hermite curves—curves that interpolate between velocities.
 
@@ -173,11 +173,11 @@ const renderer = createFrameRenderer((tl: Timeline, map: Interpolator) => {
     const arc1Radius = map(s.arc1).to(1, 5);
     const arc1EndAngle = map(s.arc1).to(0, 3 * Math.PI / 4);
     pb.bezierCircularArc(arc1Radius, Angle.ZERO, arc1EndAngle);
-    pb.l(pb.lastCommand.getEndVelocity());
+    pb.l(pb.currentVelocity);
 
     const arc2Radius = map(s.arc2).to(1, 5);
     const arc2EndAngle = map(s.arc2).to(0, -Math.PI);
-    const lineAngle = pb.lastCommand.getEndVelocity().angle;
+    const lineAngle = pb.currentVelocity.angle;
     pb.bezierCircularArc(arc2Radius, Angle.of(lineAngle).halfTurnBackward(), arc2EndAngle);
 
     return pb.toSVGPathString();
@@ -198,22 +198,24 @@ renderer.renderFrames({
 
 <br/><br/>
 
-## PathBuilder
+## Code Samples
+
+You can find the code samples in the GitHub repository inside the `samples` directory: the golf club icon, the bulb icon, the epitrochoid, and more.
+
+<br/><br/>
+
+## PathBuilder API
 
 `PathBuilder` is the main entry point for building complex SVG paths. It manages the current point, stacks of open subpaths, and provides high‑level methods for lines, curves, arcs, and auto‑controlled Béziers.
 
-### API
-
----
-
-#### Instantiation
+### Instantiation
 
 - Relative start: `PathBuilder.m(vector: Vector2D)` – start a path with a relative move from `(0, 0)`.
 - Absolute start: `PathBuilder.m(point: Point2D)` – start a path at an absolute point.
 
 ---
 
-#### State accessors
+### State accessors
 
 - `lastCommand: Command` – last appended command.
 - `currentPosition: Point2D` – absolute current endpoint (origin if no commands yet).
@@ -221,7 +223,7 @@ renderer.renderFrames({
 
 ---
 
-#### Direct Wrappers
+### Direct Wrappers
 
 - `m` – move command.
 - `l` – line command.
@@ -234,7 +236,7 @@ All these methods have at least two overloads: one with an absolute endpoint par
 
 ---
 
-#### Geometric Utilities
+### Arc & Bézier Utilities
 
 - `circularArc`, `ellipticalArc` – these methods just take the radii and angular parameters and create a primitive elliptical arc (`A`) command by calculating the large-arc and sweep flags.
 - `bezierCircularArc`, `bezierEllipticalArc` – these methods take the radii and angular parameters and give you the closest cubic Bézier approximations of circular and elliptical arcs.
@@ -244,14 +246,14 @@ All these methods have at least two overloads: one with an absolute endpoint par
 
 ---
 
-#### Appending Commands
+### Appending Commands
 
 All of these methods have corresponding command classes that you can instantiate and append into the path builder.
 - `append<T extends Command>(command: T): T`
 
 ---
 
-#### Exporting and Serializing
+### Exporting and Serializing
 
 After constructing your commands with `PathBuilder`:
 
@@ -261,12 +263,10 @@ After constructing your commands with `PathBuilder`:
 
 <br/><br/>
 
-You can find the code samples in the GitHub repository inside the `samples` directory: the golf club icon, the bulb icon, the epitrochoid, and more.
-
 ## Note from Author
 
-This library turned out to be really helpful for me when I was coding shapes. I think coding shapes gives us a degree of control over the mathematical details of a shape that we do not get in many of the graphic design software. I like to keep everything calculated and doing that in SVG is hard. Drawing a mere angled line with polar coordinates can be quite challenging. Therefore, I think the point and vector utilities can prove to be useful anytime you're working with coordinates, not just when working with SVG paths.
+This library turned out to be really helpful for me when I was coding shapes. I think coding shapes gives us a degree of control over the mathematical details of a shape that we do not get in many of the graphic design software. I like to keep everything calculated and doing that in SVG is hard. For any operation, you have to manipulate the raw coordinates. `svg-path-kit` gives you geometric utilities which encapsulate all that math and make SVG less painful and a bit more fun to work with.
 
-I'm aiming to expand this library and to expand the geometry. I want the consumers of this library, primarily myself, to be able to perform a wide range of geometric operations on the lines and curves and all kinds of shapes they're working on, such as rotating, reflecting, and transforming shapes, finding intersections, and so on. If you have any ideas or suggestions or corrections, well, the library is open-source on GitHub.
+I'm aiming to expand this library and to expand the geometry. I want this library to enable a wide range of geometric operations on all kinds of shapes, such as rotating, reflecting, dilating, finding intersections, and so on. If you have any ideas or suggestions or corrections, well, the library is open-source.
 
 Thanks a lot!
