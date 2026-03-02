@@ -1,6 +1,6 @@
 import {invLerp, lerp, remap} from "../numbers/index.js";
 import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
-import type {AnimationClock} from "./frame-sampler.js";
+import type {Playhead} from "./frame-sampler.js";
 import type {
     Interpolator,
     SegmentMapper,
@@ -9,10 +9,11 @@ import type {
     ToRangeSpecifier
 } from "./interpolator.types.ts";
 import {Sequence} from "./sequence.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
-        const time = this.time;
+        const time = this.playhead.time;
         return {
             withEasing(easing: EasingFunction): ToRangeSpecifier {
                 return {
@@ -51,12 +52,23 @@ const InterpolatorPrototype = {
     sequence<S extends string[]>(sequence: Sequence<S>): SequenceMapper<S> {
         if (!((sequence) instanceof Sequence))
             throw new Error("Invalid sequence object! Please provide a valid sequence.");
-        let time = this.time;
 
         const map = this;
+        let easing: EasingFunction | null = null;
+
         const to = function to(...anchors) {
             if (anchors.length !== sequence.length + 1)
                 throw new Error(`The output anchors must be exactly ${sequence.length + 1} in number.`);
+
+            let time = map.playhead.time;
+            if (easing)
+                time = lerp(
+                    sequence.start, sequence.end,
+                    easing(invLerp(
+                        sequence.start, sequence.end,
+                        time
+                    ))
+                );
 
             if (time <= sequence.start)
                 return anchors[0];
@@ -74,14 +86,8 @@ const InterpolatorPrototype = {
         } as ToAnchorsSpecifier<S>["to"];
 
         return {
-            withEasing(easing: EasingFunction) {
-                time = lerp(
-                    sequence.start, sequence.end,
-                    easing(invLerp(
-                        sequence.start, sequence.end,
-                        time
-                    ))
-                );
+            withEasing(easingFn: EasingFunction) {
+                easing = easingFn;
                 return { to };
             }, to
         };
@@ -92,16 +98,11 @@ Object.assign(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
 Object.freeze(InterpolatorPrototype);
 
 /** @internal */
-export function createInterpolator(clock: AnimationClock) {
+export function createInterpolator(playhead: Playhead) {
     const map = function Interpolator(segment) {
         return map.segment(segment);
     } as Interpolator;
-    const timePropertyKey: keyof Interpolator = "time";
-    const time = Object.getOwnPropertyDescriptor(clock, timePropertyKey);
-    if (!time)
-        throw new Error(`Invalid clock! Please provide a valid clock!`);
-
-    Object.defineProperties(map, { time });
+    assignReadonlyProperties(map, { playhead });
     Object.setPrototypeOf(map, InterpolatorPrototype);
     return Object.freeze(map);
 }

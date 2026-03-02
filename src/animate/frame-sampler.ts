@@ -6,8 +6,9 @@ import {saturate} from "../numbers/index.js";
 import {createTimelineInspector} from "./timeline-inspector.runtime.js";
 
 /** @internal */
-export interface AnimationClock {
-    get time(): number;
+export interface Playhead {
+    /** normalized time 0 → 1 */
+    time: number;
 }
 
 export type FrameValue =
@@ -16,16 +17,14 @@ export type FrameValue =
     | FrameValue[]
     | { [key: string]: FrameValue };
 
-export interface FrameFunction<T extends FrameValue> {
-    (ti: TimelineInspector, map: Interpolator): T;
-}
+export type FrameValueResolver<T extends FrameValue> = (ti: TimelineInspector, map: Interpolator) => T;
 
 export interface Frame<T extends FrameValue> {
     readonly time: number;
     readonly value: T;
 }
 
-export interface Frames<T extends FrameValue> {
+export interface FramesData<T extends FrameValue> {
     readonly duration: number;
     readonly fps: number;
     readonly frames: ReadonlyArray<Frame<T>>
@@ -39,73 +38,69 @@ export interface FrameSamplingOptions {
 
 export interface FrameSampler<T extends FrameValue> {
     /**
-     * sample frame at `time`
-     * @param time normalized time 0 → 1
+     * sample frame at `t`
+     * @param t normalized time 0 → 1
      * */
-    sampleAt(time: number): Frame<T>;
-    /** emit each frame lazily, one by one */
-    emit(options?: FrameSamplingOptions): Generator<Frame<T>>;
-    /** collect all frames */
-    collect(options?: FrameSamplingOptions): Frames<T>;
+    sampleAt(t: number): Frame<T>;
+    /** lazily generate frames, one by one */
+    iterate(options?: FrameSamplingOptions): Generator<Frame<T>>;
+    /** collect all frames eagerly */
+    collect(options?: FrameSamplingOptions): FramesData<T>;
+}
+
+function* stepper({ duration = 1, fps = 60, easing }: FrameSamplingOptions = {}): Generator<number> {
+    if (!Number.isFinite(duration) || duration <= 0)
+        throw new Error("duration must be > 0 and finite.");
+    if (!Number.isFinite(fps) || fps <= 0)
+        throw new Error("fps must be > 0 and finite.");
+
+    const noOfFrames = Math.floor(duration * fps);
+    if (noOfFrames < 1)
+        return;
+    yield easing ? saturate(easing(0)) : 0;
+    if (noOfFrames === 1)
+        return;
+
+    const step = 1 / (noOfFrames - 1);
+    let progress = step;
+
+    do {
+        yield easing ? saturate(easing(progress)) : progress;
+        progress += step;
+    } while (progress <= 1);
 }
 
 class FrameSamplerImpl<T extends FrameValue> implements FrameSampler<T> {
-    readonly #generateFrame: FrameFunction<T>;
-    #time: number;
+    readonly #resolveFrame: FrameValueResolver<T>;
+    readonly #playhead: Playhead;
     readonly #timelineInspector: TimelineInspector;
     readonly #interpolator: Interpolator;
 
-    constructor(func: FrameFunction<T>) {
-        this.#generateFrame = func;
-        this.#time = 0;
-        const sampler = this;
-        const clock = { get time() { return sampler.#time }};
-        this.#timelineInspector = createTimelineInspector(clock);
-        this.#interpolator = createInterpolator(clock);
+    constructor(func: FrameValueResolver<T>) {
+        this.#resolveFrame = func;
+        this.#playhead = { time: 0 };
+        this.#timelineInspector = createTimelineInspector(this.#playhead);
+        this.#interpolator = createInterpolator(this.#playhead);
     }
+
     sampleAt(time: number): Frame<T> {
-        return Object.freeze({
-            time: this.#time = time,
-            value: this.#generateFrame(this.#timelineInspector, this.#interpolator)
-        });
-    }
-    *emit({ duration = 1, easing, fps = 60 }: FrameSamplingOptions = {}): Generator<Frame<T>> {
-        if (!Number.isFinite(duration) || duration <= 0)
-            throw new Error("duration must be > 0 and finite.");
-        if (!Number.isFinite(fps) || fps <= 0)
-            throw new Error("fps must be > 0 and finite.");
-
-        let progress = 0;
-        this.#time = 0;
-
-        const noOfFrames = Math.floor(duration * fps);
-        if (noOfFrames === 1) {
-            yield Object.freeze({
-                time: this.#time,
-                value: this.#generateFrame(this.#timelineInspector, this.#interpolator)
-            });
-            return;
+        return {
+            time: this.#playhead.time = saturate(time),
+            value: this.#resolveFrame(this.#timelineInspector, this.#interpolator)
         }
-
-        const step = 1 / (noOfFrames - 1);
-
-        do {
-            yield Object.freeze({
-                time: this.#time,
-                value: this.#generateFrame(this.#timelineInspector, this.#interpolator)
-            });
-
-            progress = Math.min(progress + step, 1);
-            this.#time = saturate(easing ? easing(progress) : progress);
-        } while (progress < 1);
     }
-    collect({ duration = 1, fps = 60, ...rest }: FrameSamplingOptions = {}) {
-        const frames = [...this.emit({ duration, fps, ...rest })];
+
+    *iterate(options: FrameSamplingOptions = {}): Generator<Frame<T>> {
+        for (const t of stepper(options))
+            yield this.sampleAt(t);
+    }
+    collect({ duration = 1, fps = 60, ...rest }: FrameSamplingOptions = {}): FramesData<T> {
+        const frames = Object.freeze([...this.iterate({ duration, fps, ...rest })]);
 
         return Object.freeze({ duration, fps, frames });
     }
 }
 
-export function createFrameSampler<T extends FrameValue>(func: FrameFunction<T>): FrameSampler<T> {
+export function createFrameSampler<T extends FrameValue>(func: FrameValueResolver<T>): FrameSampler<T> {
     return new FrameSamplerImpl(func);
 }

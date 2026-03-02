@@ -2,8 +2,8 @@ import {describe, expect, it} from "vitest";
 import {PathBuilder, Point2D} from "../src/index.js";
 import {
     cubicBezierEasing, easeIn,
-    type AnimationClock, createFrameSampler,
-    Sequence, Segment, FrameExporter,
+    type Playhead, createFrameSampler,
+    Sequence, Segment, FrameExporter, type FrameValueResolver,
 } from "../src/animate/index.js";
 import {createTimelineInspector} from "../src/animate/timeline-inspector.runtime.js";
 import {createInterpolator} from "../src/animate/interpolator.runtime.js";
@@ -175,16 +175,16 @@ describe(`${Sequence.name}`, () => {
 
 describe("Timeline", () => {
     it(`${createTimelineInspector.name} returns function`, () => {
-        const clock = { time: 0.5 };
-        const ti = createTimelineInspector(clock);
+        const playhead = { time: 0.5 };
+        const ti = createTimelineInspector(playhead);
         expect(typeof ti).toBe("function");
-        expect(ti.time).toBe(clock.time);
+        expect(ti.playhead).toBe(playhead);
     });
     it("ti(segment) hasStarted / hasFinished / isActive", () => {
         const segment = new Segment(0.2, 0.8);
         let time = 0.1;
-        const clock: AnimationClock = { get time() { return time; } };
-        const ti = createTimelineInspector(clock);
+        const playhead: Playhead = { get time() { return time; } };
+        const ti = createTimelineInspector(playhead);
         const stateBefore = ti(segment);
         expect(stateBefore.hasStarted()).toBe(false);
         expect(stateBefore.hasFinished()).toBe(false);
@@ -220,23 +220,23 @@ describe("Timeline", () => {
 
 describe("Interpolator", () => {
     it("createInterpolator returns interpolator", () => {
-        const clock = {time: 0.5};
-        const map = createInterpolator(clock);
-        expect(map.time).toBe(clock.time);
+        const playhead = {time: 0.5};
+        const map = createInterpolator(playhead);
+        expect(map.playhead).toBe(playhead);
         expect(typeof map.segment).toBe("function");
         expect(typeof map(new Segment(0, 1))).toBe("object");
     });
     it("map(segment).to(start, end) remaps time", () => {
         const segment = new Segment(0.2, 0.8);
-        const clock = { time: 0.5 };
-        const map = createInterpolator(clock);
+        const playhead = { time: 0.5 };
+        const map = createInterpolator(playhead);
         const value = map(segment).to(100, 200);
         expect(value).toBeCloseTo(150);
     });
     it("map.segment(segment).withEasing(easing).to() applies easing", () => {
         const segment = new Segment(0, 1);
-        const clock = { time: 0.5 };
-        const map = createInterpolator(clock);
+        const playhead = { time: 0.5 };
+        const map = createInterpolator(playhead);
         const linear = map.segment(segment).to(0, 100);
         const eased = map.segment(segment).withEasing(easeIn).to(0, 100);
         expect(linear).toBe(50);
@@ -272,21 +272,22 @@ describe("Interpolator", () => {
 });
 
 describe("FrameRenderer", () => {
-    const renderer = createFrameSampler((tl, _) => {
+    const frameValueComputer: FrameValueResolver<string> = (tl, _) => {
         const pb = PathBuilder.m(Point2D.of(0, 0));
-        pb.l(Point2D.of(100 * tl.time, 0));
+        pb.l(Point2D.of(100 * tl.playhead.time, 0));
         return pb.toSVGPathString();
-    });
-    it(`${renderer.sampleAt.name} returns Frame`, () => {
-        const path0 = renderer.sampleAt(0);
+    };
+    const sampler = createFrameSampler(frameValueComputer);
+    it(`${sampler.sampleAt.name} returns Frame`, () => {
+        const path0 = sampler.sampleAt(0);
         expect(path0.time).toBe(0);
         expect(path0.value).toBe("M 0 0 L 0 0");
-        const path1 = renderer.sampleAt(1);
+        const path1 = sampler.sampleAt(1);
         expect(path1.time).toBe(1);
         expect(path1.value).toBe("M 0 0 L 100 0");
     });
-    it(`${renderer.collect.name} returns Frames with duration and fps`, () => {
-        const frames = renderer.collect({ duration: 5 });
+    it(`${sampler.collect.name} returns Frames with duration and fps`, () => {
+        const frames = sampler.collect({ duration: 5 });
         expect(frames.duration).toBe(5);
         expect(frames.fps).toBe(60);
         expect(frames.frames.length).toBe(300);

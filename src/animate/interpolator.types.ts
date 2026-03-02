@@ -1,6 +1,7 @@
 import type {EasingFunction} from "./easing.ts";
 import type {Sequence} from "./sequence.ts";
 import type {Segment} from "./segment.ts";
+import type {Playhead} from "./frame-sampler.js";
 
 export interface ToRangeSpecifier {
     to(start: number, end: number): number;
@@ -22,7 +23,7 @@ export interface SequenceMapper<S extends string[]> extends ToAnchorsSpecifier<S
 }
 
 export interface Interpolator {
-    get time(): number;
+    readonly playhead: Playhead;
     (segment: Segment): SegmentMapper;
     segment(segment: Segment): SegmentMapper;
     easeIn(segment: Segment): ToRangeSpecifier;

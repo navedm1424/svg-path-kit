@@ -1,7 +1,7 @@
-import type {Frame, Frames} from "./index.js";
+import type {Frame, FramesData} from "./index.js";
 
 export namespace FrameExporter {
-    export async function exportToJson(data: Frame<any> | Frames<any>, outputDirectoryPath: string, outputFileName: string): Promise<string> {
+    export async function exportToJson(data: Frame<any> | FramesData<any>, outputDirectoryPath: string, outputFileName: string): Promise<string> {
         const { writeJsonFile } = await import(
             typeof window !== "undefined" || typeof process === "undefined" || !process.versions?.node ?
                 (() => {

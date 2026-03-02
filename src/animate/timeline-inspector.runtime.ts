@@ -1,31 +1,27 @@
-import type {AnimationClock} from "./frame-sampler.js";
+import type {Playhead} from "./frame-sampler.js";
 import type {TimelineInspector} from "./timeline-inspector.types.js";
 import {Segment} from "./segment.js";
 import {Sequence} from "./sequence.js";
+import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
 
 /** @internal */
-export function createTimelineInspector(clock: AnimationClock): TimelineInspector {
+export function createTimelineInspector(playhead: Playhead): TimelineInspector {
     const instance = function TimelineInspector(subject) {
         if (!(subject instanceof Segment || (subject) instanceof Sequence))
             throw new Error("The argument must either be a segment or a sequence.");
 
         return {
             hasStarted(): boolean {
-                return instance.time >= subject.start;
+                return instance.playhead.time >= subject.start;
             },
             hasFinished(): boolean {
-                return instance.time >= subject.end;
+                return instance.playhead.time >= subject.end;
             },
             isActive(): boolean {
-                return instance.time >= subject.start && instance.time < subject.end;
+                return instance.playhead.time >= subject.start && instance.playhead.time < subject.end;
             }
         };
     } as TimelineInspector;
-    const timePropertyKey: keyof TimelineInspector = "time";
-    const time = Object.getOwnPropertyDescriptor(clock, timePropertyKey);
-    if (!time)
-        throw new Error(`Invalid clock! Please provide a valid clock!`);
-
-    Object.defineProperties(instance, { time });
+    assignReadonlyProperties(instance, { playhead });
     return Object.freeze(instance);
 }
