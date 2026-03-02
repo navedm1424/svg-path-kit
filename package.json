@@ -12,6 +12,7 @@
     "./curves": "./dist/curves/index.js",
     "./animate": "./dist/animate/index.js"
   },
+  "sideEffects": false,
   "scripts": {
     "build": "rm -rf dist/ && tsc && rm -rf dist/**/*.types.js && rm -rf dist/**/*.runtime.d.ts"
   },

@@ -86,7 +86,7 @@ export class Sequence<S extends string[]> {
     readonly [key: number]: Segment;
     readonly length: S["length"] extends number ? S["length"] : number;
     readonly segments: {
-        readonly [K in S[number]]: string extends K ? Segment | undefined : Segment;
+        readonly [K in S[number]]: Segment;
     };
     private constructor() {
         throw new Error("A sequence can only be created using the factory methods.");
@@ -99,7 +99,7 @@ export class Sequence<S extends string[]> {
             && typeof (s[0]) === "string"
             && typeof (s[1]) === "number"
         ))
-            throw new Error("Invalid inputs.");
+            throw new Error("Invalid inputs: the first element of each tuple should be a string and the second element should be a number.");
 
         return {
             scaleToRange(start: number, end: number): Sequence<S> {

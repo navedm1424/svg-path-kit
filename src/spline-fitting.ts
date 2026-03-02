@@ -1,10 +1,10 @@
-import {PathBuilder} from "./path-builder.js";
-import {Point2D} from "./point2D.js";
+import type {PathBuilder} from "./path-builder.js";
+import type {Point2D} from "./point2D.js";
+import type {ParametricCurve2D} from "./parametric-curve-2D.js";
+import type {CubicBezierCurveCommand, CubicBezierHermiteCurveCommand} from "./path.js";
+import {type CubicBezierCurve, fitCubicBezier} from "./cubic-bezier-curve.js";
 import {Vector2D} from "./vector2D.js";
-import {ParametricCurve2D} from "./parametric-curve-2D.js";
 import {findRoots, round} from "./numbers/index.js";
-import {CubicBezierCurve, fitCubicBezier} from "./cubic-bezier-curve.js";
-import {CubicBezierCurveCommand, CubicBezierHermiteCurveCommand} from "./path.js";
 
 const roundingOrder = 8;
 

@@ -1,12 +1,12 @@
 import {describe, expect, it} from "vitest";
-import {cubicBezierEasing, easeIn} from "../src/animate/easing.js";
-import {createTimeline} from "../src/animate/timeline.runtime.js";
+import {PathBuilder, Point2D} from "../src/index.js";
+import {
+    cubicBezierEasing, easeIn,
+    type AnimationClock, createFrameSampler,
+    Sequence, Segment, FrameExporter,
+} from "../src/animate/index.js";
+import {createTimelineInspector} from "../src/animate/timeline-inspector.runtime.js";
 import {createInterpolator} from "../src/animate/interpolator.runtime.js";
-import {type AnimationClock, createFrameRenderer} from "../src/animate/frame-renderer.js";
-import {PathBuilder} from "../src/path-builder.js";
-import {Point2D} from "../src/point2D.js";
-import {Sequence} from "../src/animate/sequence.js";
-import {Segment} from "../src/animate/segment.js";
 
 describe("easing", () => {
     describe("cubicBezierEasing", () => {
@@ -174,30 +174,30 @@ describe(`${Sequence.name}`, () => {
 });
 
 describe("Timeline", () => {
-    it("createTimeline returns function", () => {
+    it(`${createTimelineInspector.name} returns function`, () => {
         const clock = { time: 0.5 };
-        const tl = createTimeline(clock);
-        expect(typeof tl).toBe("function");
-        expect(tl.time).toBe(clock.time);
+        const ti = createTimelineInspector(clock);
+        expect(typeof ti).toBe("function");
+        expect(ti.time).toBe(clock.time);
     });
-    it("tl(segment) hasStarted / hasFinished / isActive", () => {
+    it("ti(segment) hasStarted / hasFinished / isActive", () => {
         const segment = new Segment(0.2, 0.8);
         let time = 0.1;
         const clock: AnimationClock = { get time() { return time; } };
-        const tl = createTimeline(clock);
-        const stateBefore = tl(segment);
+        const ti = createTimelineInspector(clock);
+        const stateBefore = ti(segment);
         expect(stateBefore.hasStarted()).toBe(false);
         expect(stateBefore.hasFinished()).toBe(false);
         expect(stateBefore.isActive()).toBe(false);
 
         time = 0.5;
-        const stateDuring = tl(segment);
+        const stateDuring = ti(segment);
         expect(stateDuring.hasStarted()).toBe(true);
         expect(stateDuring.hasFinished()).toBe(false);
         expect(stateDuring.isActive()).toBe(true);
 
         time = 0.9;
-        const stateAfter = tl(segment);
+        const stateAfter = ti(segment);
         expect(stateAfter.hasStarted()).toBe(true);
         expect(stateAfter.hasFinished()).toBe(true);
         expect(stateAfter.isActive()).toBe(false);
@@ -205,16 +205,16 @@ describe("Timeline", () => {
     it("tl(sequence) works", () => {
         const seq = Sequence.fromRatios(["a", 1]).scaleToRange(0.25, 0.75);
         const clock = { time: 0.5 };
-        const state = createTimeline(clock)(seq);
+        const state = createTimelineInspector(clock)(seq);
         expect(state.hasStarted()).toBe(true);
         expect(state.isActive()).toBe(true);
         expect(state.hasFinished()).toBe(false);
     });
     it("throws when argument is not Segment or Sequence", () => {
-        const tl = createTimeline({ time: 0 });
-        expect(() => tl(null as any)).toThrow();
-        expect(() => tl(42 as any)).toThrow();
-        expect(() => tl({} as any)).toThrow("segment or a sequence");
+        const ti = createTimelineInspector({ time: 0 });
+        expect(() => ti(null as any)).toThrow();
+        expect(() => ti(42 as any)).toThrow();
+        expect(() => ti({} as any)).toThrow("segment or a sequence");
     });
 });
 
@@ -272,35 +272,34 @@ describe("Interpolator", () => {
 });
 
 describe("FrameRenderer", () => {
-    const renderer = createFrameRenderer((tl, map) => {
+    const renderer = createFrameSampler((tl, _) => {
         const pb = PathBuilder.m(Point2D.of(0, 0));
         pb.l(Point2D.of(100 * tl.time, 0));
         return pb.toSVGPathString();
     });
-    it(`${renderer.renderFrameAt.name} returns Frame`, () => {
-        const path0 = renderer.renderFrameAt(0);
+    it(`${renderer.sampleAt.name} returns Frame`, () => {
+        const path0 = renderer.sampleAt(0);
         expect(path0.time).toBe(0);
         expect(path0.value).toBe("M 0 0 L 0 0");
-        const path1 = renderer.renderFrameAt(1);
+        const path1 = renderer.sampleAt(1);
         expect(path1.time).toBe(1);
         expect(path1.value).toBe("M 0 0 L 100 0");
     });
-    it(`${renderer.renderFrames.name} returns Frames with duration and fps`, () => {
-        const frames = renderer.renderFrames({ duration: 5 });
-        expect(Array.isArray(frames)).toBe(true);
+    it(`${renderer.collect.name} returns Frames with duration and fps`, () => {
+        const frames = renderer.collect({ duration: 5 });
         expect(frames.duration).toBe(5);
         expect(frames.fps).toBe(60);
-        expect(frames.length).toBe(300);
-        expect(frames[0]).toMatch(/M\s+0\s+0/);
+        expect(frames.frames.length).toBe(300);
+        expect(frames.frames[0]!.value).toMatch(/M\s+0\s+0/);
     });
     it("exportToJson in Node writes JSON file", async () => {
-        const animated = createFrameRenderer((_, __) => {
+        const animated = createFrameSampler((_, __) => {
             const pb = PathBuilder.m(Point2D.ORIGIN);
             pb.l(Point2D.of(10, 0));
             return pb.toSVGPathString();
         });
-        const frames = animated.renderFrames({ duration: 1 });
-        const outPath = await frames.exportToJson("test-output-animate", "frames");
+        const frames = animated.collect({ duration: 1 });
+        const outPath = await FrameExporter.exportToJson(frames, "test-output-animate", "frames");
         expect(outPath).toMatch(/frames\.json$/);
         const fs = await import("fs");
         const data = JSON.parse(fs.readFileSync(outPath, "utf8"));
@@ -309,18 +308,18 @@ describe("FrameRenderer", () => {
         fs.rmSync("test-output-animate", { recursive: true, force: true });
     });
     it("exportToJson in Node writes JSON file", async () => {
-        const animated = createFrameRenderer((_, __) => {
+        const animated = createFrameSampler((_, __) => {
             const pb = PathBuilder.m(Point2D.ORIGIN);
             pb.l(Point2D.of(10, 0));
             return pb.toSVGPathString();
         });
-        const outPath = await animated.renderFrameAt(0).exportToJson("test-output-path", "path-export");
+        const outPath = await FrameExporter.exportToJson(animated.sampleAt(0), "test-output-path", "path-export");
         expect(outPath).toMatch(/path-export\.json$/);
         const fs = await import("fs");
         const content = fs.readFileSync(outPath, "utf8");
         const data = JSON.parse(content);
-        expect(data.frame).toBeDefined();
-        expect(typeof data.frame).toBe("string");
+        expect(data.value).toBeDefined();
+        expect(typeof data.value).toBe("string");
         fs.rmSync("test-output-path", { recursive: true, force: true });
     });
 });

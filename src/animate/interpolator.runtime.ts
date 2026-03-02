@@ -1,6 +1,6 @@
 import {invLerp, lerp, remap} from "../numbers/index.js";
 import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
-import type {AnimationClock} from "./frame-renderer.js";
+import type {AnimationClock} from "./frame-sampler.js";
 import type {
     Interpolator,
     SegmentMapper,
