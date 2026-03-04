@@ -1,41 +1,102 @@
 import {invLerp, lerp, remap} from "../numbers/index.js";
 import {easeIn, easeInOut, easeOut, type EasingFunction} from "./easing.js";
 import type {Playhead} from "./frame-sampler.js";
-import type {
-    Interpolator,
-    SegmentMapper,
-    SequenceMapper,
-    ToAnchorsSpecifier,
-    ToRangeSpecifier
-} from "./interpolator.types.ts";
+import type {Interpolator, SegmentMapper, SequenceMapper, ToAnchorsStep, ToRangeStep} from "./interpolator.types.ts";
 import {Sequence} from "./sequence.js";
 import {assignReadonlyProperties} from "../utils/object-utils.runtime.js";
+import type {Segment} from "./segment.js";
+
+class ToRangeStepImpl implements ToRangeStep {
+    readonly #value: number;
+    readonly #segment: Segment;
+    readonly #easing: EasingFunction;
+
+    constructor(value: number, segment: Segment, easing: EasingFunction) {
+        this.#value = value;
+        this.#segment = segment;
+        this.#easing = easing;
+    }
+
+    to(start: number, end: number) {
+        return lerp(
+            start, end,
+            this.#easing(invLerp(
+                this.#segment.start, this.#segment.end,
+                this.#value
+            ))
+        );
+    }
+}
+
+class SegmentMapperImpl implements SegmentMapper {
+    readonly #value: number;
+    readonly #segment: Segment;
+
+    constructor(value: number, segment: Segment) {
+        this.#value = value;
+        this.#segment = segment;
+    }
+
+    withEasing(easing: EasingFunction): ToRangeStep {
+        return new ToRangeStepImpl(this.#value, this.#segment, easing);
+    }
+    to(start: number, end: number) {
+        return remap(
+            this.#value,
+            this.#segment.start, this.#segment.end,
+            start, end
+        );
+    }
+}
+
+class ToAnchorsStepImpl<S extends string[]> implements ToAnchorsStep<S> {
+    constructor(
+        readonly value: number,
+        readonly sequence: Sequence<S>
+    ) {}
+
+    to(...anchors: Parameters<ToAnchorsStep<S>["to"]>): number {
+        if (anchors.length !== this.sequence.length + 1)
+            throw new Error(`The output anchors must be exactly ${this.sequence.length + 1} in number.`);
+
+        if (this.value <= this.sequence.start)
+            return anchors[0];
+        if (this.value >= this.sequence.end)
+            return anchors[anchors.length - 1];
+
+        for (let i = 0; i < this.sequence.length; i++) {
+            const segment = this.sequence[i]!;
+            if (segment.start <= this.value && this.value < segment.end) {
+                return remap(
+                    this.value,
+                    segment.start, segment.end,
+                    anchors[i], anchors[i + 1]
+                );
+            }
+        }
+
+        return undefined as never;
+    }
+}
+
+class SequenceMapperImpl<S extends string[]> extends ToAnchorsStepImpl<S> implements SequenceMapper<S> {
+    withEasing(easing: EasingFunction): ToAnchorsStep<S> {
+        return new ToAnchorsStepImpl(
+            lerp(
+                this.sequence.start, this.sequence.end,
+                easing(invLerp(
+                    this.sequence.start, this.sequence.end,
+                    this.value
+                ))
+            ),
+            this.sequence
+        );
+    }
+}
 
 const InterpolatorPrototype = {
     segment(segment): SegmentMapper {
-        const time = this.playhead.time;
-        return {
-            withEasing(easing: EasingFunction): ToRangeSpecifier {
-                return {
-                    to(start: number, end: number) {
-                        return lerp(
-                            start, end,
-                            easing(invLerp(
-                                segment.start, segment.end,
-                                time
-                            ))
-                        );
-                    }
-                };
-            },
-            to(start: number, end: number) {
-                return remap(
-                    time,
-                    segment.start, segment.end,
-                    start, end
-                );
-            }
-        };
+        return new SegmentMapperImpl(this.playhead.time, segment);
     },
     easeIn(segment) {
         return this.segment(segment)
@@ -53,48 +114,12 @@ const InterpolatorPrototype = {
         if (!((sequence) instanceof Sequence))
             throw new Error("Invalid sequence object! Please provide a valid sequence.");
 
-        const map = this;
-        let easing: EasingFunction | null = null;
-
-        const to = function to(...anchors) {
-            if (anchors.length !== sequence.length + 1)
-                throw new Error(`The output anchors must be exactly ${sequence.length + 1} in number.`);
-
-            let time = map.playhead.time;
-            if (easing)
-                time = lerp(
-                    sequence.start, sequence.end,
-                    easing(invLerp(
-                        sequence.start, sequence.end,
-                        time
-                    ))
-                );
-
-            if (time <= sequence.start)
-                return anchors[0];
-            if (time >= sequence.end)
-                return anchors[anchors.length - 1];
-
-            for (let i = 0; i < sequence.length; i++) {
-                const segment = sequence[i]!;
-                if (segment.start <= time && time < segment.end) {
-                    return map(segment).to(anchors[i], anchors[i + 1]);
-                }
-            }
-
-            return undefined as never;
-        } as ToAnchorsSpecifier<S>["to"];
-
-        return {
-            withEasing(easingFn: EasingFunction) {
-                easing = easingFn;
-                return { to };
-            }, to
-        };
+        return new SequenceMapperImpl(this.playhead.time, sequence);
     }
 } as Interpolator;
 
 Object.assign(InterpolatorPrototype, {[Symbol.toStringTag]: "Interpolator"});
+Object.setPrototypeOf(InterpolatorPrototype, Function.prototype);
 Object.freeze(InterpolatorPrototype);
 
 /** @internal */

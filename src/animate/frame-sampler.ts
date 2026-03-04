@@ -5,10 +5,9 @@ import type {EasingFunction} from "./easing.js";
 import {saturate} from "../numbers/index.js";
 import {createTimelineInspector} from "./timeline-inspector.runtime.js";
 
-/** @internal */
 export interface Playhead {
     /** normalized time 0 → 1 */
-    time: number;
+    get time(): number;
 }
 
 export type FrameValue =
@@ -72,20 +71,22 @@ function* stepper({ duration = 1, fps = 60, easing }: FrameSamplingOptions = {})
 
 class FrameSamplerImpl<T extends FrameValue> implements FrameSampler<T> {
     readonly #resolveFrame: FrameValueResolver<T>;
-    readonly #playhead: Playhead;
+    #time: number;
     readonly #timelineInspector: TimelineInspector;
     readonly #interpolator: Interpolator;
 
     constructor(func: FrameValueResolver<T>) {
         this.#resolveFrame = func;
-        this.#playhead = { time: 0 };
-        this.#timelineInspector = createTimelineInspector(this.#playhead);
-        this.#interpolator = createInterpolator(this.#playhead);
+        this.#time = 0;
+        const thisInstance = this;
+        const playhead = { get time() { return thisInstance.#time; } };
+        this.#timelineInspector = createTimelineInspector(playhead);
+        this.#interpolator = createInterpolator(playhead);
     }
 
     sampleAt(time: number): Frame<T> {
         return {
-            time: this.#playhead.time = saturate(time),
+            time: this.#time = saturate(time),
             value: this.#resolveFrame(this.#timelineInspector, this.#interpolator)
         }
     }
@@ -95,9 +96,9 @@ class FrameSamplerImpl<T extends FrameValue> implements FrameSampler<T> {
             yield this.sampleAt(t);
     }
     collect({ duration = 1, fps = 60, ...rest }: FrameSamplingOptions = {}): FramesData<T> {
-        const frames = Object.freeze([...this.iterate({ duration, fps, ...rest })]);
+        const frames = [...this.iterate({ duration, fps, ...rest })];
 
-        return Object.freeze({ duration, fps, frames });
+        return { duration, fps, frames };
     }
 }
 
