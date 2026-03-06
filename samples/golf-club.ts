@@ -1,4 +1,4 @@
-import {LineCommand, PathBuilder, Point2D, Vector2D} from "../src/index";
+import {LineCommand, PathBuilder, Point2D, Vector2D} from "../src/index.js";
 
 const shaftLength = 8;
 const angle = Math.PI / 12;
