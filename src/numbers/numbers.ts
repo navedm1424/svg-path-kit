@@ -1,4 +1,17 @@
-import {clamp, saturate} from "./number-utils.js";
+export function clamp(
+    v: number,
+    min: number,
+    max: number
+) {
+    if (min > max)
+        [min, max] = [max, min];
+
+    if (v > max)
+        return max;
+    if (v < min)
+        return min;
+    return v;
+}
 
 export function round(num: number, decimalPlaces: number = 0): number {
     const factor = Math.pow(10, decimalPlaces);
@@ -55,40 +68,4 @@ export function findRoots(f: (t: number) => number, tStart: number, tEnd: number
         tCurr = tNext; vCurr = vNext; currSpeed = nextSpeed;
     }
     return roots;
-}
-
-export function lerp(
-    start: number,
-    end: number,
-    t: number
-) {
-    return clamp(start + (end - start) * t, start, end);
-}
-
-export function invLerp(
-    start: number,
-    end: number,
-    v: number
-) {
-    return saturate((v - start) / (end - start));
-}
-
-export function remap(
-    value: number,
-    currentStart: number,
-    currentEnd: number,
-    newStart: number,
-    newEnd: number
-) {
-    if (currentStart === newStart && currentEnd === newEnd)
-        return value;
-    if (value <= currentStart)
-        return newStart;
-    if (value >= currentEnd)
-        return newEnd;
-
-    // same as lerp(newStart, newEnd, invLerp(currentStart, currentEnd, value))
-    return (
-        newStart + (newEnd - newStart) * ((value - currentStart) / (currentEnd - currentStart))
-    );
 }

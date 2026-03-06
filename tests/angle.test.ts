@@ -162,7 +162,7 @@ describe("Angle", () => {
   describe("valueOf / Symbol.toPrimitive", () => {
     it("returns value for coercion", () => {
       const a = Angle.of(1.5);
-      expect(a.valueOf()).toBe(1.5);
+      expect(+a).toBe(1.5);
       expect(a[Symbol.toPrimitive]()).toBe(1.5);
       expect(Number(a)).toBe(1.5);
       expect(String(a)).toBe("1.5");

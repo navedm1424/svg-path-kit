@@ -1,7 +1,7 @@
 {
   "name": "svg-path-kit",
   "version": "1.2.0-beta.6",
-  "description": "A geometry-oriented library for building and animating complex SVG paths.",
+  "description": "A geometry-oriented library for building complex SVG paths.",
   "author": "Naved <navedm1424@gmail.com>",
   "type": "module",
   "main": "dist/index.js",
@@ -9,13 +9,11 @@
   "exports": {
     ".": "./dist/index.js",
     "./numbers": "./dist/numbers/index.js",
-    "./curves": "./dist/curves/index.js",
-    "./animate": "./dist/animate/index.js"
+    "./curves": "./dist/curves/index.js"
   },
   "sideEffects": false,
   "scripts": {
-    "build": "rm -rf dist/ && tsc && rm -rf dist/**/*.types.js && rm -rf dist/**/*.runtime.d.ts"
-  },
+    "build": "rm -rf dist/ && tsc && rm -rf dist/**/*.types.js && rm -rf dist/**/*.runtime.d.ts"},
   "files": [
     "dist"
   ],

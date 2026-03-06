@@ -15,7 +15,7 @@ import {
     QuadraticBezierCurveCommand, HandleDefinedCubicBezierCurve
 } from "./path.js";
 import {Angle} from "./angle.js";
-import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
 /**
  * Builder class for constructing SVG paths from geometric utilities
@@ -140,7 +140,7 @@ export class PathBuilder {
 
     /**
      * - Lets you draw circular arcs
-     * - Uses the elliptical arc (`A`/`a`) command under the hood
+     * - Uses the `A`/`a` command under the hood
      * - Spares you from its confusing flags
      */
     public circularArc(radius: number, startAngle: number | Angle, endAngle: number | Angle, rotation?: number | Angle): EllipticalArcCommand;

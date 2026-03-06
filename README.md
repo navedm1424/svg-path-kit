@@ -161,39 +161,41 @@ commands.shaft!.length;
 
 ### Computing Path Animations
 
-Compute and store path animations using the `FrameRenderer` utility:
+You can combine this with another library I authored, `times-fps`, to compute and store path animations using the `FrameSampler` and `FrameExporter` utilities:
 
 ```ts
 import {PathBuilder, Point2D} from "svg-path-kit";
-import {createFrameRenderer, Sequence, cubicBezierEasing} from "svg-path-kit/animate";
+import {createFrameSampler, Timeline, cubicBezierEasing} from "times-fps";
+import {FrameExporter} from "times-fps/exporter";
 
-const sequence = Sequence.fromRatios(
+const timeline = Timeline.ofPhases(
     ["arc1", 1],
     ["arc2", 1]
-).scaleToRange(0, 1);
-const s = sequence.segments;
+);
+const p = timeline.phases;
 
-const renderer = createFrameRenderer((tl: Timeline, map: Interpolator) => {
+const sampler = createFrameSampler((tl: Timeline, map: Interpolator) => {
     const pb = PathBuilder.m(Point2D.ORIGIN);
 
-    const arc1Radius = map(s.arc1).to(1, 5);
-    const arc1EndAngle = map(s.arc1).to(0, 3 * Math.PI / 4);
+    const arc1Radius = map(p.arc1).to(1, 5);
+    const arc1EndAngle = map(p.arc1).to(0, 3 * Math.PI / 4);
     pb.bezierCircularArc(arc1Radius, Angle.ZERO, arc1EndAngle);
     pb.l(pb.currentVelocity);
 
-    const arc2Radius = map(s.arc2).to(1, 5);
-    const arc2EndAngle = map(s.arc2).to(0, -Math.PI);
+    const arc2Radius = map(p.arc2).to(1, 5);
+    const arc2EndAngle = map(p.arc2).to(0, -Math.PI);
     const lineAngle = pb.currentVelocity.angle;
     pb.bezierCircularArc(arc2Radius, Angle.of(lineAngle).halfTurnBackward(), arc2EndAngle);
 
     return pb.toSVGPathString();
 });
 
-renderer.renderFrames({
-    duration: 3,
-    fps: 120,
-    easing: cubicBezierEasing(0.55, 0.085, 0.68, 0.53)
-}).exportToJson(
+FrameExporter.exportToJson(
+    sampler.collect({
+        duration: 3,
+        fps: 120,
+        easing: cubicBezierEasing(0.55, 0.085, 0.68, 0.53)
+    }),
     // this path should be relative to `process.cwd()`
     "../json-exports",
     "path-data"

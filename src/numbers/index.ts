@@ -1,2 +1,1 @@
-export * from "./math-utils.js";
-export * from "./number-utils.js";
+export * from "./numbers.js";

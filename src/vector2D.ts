@@ -1,6 +1,6 @@
 import { Point2D } from "./point2D.js";
 import {Angle} from "./angle.js";
-import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
 /**
  * Mutable 2D vector with geometric helpers and conversion utilities.

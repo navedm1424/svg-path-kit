@@ -13,7 +13,7 @@ import {
 } from "./svg-path.js";
 import {EllipticalArc} from "./curves/index.js";
 import {Angle} from "./angle.js";
-import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
 export interface Command {
     /** Starting point of the command. */

@@ -1,7 +1,7 @@
 import {Vector2D} from "./vector2D.js";
 import {Point2D} from "./point2D.js";
 import {ParametricCurve2D} from "./parametric-curve-2D.js";
-import {makePropertiesReadonly} from "./utils/object-utils.runtime.js";
+import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
 export class CubicBezierCurve extends ParametricCurve2D {
     constructor(
