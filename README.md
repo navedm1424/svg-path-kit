@@ -161,11 +161,11 @@ commands.shaft!.length;
 
 ### Computing Path Animations
 
-You can combine this with another library I authored, `times-fps`, to compute and store path animations using the `FrameSampler` and `FrameExporter` utilities:
+You can combine this with another library I authored, [`times-fps`](https://github.com/navedm1424/times-fps), to compute and store path animations using the `FrameSampler` and `FrameExporter` utilities:
 
 ```ts
 import {PathBuilder, Point2D} from "svg-path-kit";
-import {createFrameSampler, Timeline, cubicBezierEasing} from "times-fps";
+import {createFrameSampler, getInterpolator, Timeline, cubicBezierEasing} from "times-fps";
 import {FrameExporter} from "times-fps/exporter";
 
 const timeline = Timeline.ofPhases(
@@ -174,7 +174,8 @@ const timeline = Timeline.ofPhases(
 );
 const p = timeline.phases;
 
-const sampler = createFrameSampler((tl: Timeline, map: Interpolator) => {
+const sampler = createFrameSampler(progress => {
+    const map = getInterpolator(progress);
     const pb = PathBuilder.m(Point2D.ORIGIN);
 
     const arc1Radius = map(p.arc1).to(1, 5);
@@ -201,8 +202,6 @@ FrameExporter.exportToJson(
     "path-data"
 ); // This will store the animation frames in a `path-data.json` file
 ```
-
-> Note: `exportToJson` will only work in Node.js.
 
 <br/><br/>
 
@@ -271,7 +270,6 @@ After constructing your commands with `PathBuilder`:
 
 - `toPath()` – create a `Path` instance with the appended commands.
 - `toSVGPathString()` – serialize to an SVG `d` string.
-- `exportToJson()` – create a JSON file with the path data. *Can only run in Node.js*.
 
 <br/><br/>
 
