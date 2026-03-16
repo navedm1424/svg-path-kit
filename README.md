@@ -248,7 +248,7 @@ All these methods have at least two overloads: one with an absolute endpoint par
 - `circularArc`, `ellipticalArc` – these methods just take the radii and angular parameters and create a primitive elliptical arc (`A`) command by calculating the large-arc and sweep flags.
 - `bezierCircularArc`, `bezierEllipticalArc` – these methods take the radii and angular parameters and give you the closest cubic Bézier approximations of circular and elliptical arcs.
 - `hermiteCurve` – this method creates a cubic Bézier curve that interpolates between the endpoint velocities.
-- `handleDefinedBezier` – this method lets you specify the handle vectors (`start -> first control point` and `end -> second control points`) rather than the offset vectors of the control points.
+- `handleDefinedBezier` – this method lets you specify the handle vectors (`start -> first control point` and `end -> second control point`) rather than the offset vectors of the control points.
 - `chordScaledBezier` – this method gives you a cubic Bézier curve with handle lengths scaled relative to the chord length and directed by angles.
 
 > Keep in mind that the `startAngle` and `endAngle` parameters on the arc command methods are not central angles; they are parametric angles. The central angle of a point on an ellipse is the angle the radial vector of the point makes with the horizontal semi-axis. This is not the same as the parametric angle of the point, which is what goes into the parametric equations of an ellipse: `x(θ) = a cos(θ)` and `y(θ) = b sin(θ)`.
