@@ -2,7 +2,7 @@ import {Angle, PathBuilder, Point2D, Vector2D} from "../dist/index.js";
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 const SHAFT_LENGTH = 7.5;
-const rotation = Angle.QUARTER_PI.negated();
+const rotation = Angle.HALF_PI.negated();
 const PI_BY_8 = Angle.QUARTER_PI.multiply(1/2);
 const PI_BY_16 = Angle.of(Math.PI / 16);
 const SHAFT_TILT = PI_BY_16.multiply(1/8);

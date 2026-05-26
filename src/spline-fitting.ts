@@ -13,10 +13,13 @@ const roundingOrder = 8;
  */
 export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: number) {
     const criticalTs = new Set<number>();
+    function addToSet(t: number) {
+        criticalTs.add(round(t, roundingOrder));
+    }
+    addToSet(tStart);
 
     // Coordinate extrema
     // Cusps where the roots coincide
-    const addToSet = (t: number) => criticalTs.add(round(t, roundingOrder));
     findRoots((t: number) => curve.tangentAt(t).x, tStart, tEnd).forEach(addToSet);
     findRoots((t: number) => curve.tangentAt(t).y, tStart, tEnd).forEach(addToSet);
 
@@ -38,6 +41,7 @@ export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: n
         return tangent.crossProduct(acceleration) / Math.pow(tangent.magnitude, 3);
     }, tStart, tEnd).forEach(addToSet);
 
+    addToSet(tEnd);
     return Array.from(criticalTs).sort((a, b) => a - b);
 }
 
@@ -152,9 +156,7 @@ export function fitSplineAtParams(pb: PathBuilder, curve: ParametricCurve2D, ...
  * Fit a spline through a curve segment at its critical parameter values (extrema and inflection points).
  */
 export function fitSplineTo(pb: PathBuilder, curve: ParametricCurve2D, t0: number, t1: number) {
-    let criciticalPoints = findCriticalTs(curve, t0, t1);
-    if (criciticalPoints.length < 2)
-        return fitSplineAtParams(pb, curve, t0, t1);
+    const criciticalPoints = findCriticalTs(curve, t0, t1);
 
     return fitSplineAtParams(pb, curve, criciticalPoints[0]!, criciticalPoints[1]!, ...criciticalPoints.slice(2));
 }

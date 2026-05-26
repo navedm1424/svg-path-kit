@@ -53,6 +53,7 @@ export class Circle extends ParametricCurve2D {
 export class CircularArc {
     readonly startAngle: Angle;
     readonly endAngle: Angle;
+    readonly sweptAngle: Angle;
     readonly rotation: Angle;
 
     /** Define a circular arc between two angles with an optional rotation offset. */
@@ -65,7 +66,8 @@ export class CircularArc {
         this.rotation = rotation instanceof Angle ? rotation : Angle.of(rotation);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
-        makePropertiesReadonly(this, "radius", "startAngle", "endAngle", "rotation");
+        this.sweptAngle = this.endAngle.subtract(this.startAngle);
+        makePropertiesReadonly(this, "radius", "startAngle", "endAngle", "sweptAngle", "rotation");
     }
 
     /** Vector from center to starting point. */

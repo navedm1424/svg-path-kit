@@ -89,6 +89,7 @@ export class EllipticalArc {
     readonly semiMinorAxis: number;
     readonly startAngle: Angle;
     readonly endAngle: Angle;
+    readonly sweptAngle: Angle;
     #ellipseTilt: Angle;
 
     constructor(
@@ -103,7 +104,8 @@ export class EllipticalArc {
         this.#ellipseTilt = ellipseTilt instanceof Angle ? ellipseTilt : Angle.of(ellipseTilt);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
-        makePropertiesReadonly(this, "semiMajorAxis", "semiMinorAxis", "startAngle", "endAngle");
+        this.sweptAngle = this.endAngle.subtract(this.startAngle);
+        makePropertiesReadonly(this, "semiMajorAxis", "semiMinorAxis", "startAngle", "endAngle", "sweptAngle");
     }
     get ellipseTilt(): Angle {
         return this.#ellipseTilt;

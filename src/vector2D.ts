@@ -127,7 +127,7 @@ export class Vector2D {
     }
 
     public toPoint(): Point2D {
-        return new Point2D(this.#x, this.#y);
+        return new Point2D(this.x, this.y);
     }
 }
 
