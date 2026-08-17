@@ -9,6 +9,7 @@ export class Vector2D {
     #x: number;
     #y: number;
     #magnitude: number;
+    #angle: Angle | undefined;
 
     public static readonly NULL_VECTOR = new Vector2D(0, 0);
 
@@ -31,7 +32,9 @@ export class Vector2D {
         return this.#y / this.#x;
     }
     get angle() {
-        return Math.atan2(this.#y, this.#x);
+        if (typeof this.#angle === "undefined")
+            return this.#angle = Angle.of(Math.atan2(this.#y, this.#x));
+        return this.#angle;
     }
 
     public static of(x: number, y: number = x): Vector2D {
@@ -40,9 +43,10 @@ export class Vector2D {
 
     /** Vector from polar coordinates—`radius` and `angle` */
     public static polar(radius: number, angle: number | Angle): Vector2D {
-        if (angle instanceof Angle)
-            return new Vector2D(radius * angle.cosine, radius * angle.sine);
-        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
+        const angleInstance = angle instanceof Angle ? angle : Angle.of(angle);
+        const vector2D = new Vector2D(radius * angleInstance.cosine, radius * angleInstance.sine);
+        vector2D.#angle = angleInstance;
+        return vector2D;
     }
 
     /** Vector from `initialPoint` to `terminalPoint` */
