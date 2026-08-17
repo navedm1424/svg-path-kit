@@ -34,7 +34,7 @@ export class Vector2D {
         return Math.atan2(this.#y, this.#x);
     }
 
-    public static of(x: number, y: number): Vector2D {
+    public static of(x: number, y: number = x): Vector2D {
         return new Vector2D(x, y);
     }
 

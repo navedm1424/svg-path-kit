@@ -11,7 +11,7 @@ export class Point2D {
         makePropertiesReadonly(this, "x", "y");
     }
 
-    public static of(x: number, y: number): Point2D {
+    public static of(x: number, y: number = x): Point2D {
         return new Point2D(x, y);
     }
 
