@@ -76,12 +76,15 @@ export class LineCommand implements Command {
     get length() {
         return Math.hypot(this.terminalPoint.x - this.initialPoint.x, this.terminalPoint.y - this.initialPoint.y);
     }
-
-    public getStartVelocity(): Vector2D {
+    get vector() {
         return Vector2D.from(this.initialPoint, this.terminalPoint);
     }
+
+    public getStartVelocity(): Vector2D {
+        return this.vector;
+    }
     public getEndVelocity(): Vector2D {
-        return this.getStartVelocity();
+        return this.vector;
     }
     public toSVGPathCommand() {
         return new AbsoluteLinePrimitive(this.terminalPoint);
@@ -422,7 +425,7 @@ export class ChordScaledBezierCommand implements Command {
         this.terminalPoint = terminalPoint instanceof Point2D ? terminalPoint :
             initialPoint.add(terminalPoint);
         const chord = Vector2D.from(initialPoint, this.terminalPoint);
-        const chordLen = chord.magnitude;
+        const chordLen = chord.length;
         if (chordLen < 1e-9) { // degenerate case
             this.cubicBezierCurve = new CubicBezierCurve(
                 initialPoint, initialPoint, this.terminalPoint, this.terminalPoint

@@ -20,7 +20,7 @@ function buildSegments(
     let sAccum = 0;
     let lastSegmentBreak = t0;
     let prevT = t0;
-    const firstTangent = curve.tangentAt(t0).magnitude;
+    const firstTangent = curve.tangentAt(t0).length;
     let prevV = firstTangent;
 
     while (prevT < t1) {
@@ -31,7 +31,7 @@ function buildSegments(
         const ds = prevV * dt;
         sAccum += ds;
         prevT = currentT;
-        const currentV = curve.tangentAt(currentT).magnitude;
+        const currentV = curve.tangentAt(currentT).length;
         if (Math.abs(currentV - prevV) > 1e-1) {
             segs.push({
                 t0: lastSegmentBreak,
@@ -83,7 +83,7 @@ export function arcLengthParametrize(
         }
 
         let currentT = t;
-        let currentV = sourceCurve.tangentAt(t).magnitude;
+        let currentV = sourceCurve.tangentAt(t).length;
         let step = STEP / 2;
 
         while (true) {
@@ -97,7 +97,7 @@ export function arcLengthParametrize(
             }
             acc += ds;
             currentT += dt;
-            currentV = sourceCurve.tangentAt(currentT).magnitude;
+            currentV = sourceCurve.tangentAt(currentT).length;
         }
     }
 

@@ -35,8 +35,8 @@ describe("MoveCommand", () => {
   });
   it("getStartVelocity and getEndVelocity are NULL_VECTOR", () => {
     const cmd = new MoveCommand(origin, p100);
-    expect(cmd.getStartVelocity().magnitude).toBe(0);
-    expect(cmd.getEndVelocity().magnitude).toBe(0);
+    expect(cmd.getStartVelocity().length).toBe(0);
+    expect(cmd.getEndVelocity().length).toBe(0);
   });
   it("toSVGPathCommand returns AbsoluteMovePrimitive", () => {
     const cmd = new MoveCommand(origin, Point2D.of(1, 2));

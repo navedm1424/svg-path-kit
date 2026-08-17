@@ -24,10 +24,10 @@ function splitBezierAt(bez: CubicBezierCurve, t: number): [CubicBezierCurve, Cub
 
 function cubicBezierCurveForCircularArcFromAngle(startingPoint: Point2D, angle: number, endingPoint: Point2D) {
     const chordVector = Vector2D.from(startingPoint, endingPoint);
-    const radius = chordVector.magnitude * Math.cos(angle / 2) / Math.sin(angle);
+    const radius = chordVector.length * Math.cos(angle / 2) / Math.sin(angle);
     const midpoint = lerpBetweenPoints(startingPoint, endingPoint, 0.5);
 
-    let midpointToCenter = Math.sqrt(Math.pow(radius, 2) - Math.pow(chordVector.magnitude / 2.0, 2));
+    let midpointToCenter = Math.sqrt(Math.pow(radius, 2) - Math.pow(chordVector.length / 2.0, 2));
     if (angle < 0)
         midpointToCenter = -midpointToCenter;
 

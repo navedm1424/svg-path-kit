@@ -1,4 +1,4 @@
-import { Point2D } from "./point2D.js";
+import {Point2D} from "./point2D.js";
 import {Angle} from "./angle.js";
 import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
@@ -8,15 +8,25 @@ import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 export class Vector2D {
     #x: number;
     #y: number;
-    #magnitude: number;
-    #angle: Angle | undefined;
+    #length: number;
+    #angle: Angle;
 
     public static readonly NULL_VECTOR = new Vector2D(0, 0);
 
-    constructor(x: number, y: number) {
-        this.#x = x;
-        this.#y = y;
-        this.#magnitude = Math.hypot(x, y);
+    constructor(...args: [x: number, y: number] | [radius: number, angle: Angle]) {
+        if (args[1] instanceof Angle) {
+            const [radius, angle] = args;
+            this.#x = radius * angle.cosine;
+            this.#y = radius * angle.sine;
+            this.#length = radius;
+            this.#angle = angle;
+        } else {
+            const [x, y] = args;
+            this.#x = x;
+            this.#y = y;
+            this.#length = Math.hypot(x, y);
+            this.#angle = Angle.of(Math.atan2(this.#y, this.#x));
+        }
     }
 
     get x() {
@@ -25,15 +35,13 @@ export class Vector2D {
     get y() {
         return this.#y;
     }
-    get magnitude() {
-        return this.#magnitude;
+    get length() {
+        return this.#length;
     }
     get slope() {
         return this.#y / this.#x;
     }
     get angle() {
-        if (typeof this.#angle === "undefined")
-            return this.#angle = Angle.of(Math.atan2(this.#y, this.#x));
         return this.#angle;
     }
 
@@ -43,10 +51,7 @@ export class Vector2D {
 
     /** Vector from polar coordinates—`radius` and `angle` */
     public static polar(radius: number, angle: number | Angle): Vector2D {
-        const angleInstance = angle instanceof Angle ? angle : Angle.of(angle);
-        const vector2D = new Vector2D(radius * angleInstance.cosine, radius * angleInstance.sine);
-        vector2D.#angle = angleInstance;
-        return vector2D;
+        return new Vector2D(radius, angle instanceof Angle ? angle : Angle.of(angle));
     }
 
     /** Vector from `initialPoint` to `terminalPoint` */
@@ -63,7 +68,7 @@ export class Vector2D {
     }
 
     public angleWith(vector: Vector2D): number {
-        return Math.acos(this.dotProduct(vector) / (this.#magnitude * vector.#magnitude));
+        return Math.acos(this.dotProduct(vector) / (this.#length * vector.#length));
     }
 
     public singedAngleWith(vector: Vector2D): number {
@@ -81,9 +86,9 @@ export class Vector2D {
 
     /** Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0. */
     public normalize(): Vector2D {
-        if (this.#magnitude === 0)
+        if (this.#length === 0)
             return Vector2D.NULL_VECTOR;
-        return new Vector2D(this.x / this.#magnitude, this.y / this.#magnitude);
+        return new Vector2D(this.x / this.#length, this.y / this.#length);
     }
 
     /**
@@ -115,7 +120,7 @@ export class Vector2D {
     public scale(scalar: number): this {
         this.#x *= scalar;
         this.#y *= scalar;
-        this.#magnitude = Math.hypot(this.x, this.y);
+        this.#length = Math.hypot(this.x, this.y);
         return this;
     }
 

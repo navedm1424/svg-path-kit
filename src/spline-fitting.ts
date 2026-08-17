@@ -38,7 +38,7 @@ export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: n
     findRoots((t: number) => {
         const tangent = curve.tangentAt(t);
         const acceleration = curve.accelerationAt(t);
-        return tangent.crossProduct(acceleration) / Math.pow(tangent.magnitude, 3);
+        return tangent.crossProduct(acceleration) / Math.pow(tangent.length, 3);
     }, tStart, tEnd).forEach(addToSet);
 
     addToSet(tEnd);

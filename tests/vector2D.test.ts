@@ -8,7 +8,7 @@ describe("Vector2D", () => {
     it("has zero components and magnitude", () => {
       expect(Vector2D.NULL_VECTOR.x).toBe(0);
       expect(Vector2D.NULL_VECTOR.y).toBe(0);
-      expect(Vector2D.NULL_VECTOR.magnitude).toBe(0);
+      expect(Vector2D.NULL_VECTOR.length).toBe(0);
     });
   });
 
@@ -17,7 +17,7 @@ describe("Vector2D", () => {
       const v = Vector2D.of(3, 4);
       expect(v.x).toBe(3);
       expect(v.y).toBe(4);
-      expect(v.magnitude).toBe(5);
+      expect(v.length).toBe(5);
     });
   });
 
@@ -93,7 +93,7 @@ describe("Vector2D", () => {
   describe("normalize", () => {
     it("returns unit vector", () => {
       const v = Vector2D.of(3, 4).normalize();
-      expect(v.magnitude).toBeCloseTo(1);
+      expect(v.length).toBeCloseTo(1);
       expect(v.x).toBeCloseTo(0.6);
       expect(v.y).toBeCloseTo(0.8);
     });
@@ -145,7 +145,7 @@ describe("Vector2D", () => {
       expect(ret).toBe(v);
       expect(v.x).toBe(4);
       expect(v.y).toBe(6);
-      expect(v.magnitude).toBeCloseTo(2 * Math.hypot(2, 3));
+      expect(v.length).toBeCloseTo(2 * Math.hypot(2, 3));
     });
   });
 
@@ -182,8 +182,8 @@ describe("Vector2D", () => {
 
   describe("angle", () => {
     it("returns atan2(y, x)", () => {
-      expect(Vector2D.of(1, 0).angle).toBe(0);
-      expect(Vector2D.of(1, 1).angle).toBeCloseTo(Math.PI / 4);
+      expect(Vector2D.of(1, 0).angle.value).toBe(0);
+      expect(Vector2D.of(1, 1).angle.value).toBeCloseTo(Math.PI / 4);
     });
   });
 });
