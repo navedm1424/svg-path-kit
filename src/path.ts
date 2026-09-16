@@ -345,7 +345,7 @@ export class EllipticalArcWrapperCommand implements Command {
 
         // transform to arc space
         const midPointToStart = Vector2D.from(this.terminalPoint, initialPoint)
-            .scale(1 / 2).rotate(this.xAxisRotation.negated());
+            .scale(1 / 2).rotate(this.xAxisRotation.negate());
 
         // scale radii
         const lambda =

@@ -113,7 +113,7 @@ describe("Angle", () => {
   describe("negated", () => {
     it("returns angle with negated value", () => {
       const angle = Angle.of(1);
-      const neg = angle.negated();
+      const neg = angle.negate();
       expect(neg.value).toBeCloseTo(-1);
       expect(neg.sine).toBeCloseTo(-angle.sine);
       expect(neg.cosine).toBeCloseTo(angle.cosine);

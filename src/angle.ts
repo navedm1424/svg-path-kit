@@ -81,7 +81,7 @@ export class Angle {
     }
 
     /** -θ (negated angle) */
-    public negated() {
+    public negate() {
         return Angle.#of(
             -this.value,
             -this.sine, this.cosine
