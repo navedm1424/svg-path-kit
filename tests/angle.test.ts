@@ -2,6 +2,13 @@ import { describe, it, expect } from "vitest";
 import { Angle } from "../src/angle.js";
 
 describe("Angle", () => {
+  describe("construction", () => {
+    it("rejects direct construction that bypasses the factory", () => {
+      const AngleCtor = Angle as unknown as new (value: number) => Angle;
+      expect(() => new AngleCtor(1)).toThrow(/Illegal constructor/);
+    });
+  });
+
   describe("static constants", () => {
     it("ZERO has value 0", () => {
       expect(Angle.ZERO.value).toBe(0);
