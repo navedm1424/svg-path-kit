@@ -41,24 +41,48 @@ describe("Angle", () => {
     });
   });
 
+  describe("deg", () => {
+    it("builds an angle from degrees", () => {
+      expect(Angle.deg(180).value).toBeCloseTo(Math.PI);
+      expect(Angle.deg(90).value).toBeCloseTo(Math.PI / 2);
+      expect(Angle.deg(30).value).toBeCloseTo(Math.PI / 6);
+    });
+  });
+
+  describe("grad", () => {
+    it("builds an angle from gradians", () => {
+      expect(Angle.grad(200).value).toBeCloseTo(Math.PI);
+      expect(Angle.grad(100).value).toBeCloseTo(Math.PI / 2);
+      expect(Angle.grad(400).value).toBeCloseTo(2 * Math.PI);
+    });
+  });
+
+  describe("turn", () => {
+    it("builds an angle from turns", () => {
+      expect(Angle.turn(1).value).toBeCloseTo(2 * Math.PI);
+      expect(Angle.turn(0.5).value).toBeCloseTo(Math.PI);
+      expect(Angle.turn(0.25).value).toBeCloseTo(Math.PI / 2);
+    });
+  });
+
   describe("add", () => {
     it("adds number", () => {
-      const a = Angle.of(1).add(2);
+      const a = Angle.of(1).plus(2);
       expect(a.value).toBeCloseTo(3);
     });
     it("adds Angle", () => {
-      const a = Angle.of(1).add(Angle.of(2));
+      const a = Angle.of(1).plus(Angle.of(2));
       expect(a.value).toBeCloseTo(3);
     });
   });
 
   describe("subtract", () => {
     it("subtracts number", () => {
-      const a = Angle.of(3).subtract(1);
+      const a = Angle.of(3).minus(1);
       expect(a.value).toBeCloseTo(2);
     });
     it("subtracts Angle", () => {
-      const a = Angle.of(3).subtract(Angle.of(1));
+      const a = Angle.of(3).minus(Angle.of(1));
       expect(a.value).toBeCloseTo(2);
     });
   });
@@ -67,6 +91,22 @@ describe("Angle", () => {
     it("scales angle by factor", () => {
       const a = Angle.of(2).multiply(3);
       expect(a.value).toBeCloseTo(6);
+    });
+  });
+
+  describe("divide", () => {
+    it("scales angle by 1/scalar", () => {
+      const a = Angle.of(6).divide(3);
+      expect(a.value).toBeCloseTo(2);
+    });
+  });
+
+  describe("map", () => {
+    it("applies fn to the underlying value and rewraps it", () => {
+      const a = Angle.of(1).map((v) => v * 2);
+      expect(a.value).toBeCloseTo(2);
+      expect(a.sine).toBeCloseTo(Math.sin(2));
+      expect(a.cosine).toBeCloseTo(Math.cos(2));
     });
   });
 
@@ -113,13 +153,13 @@ describe("Angle", () => {
   describe("halfTurnForward / halfTurnBackward", () => {
     const a = Angle.of(Math.PI / 4);
     it("adds π/2", () => {
-      const b = a.halfTurnForward();
+      const b = a.plusHalfPi();
       expect(b.value).toBeCloseTo(3 * Math.PI / 4);
       expect(b.sine).toBe(a.cosine);
       expect(b.cosine).toBe(-a.sine);
     });
     it("subtracts π/2", () => {
-      const b = a.halfTurnBackward();
+      const b = a.minusHalfPi();
       expect(b.value).toBeCloseTo(-Math.PI / 4);
       expect(b.sine).toBe(-a.cosine);
       expect(b.cosine).toBe(a.sine);
@@ -129,13 +169,13 @@ describe("Angle", () => {
   describe("flipForward / flipBackward", () => {
     const a = Angle.of(0.5);
     it("flipForward adds π", () => {
-      const b = a.flipForward();
+      const b = a.plusPi();
       expect(b.value).toBeCloseTo(0.5 + Math.PI);
       expect(b.sine).toBe(-a.sine);
       expect(b.cosine).toBe(-a.cosine);
     });
     it("flipBackward subtracts π", () => {
-      const b = a.flipBackward();
+      const b = a.minusPi();
       expect(b.value).toBeCloseTo(0.5 - Math.PI);
       expect(b.sine).toBe(-a.sine);
       expect(b.cosine).toBe(-a.cosine);
@@ -145,24 +185,74 @@ describe("Angle", () => {
   describe("revolveForward / revolveBackward", () => {
     const a = Angle.of(0.5);
     it("revolveForward adds 2π", () => {
-      const b = a.revolveForward();
+      const b = a.plusTwoPi();
       expect(b.value).toBeCloseTo(0.5 + 2 * Math.PI);
       expect(b.sine).toBe(a.sine);
       expect(b.cosine).toBe(a.cosine);
     });
     it("revolveBackward subtracts 2π", () => {
-      const b = a.revolveBackward();
+      const b = a.minusTwoPi();
       expect(b.value).toBeCloseTo(0.5 - 2 * Math.PI);
       expect(b.sine).toBe(a.sine);
       expect(b.cosine).toBe(a.cosine);
     });
   });
 
-  describe("toDegrees", () => {
+  describe("wrap", () => {
+    it("normalizes a value above 2π into [0, 2π)", () => {
+      expect(Angle.of(3 * Math.PI).wrap().value).toBeCloseTo(Math.PI);
+    });
+    it("normalizes a negative value into [0, 2π)", () => {
+      expect(Angle.of(-Math.PI / 2).wrap().value).toBeCloseTo(3 * Math.PI / 2);
+    });
+    it("leaves an in-range value unchanged", () => {
+      expect(Angle.of(Math.PI / 3).wrap().value).toBeCloseTo(Math.PI / 3);
+    });
+  });
+
+  describe("wrapSigned", () => {
+    it("normalizes a value above π into [-π, π)", () => {
+      expect(Angle.of(3 * Math.PI / 2).wrapSigned().value).toBeCloseTo(-Math.PI / 2);
+    });
+    it("normalizes a negative value below -π into [-π, π)", () => {
+      expect(Angle.of(-3 * Math.PI / 2).wrapSigned().value).toBeCloseTo(Math.PI / 2);
+    });
+    it("leaves an in-range value unchanged", () => {
+      expect(Angle.of(Math.PI / 4).wrapSigned().value).toBeCloseTo(Math.PI / 4);
+    });
+  });
+
+  describe("toDeg / toGrad / toTurn", () => {
     it("converts radians to degrees", () => {
-      expect(Angle.PI.toDegrees()).toBeCloseTo(180);
-      expect(Angle.HALF_PI.toDegrees()).toBeCloseTo(90);
-      expect(Angle.of(Math.PI / 6).toDegrees()).toBeCloseTo(30);
+      expect(Angle.PI.toDeg()).toBeCloseTo(180);
+      expect(Angle.HALF_PI.toDeg()).toBeCloseTo(90);
+      expect(Angle.of(Math.PI / 6).toDeg()).toBeCloseTo(30);
+    });
+    it("converts radians to gradians", () => {
+      expect(Angle.PI.toGrad()).toBeCloseTo(200);
+      expect(Angle.HALF_PI.toGrad()).toBeCloseTo(100);
+      expect(Angle.TWO_PI.toGrad()).toBeCloseTo(400);
+    });
+    it("converts radians to turns", () => {
+      expect(Angle.TWO_PI.toTurn()).toBeCloseTo(1);
+      expect(Angle.PI.toTurn()).toBeCloseTo(0.5);
+      expect(Angle.HALF_PI.toTurn()).toBeCloseTo(0.25);
+    });
+  });
+
+  describe("equals", () => {
+    it("returns true for equal angles", () => {
+      expect(Angle.of(1).equals(Angle.of(1))).toBe(true);
+    });
+    it("returns true when compared against a raw number", () => {
+      expect(Angle.of(1).equals(1)).toBe(true);
+    });
+    it("returns false for angles outside the default epsilon", () => {
+      expect(Angle.of(1).equals(1.1)).toBe(false);
+    });
+    it("respects a custom epsilon", () => {
+      expect(Angle.of(1).equals(1.05, 0.1)).toBe(true);
+      expect(Angle.of(1).equals(1.2, 0.1)).toBe(false);
     });
   });
 

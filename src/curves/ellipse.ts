@@ -77,7 +77,7 @@ export class Ellipse extends ParametricCurve2D {
         this.#center = this.#center.add(vector);
     }
     public rotate(angle: number | Angle) {
-        this.#ellipseTilt = this.#ellipseTilt.add(angle);
+        this.#ellipseTilt = this.#ellipseTilt.plus(angle);
     }
 }
 
@@ -104,7 +104,7 @@ export class EllipticalArc {
         this.#ellipseTilt = ellipseTilt instanceof Angle ? ellipseTilt : Angle.of(ellipseTilt);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
-        this.sweptAngle = this.endAngle.subtract(this.startAngle);
+        this.sweptAngle = this.endAngle.minus(this.startAngle);
         makePropertiesReadonly(this, "semiMajorAxis", "semiMinorAxis", "startAngle", "endAngle", "sweptAngle");
     }
     get ellipseTilt(): Angle {
@@ -143,6 +143,6 @@ export class EllipticalArc {
 
     /** Rotate the underlying ellipse by `angle`. */
     public rotate(angle: number | Angle) {
-        this.#ellipseTilt = this.#ellipseTilt.add(angle);
+        this.#ellipseTilt = this.#ellipseTilt.plus(angle);
     }
 }

@@ -66,7 +66,7 @@ export class CircularArc {
         this.rotation = rotation instanceof Angle ? rotation : Angle.of(rotation);
         this.startAngle = startAngle instanceof Angle ? startAngle : Angle.of(startAngle);
         this.endAngle = endAngle instanceof Angle ? endAngle : Angle.of(endAngle);
-        this.sweptAngle = this.endAngle.subtract(this.startAngle);
+        this.sweptAngle = this.endAngle.minus(this.startAngle);
         makePropertiesReadonly(this, "radius", "startAngle", "endAngle", "sweptAngle", "rotation");
     }
 

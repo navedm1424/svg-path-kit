@@ -312,7 +312,7 @@ export class EllipticalArcCommand implements Command {
         const angleDiff = this.arc.endAngle.value - this.arc.startAngle.value;
         return new AbsoluteEllipticalArcPrimitive(
             this.arc.semiMajorAxis, this.arc.semiMinorAxis,
-            this.arc.ellipseTilt.toDegrees(), angleDiff > Math.PI ? 1 : 0,
+            this.arc.ellipseTilt.toDeg(), angleDiff > Math.PI ? 1 : 0,
             angleDiff > 0 ? 1 : 0, this.terminalPoint
         );
     }
@@ -403,7 +403,7 @@ export class EllipticalArcWrapperCommand implements Command {
         return this.sweepFlag ? velocity : velocity.scale(-1);
     }
     public toSVGPathCommand() {
-        return new AbsoluteEllipticalArcPrimitive(this.xRadius, this.yRadius, this.arc.ellipseTilt.toDegrees(), this.largeArcFlag ? 1 : 0, this.sweepFlag ? 1 : 0, this.terminalPoint);
+        return new AbsoluteEllipticalArcPrimitive(this.xRadius, this.yRadius, this.arc.ellipseTilt.toDeg(), this.largeArcFlag ? 1 : 0, this.sweepFlag ? 1 : 0, this.terminalPoint);
     }
 }
 
