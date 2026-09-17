@@ -46,8 +46,8 @@ export class Ellipse extends ParametricCurve2D {
     }
 
     public at(angle: number | Angle): Point2D {
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
         return this.center.add(Vector2D.of(
             this.semiMajorAxis * cosine,
             this.semiMinorAxis * sine
@@ -55,8 +55,8 @@ export class Ellipse extends ParametricCurve2D {
     }
 
     public tangentAt(angle: number | Angle): Vector2D {
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
         return Vector2D.of(
             -this.semiMajorAxis * sine,
             this.semiMinorAxis * cosine
@@ -64,8 +64,8 @@ export class Ellipse extends ParametricCurve2D {
     }
 
     public accelerationAt(angle: number | Angle): Vector2D {
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
         return Vector2D.of(
             -this.semiMajorAxis * cosine,
             -this.semiMinorAxis * sine
@@ -114,30 +114,30 @@ export class EllipticalArc {
     /** Vector from center to starting point. */
     get startingPointVector(): Vector2D {
         return Vector2D.of(
-            this.semiMajorAxis * this.startAngle.cosine,
-            this.semiMinorAxis * this.startAngle.sine
+            this.semiMajorAxis * this.startAngle.cos,
+            this.semiMinorAxis * this.startAngle.sin
         ).rotate(this.#ellipseTilt);
     }
     /** Vector from center to ending point. */
     get endingPointVector(): Vector2D {
         return Vector2D.of(
-            this.semiMajorAxis * this.endAngle.cosine,
-            this.semiMinorAxis * this.endAngle.sine
+            this.semiMajorAxis * this.endAngle.cos,
+            this.semiMinorAxis * this.endAngle.sin
         ).rotate(this.#ellipseTilt);
     }
 
     /** Tangent at the arc start. */
     get startingTangentVector(): Vector2D {
         return Vector2D.of(
-            -this.semiMajorAxis * this.startAngle.sine,
-            this.semiMinorAxis * this.startAngle.cosine
+            -this.semiMajorAxis * this.startAngle.sin,
+            this.semiMinorAxis * this.startAngle.cos
         ).rotate(this.#ellipseTilt);
     }
     /** Tangent at the arc end. */
     get endingTangentVector(): Vector2D {
         return Vector2D.of(
-            -this.semiMajorAxis * this.endAngle.sine,
-            this.semiMinorAxis * this.endAngle.cosine
+            -this.semiMajorAxis * this.endAngle.sin,
+            this.semiMinorAxis * this.endAngle.cos
         ).rotate(this.#ellipseTilt);
     }
 

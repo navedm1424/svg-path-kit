@@ -12,23 +12,23 @@ describe("Angle", () => {
   describe("static constants", () => {
     it("ZERO has value 0", () => {
       expect(Angle.ZERO.value).toBe(0);
-      expect(Angle.ZERO.sine).toBe(0);
-      expect(Angle.ZERO.cosine).toBe(1);
+      expect(Angle.ZERO.sin).toBe(0);
+      expect(Angle.ZERO.cos).toBe(1);
     });
     it("HALF_PI is π/2", () => {
       expect(Angle.HALF_PI.value).toBeCloseTo(Math.PI / 2);
-      expect(Angle.HALF_PI.sine).toBeCloseTo(1);
-      expect(Angle.HALF_PI.cosine).toBeCloseTo(0);
+      expect(Angle.HALF_PI.sin).toBeCloseTo(1);
+      expect(Angle.HALF_PI.cos).toBeCloseTo(0);
     });
     it("PI is π", () => {
       expect(Angle.PI.value).toBeCloseTo(Math.PI);
-      expect(Angle.PI.sine).toBeCloseTo(0);
-      expect(Angle.PI.cosine).toBeCloseTo(-1);
+      expect(Angle.PI.sin).toBeCloseTo(0);
+      expect(Angle.PI.cos).toBeCloseTo(-1);
     });
     it("TWO_PI is 2π", () => {
       expect(Angle.TWO_PI.value).toBeCloseTo(2 * Math.PI);
-      expect(Angle.TWO_PI.sine).toBeCloseTo(0);
-      expect(Angle.TWO_PI.cosine).toBeCloseTo(1);
+      expect(Angle.TWO_PI.sin).toBeCloseTo(0);
+      expect(Angle.TWO_PI.cos).toBeCloseTo(1);
     });
   });
 
@@ -36,8 +36,8 @@ describe("Angle", () => {
     it("creates angle with cached sin/cos", () => {
       const a = Angle.of(Math.PI / 4);
       expect(a.value).toBeCloseTo(Math.PI / 4);
-      expect(a.sine).toBeCloseTo(Math.SQRT1_2);
-      expect(a.cosine).toBeCloseTo(Math.SQRT1_2);
+      expect(a.sin).toBeCloseTo(Math.SQRT1_2);
+      expect(a.cos).toBeCloseTo(Math.SQRT1_2);
     });
   });
 
@@ -105,8 +105,8 @@ describe("Angle", () => {
     it("applies fn to the underlying value and rewraps it", () => {
       const a = Angle.of(1).map((v) => v * 2);
       expect(a.value).toBeCloseTo(2);
-      expect(a.sine).toBeCloseTo(Math.sin(2));
-      expect(a.cosine).toBeCloseTo(Math.cos(2));
+      expect(a.sin).toBeCloseTo(Math.sin(2));
+      expect(a.cos).toBeCloseTo(Math.cos(2));
     });
   });
 
@@ -115,8 +115,8 @@ describe("Angle", () => {
       const angle = Angle.of(1);
       const neg = angle.negate();
       expect(neg.value).toBeCloseTo(-1);
-      expect(neg.sine).toBeCloseTo(-angle.sine);
-      expect(neg.cosine).toBeCloseTo(angle.cosine);
+      expect(neg.sin).toBeCloseTo(-angle.sin);
+      expect(neg.cos).toBeCloseTo(angle.cos);
     });
   });
 
@@ -125,8 +125,8 @@ describe("Angle", () => {
       const a = Angle.of(Math.PI / 6);
       const b = a.complement();
       expect(b.value).toBeCloseTo(Math.PI / 3);
-      expect(b.sine).toBe(a.cosine);
-      expect(b.cosine).toBe(a.sine);
+      expect(b.sin).toBe(a.cos);
+      expect(b.cos).toBe(a.sin);
     });
   });
 
@@ -135,8 +135,8 @@ describe("Angle", () => {
       const a = Angle.of(Math.PI / 3);
       const b = a.supplement();
       expect(b.value).toBeCloseTo(2 * Math.PI / 3);
-      expect(b.sine).toBe(a.sine);
-      expect(b.cosine).toBe(-a.cosine);
+      expect(b.sin).toBe(a.sin);
+      expect(b.cos).toBe(-a.cos);
     });
   });
 
@@ -145,8 +145,8 @@ describe("Angle", () => {
       const a = Angle.of(Math.PI / 2);
       const b = a.explement();
       expect(b.value).toBeCloseTo(3 * Math.PI / 2);
-      expect(b.sine).toBe(-a.sine);
-      expect(b.cosine).toBe(a.cosine);
+      expect(b.sin).toBe(-a.sin);
+      expect(b.cos).toBe(a.cos);
     });
   });
 
@@ -155,14 +155,14 @@ describe("Angle", () => {
     it("adds π/2", () => {
       const b = a.plusHalfPi();
       expect(b.value).toBeCloseTo(3 * Math.PI / 4);
-      expect(b.sine).toBe(a.cosine);
-      expect(b.cosine).toBe(-a.sine);
+      expect(b.sin).toBe(a.cos);
+      expect(b.cos).toBe(-a.sin);
     });
     it("subtracts π/2", () => {
       const b = a.minusHalfPi();
       expect(b.value).toBeCloseTo(-Math.PI / 4);
-      expect(b.sine).toBe(-a.cosine);
-      expect(b.cosine).toBe(a.sine);
+      expect(b.sin).toBe(-a.cos);
+      expect(b.cos).toBe(a.sin);
     });
   });
 
@@ -171,14 +171,14 @@ describe("Angle", () => {
     it("flipForward adds π", () => {
       const b = a.plusPi();
       expect(b.value).toBeCloseTo(0.5 + Math.PI);
-      expect(b.sine).toBe(-a.sine);
-      expect(b.cosine).toBe(-a.cosine);
+      expect(b.sin).toBe(-a.sin);
+      expect(b.cos).toBe(-a.cos);
     });
     it("flipBackward subtracts π", () => {
       const b = a.minusPi();
       expect(b.value).toBeCloseTo(0.5 - Math.PI);
-      expect(b.sine).toBe(-a.sine);
-      expect(b.cosine).toBe(-a.cosine);
+      expect(b.sin).toBe(-a.sin);
+      expect(b.cos).toBe(-a.cos);
     });
   });
 
@@ -187,14 +187,14 @@ describe("Angle", () => {
     it("revolveForward adds 2π", () => {
       const b = a.plusTwoPi();
       expect(b.value).toBeCloseTo(0.5 + 2 * Math.PI);
-      expect(b.sine).toBe(a.sine);
-      expect(b.cosine).toBe(a.cosine);
+      expect(b.sin).toBe(a.sin);
+      expect(b.cos).toBe(a.cos);
     });
     it("revolveBackward subtracts 2π", () => {
       const b = a.minusTwoPi();
       expect(b.value).toBeCloseTo(0.5 - 2 * Math.PI);
-      expect(b.sine).toBe(a.sine);
-      expect(b.cosine).toBe(a.cosine);
+      expect(b.sin).toBe(a.sin);
+      expect(b.cos).toBe(a.cos);
     });
   });
 

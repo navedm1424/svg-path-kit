@@ -31,14 +31,14 @@ export class Circle extends ParametricCurve2D {
     }
 
     public tangentAt(angle: number | Angle): Vector2D {
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
         return Vector2D.of(-this.radius * sine, this.radius * cosine);
     }
 
     public accelerationAt(angle: number | Angle): Vector2D {
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
         return Vector2D.of(-this.radius * cosine, -this.radius * sine);
     }
     /** Translate the circle center by a vector. */
@@ -73,30 +73,30 @@ export class CircularArc {
     /** Vector from center to starting point. */
     get startingPointVector(): Vector2D {
         return Vector2D.of(
-            this.radius * this.startAngle.cosine,
-            this.radius * this.startAngle.sine
+            this.radius * this.startAngle.cos,
+            this.radius * this.startAngle.sin
         ).rotate(this.rotation);
     }
     /** Vector from center to ending point. */
     get endingPointVector(): Vector2D {
         return Vector2D.of(
-            this.radius * this.endAngle.cosine,
-            this.radius * this.endAngle.sine
+            this.radius * this.endAngle.cos,
+            this.radius * this.endAngle.sin
         ).rotate(this.rotation);
     }
 
     /** Tangent vector at the arc start. */
     get startingTangentVector(): Vector2D {
         return Vector2D.of(
-            -this.radius * this.startAngle.sine,
-            this.radius * this.startAngle.cosine
+            -this.radius * this.startAngle.sin,
+            this.radius * this.startAngle.cos
         ).rotate(this.rotation);
     }
     /** Tangent vector at the arc end. */
     get endingTangentVector(): Vector2D {
         return Vector2D.of(
-            -this.radius * this.endAngle.sine,
-            this.radius * this.endAngle.cosine
+            -this.radius * this.endAngle.sin,
+            this.radius * this.endAngle.cos
         ).rotate(this.rotation);
     }
 }

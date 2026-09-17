@@ -14,8 +14,8 @@ export class Superellipse extends ParametricCurve2D {
     }
 
     at(t: number | Angle): Point2D {
-        const cosine = t instanceof Angle ? t.cosine : Math.cos(t);
-        const sine = t instanceof Angle ? t.sine : Math.sin(t);
+        const cosine = t instanceof Angle ? t.cos : Math.cos(t);
+        const sine = t instanceof Angle ? t.sin : Math.sin(t);
         return Point2D.of(
             this.a * Math.sign(cosine) * Math.pow(Math.abs(cosine), this.#exp),
             this.b * Math.sign(sine) * Math.pow(Math.abs(sine), this.#exp)
@@ -23,8 +23,8 @@ export class Superellipse extends ParametricCurve2D {
     }
 
     tangentAt(t: number | Angle): Vector2D {
-        const cosine = t instanceof Angle ? t.cosine : Math.cos(t);
-        const sine = t instanceof Angle ? t.sine : Math.sin(t);
+        const cosine = t instanceof Angle ? t.cos : Math.cos(t);
+        const sine = t instanceof Angle ? t.sin : Math.sin(t);
         const x = -this.#exp * this.a * sine * Math.pow(Math.abs(cosine), this.#exp - 1);
         const y = this.#exp * this.b * cosine * Math.pow(Math.abs(sine), this.#exp - 1);
         if (!(Number.isFinite(x) && Number.isFinite(y)))

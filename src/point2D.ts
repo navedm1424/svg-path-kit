@@ -21,7 +21,7 @@ export class Point2D {
     }
 
     public toVector(): Vector2D {
-        return new Vector2D(this.x, this.y);
+        return Vector2D.of(this.x, this.y);
     }
 }
 

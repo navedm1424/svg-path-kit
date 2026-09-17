@@ -24,17 +24,17 @@ export class Angle {
 
     private constructor(
         readonly value: number,
-        readonly sine: number = Math.sin(value),
-        readonly cosine: number = Math.cos(value),
+        readonly sin: number = Math.sin(value),
+        readonly cos: number = Math.cos(value),
         license?: typeof ANGLE_CONSTRUCTION_LICENSE
     ) {
         if (license !== ANGLE_CONSTRUCTION_LICENSE)
             throw new Error('Illegal constructor: use the factory method.');
 
-        makePropertiesReadonly(this, "value", "sine", "cosine");
+        makePropertiesReadonly(this, "value", "sin", "cos");
     }
 
-    static #of(value: number, sine: number = Math.sin(value), cosine: number = Math.cos(value)) {
+    static #of(value: number, sine?: number, cosine?: number) {
         return new Angle(value, sine, cosine, ANGLE_CONSTRUCTION_LICENSE);
     }
 
@@ -84,7 +84,7 @@ export class Angle {
     public negate() {
         return Angle.#of(
             -this.value,
-            -this.sine, this.cosine
+            -this.sin, this.cos
         );
     }
 
@@ -92,15 +92,15 @@ export class Angle {
     public complement() {
         return Angle.#of(
             Angle.HALF_PI.value - this.value,
-            this.cosine, this.sine
+            this.cos, this.sin
         );
     }
     /** π - θ (supplement of the angle) */
     public supplement() {
         return Angle.#of(
             Angle.PI.value - this.value,
-            this.sine,
-            -this.cosine
+            this.sin,
+            -this.cos
         );
     }
 
@@ -108,7 +108,7 @@ export class Angle {
     public explement() {
         return Angle.#of(
             Angle.TWO_PI.value - this.value,
-            -this.sine, this.cosine
+            -this.sin, this.cos
         );
     }
 
@@ -116,7 +116,7 @@ export class Angle {
     public plusHalfPi() {
         return Angle.#of(
             this.value + Angle.HALF_PI.value,
-            this.cosine, -this.sine
+            this.cos, -this.sin
         );
     }
 
@@ -124,7 +124,7 @@ export class Angle {
     public minusHalfPi() {
         return Angle.#of(
             this.value - Angle.HALF_PI.value,
-            -this.cosine, this.sine
+            -this.cos, this.sin
         );
     }
 
@@ -132,7 +132,7 @@ export class Angle {
     public plusPi() {
         return Angle.#of(
             this.value + Angle.PI.value,
-            -this.sine, -this.cosine
+            -this.sin, -this.cos
         );
     }
 
@@ -140,7 +140,7 @@ export class Angle {
     public minusPi() {
         return Angle.#of(
             this.value - Angle.PI.value,
-            -this.sine, -this.cosine
+            -this.sin, -this.cos
         );
     }
 
@@ -148,7 +148,7 @@ export class Angle {
     public plusTwoPi() {
         return Angle.#of(
             this.value + Angle.TWO_PI.value,
-            this.sine, this.cosine
+            this.sin, this.cos
         );
     }
 
@@ -156,21 +156,21 @@ export class Angle {
     public minusTwoPi() {
         return Angle.#of(
             this.value - Angle.TWO_PI.value,
-            this.sine, this.cosine
+            this.sin, this.cos
         );
     }
 
     /** Normalizes θ into `[0, 2π)`. */
     public wrap(): Angle {
         const twoPi = Angle.TWO_PI.value;
-        return Angle.#of(((this.value % twoPi) + twoPi) % twoPi);
+        return Angle.#of(((this.value % twoPi) + twoPi) % twoPi, this.sin, this.cos);
     }
 
     /** Normalizes θ into `[-π, π)`. */
     public wrapSigned(): Angle {
         const twoPi = Angle.TWO_PI.value;
         const pi = Angle.PI.value;
-        return Angle.#of((((this.value + pi) % twoPi) + twoPi) % twoPi - pi);
+        return Angle.#of((((this.value + pi) % twoPi) + twoPi) % twoPi - pi, this.sin, this.cos);
     }
 
     public toDeg() {
