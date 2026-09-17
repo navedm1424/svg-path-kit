@@ -7,6 +7,9 @@ const VECTOR2D_CONSTRUCTION_LICENSE = Symbol('Vector2DConstructionLicense');
 
 /**
  * Mutable 2D vector with geometric helpers and conversion utilities.
+ *
+ * > Note: SVG uses a top-left origin with a downward-increasing y-axis, which inverts sweep semantics compared to the conventional mathematical Cartesian system.
+ * In the conventional Cartesian system, a positive sweep would correspond to counter-clockwise and a negative sweep would correspond to clockwise.
  */
 export class Vector2D {
     #x: number;
@@ -82,7 +85,7 @@ export class Vector2D {
         if (length === 0)
             return Vector2D.NULL_VECTOR;
 
-        const midpoint = a.map(aValue => (b.value + aValue) / 2).wrapSigned();
+        const midpoint = a.map(aValue => (b.value + aValue) / 2).wrap();
 
         // Picks whichever of the two perpendicular candidates actually points along (x, y);
         // self-correcting even if `midpoint` landed on the opposite side of the wrap (i.e. off by π),
@@ -107,9 +110,9 @@ export class Vector2D {
         return Vector2D.#of(this.#x - vector.#x, this.#y - vector.#y);
     }
 
-    /** Signed angle in `(-π, π]` radians from this vector to `other`, positive counter-clockwise and negative clockwise. */
+    /** Signed angle in `(-π, π]` radians from this vector to `other`, positive clockwise and negative counter-clockwise. */
     public angleWith(other: Vector2D): Angle;
-    /** Signed angle from this vector to `other`, swept in the given direction: `1` for counter-clockwise (range `[0, 2π)`), `-1` for clockwise (range `(-2π, 0]`). */
+    /** Signed angle from this vector to `other`, swept in the given direction: `1` for clockwise (range `[0, 2π)`), `-1` for counter-clockwise (range `(-2π, 0]`). */
     public angleWith(other: Vector2D, sweep: 1 | -1): Angle;
     public angleWith(other: Vector2D, sweep?: 1 | -1): Angle {
         const angle = Angle.of(Math.atan2(this.crossProduct(other), this.dotProduct(other)));
@@ -137,18 +140,16 @@ export class Vector2D {
     }
 
     /**
-     * Return a perpendicular vector; orientation controls clockwise/counter-clockwise.
+     * Return a perpendicular vector; sweep controls clockwise/counter-clockwise.
      *
-     * `orientation` specifies the orientation of rotation for perpendicular vectors:
+     * `sweep` specifies the sweep direction of rotation for perpendicular vectors:
      * - `1 (default)`—specifying clockwise in SVG's coordinate system.
      * - `-1`—specifying counter-clockwise in SVG's coordinate system.
      *
-     * > Note: SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system.
-     * In the conventional Cartesian system, a positive orientation would correspond to counterclockwise and a negative orientation would correspond to clockwise.
-     * Perpendicular vectors can also be obtained using the `rotate` method with angles of `±Math.PI / 2`.
+     * > Perpendicular vectors can also be obtained using the `rotate` method with angles of `±Math.PI / 2`.
      */
-    public perpendicular(orientation: 1 | -1 = 1): Vector2D {
-        let sign = Math.sign(orientation);
+    public perpendicular(sweep: 1 | -1 = 1): Vector2D {
+        let sign = Math.sign(sweep);
         sign = sign === 0 ? 1 : sign;
         return Vector2D.#of(
             sign * -1 * this.#y, sign * this.#x,

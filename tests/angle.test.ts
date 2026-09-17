@@ -199,26 +199,38 @@ describe("Angle", () => {
   });
 
   describe("wrap", () => {
-    it("normalizes a value above 2π into [0, 2π)", () => {
-      expect(Angle.of(3 * Math.PI).wrap().value).toBeCloseTo(Math.PI);
+    it("normalizes a value above π into [-π, π)", () => {
+      expect(Angle.of(3 * Math.PI / 2).wrap().value).toBeCloseTo(-Math.PI / 2);
     });
-    it("normalizes a negative value into [0, 2π)", () => {
-      expect(Angle.of(-Math.PI / 2).wrap().value).toBeCloseTo(3 * Math.PI / 2);
+    it("normalizes a negative value below -π into [-π, π)", () => {
+      expect(Angle.of(-3 * Math.PI / 2).wrap().value).toBeCloseTo(Math.PI / 2);
     });
     it("leaves an in-range value unchanged", () => {
-      expect(Angle.of(Math.PI / 3).wrap().value).toBeCloseTo(Math.PI / 3);
+      expect(Angle.of(Math.PI / 4).wrap().value).toBeCloseTo(Math.PI / 4);
     });
   });
 
-  describe("wrapSigned", () => {
-    it("normalizes a value above π into [-π, π)", () => {
-      expect(Angle.of(3 * Math.PI / 2).wrapSigned().value).toBeCloseTo(-Math.PI / 2);
+  describe("wrap(1) (positive sweep)", () => {
+    it("normalizes a value above 2π into [0, 2π)", () => {
+      expect(Angle.of(3 * Math.PI).wrap(1).value).toBeCloseTo(Math.PI);
     });
-    it("normalizes a negative value below -π into [-π, π)", () => {
-      expect(Angle.of(-3 * Math.PI / 2).wrapSigned().value).toBeCloseTo(Math.PI / 2);
+    it("normalizes a negative value into [0, 2π)", () => {
+      expect(Angle.of(-Math.PI / 2).wrap(1).value).toBeCloseTo(3 * Math.PI / 2);
     });
     it("leaves an in-range value unchanged", () => {
-      expect(Angle.of(Math.PI / 4).wrapSigned().value).toBeCloseTo(Math.PI / 4);
+      expect(Angle.of(Math.PI / 3).wrap(1).value).toBeCloseTo(Math.PI / 3);
+    });
+  });
+
+  describe("wrap(-1) (negative sweep)", () => {
+    it("normalizes a value above 0 into (-2π, 0]", () => {
+      expect(Angle.of(Math.PI / 2).wrap(-1).value).toBeCloseTo(Math.PI / 2 - 2 * Math.PI);
+    });
+    it("normalizes a value below -2π into (-2π, 0]", () => {
+      expect(Angle.of(-5 * Math.PI / 2).wrap(-1).value).toBeCloseTo(-Math.PI / 2);
+    });
+    it("leaves zero unchanged", () => {
+      expect(Angle.of(0).wrap(-1).value).toBe(0);
     });
   });
 

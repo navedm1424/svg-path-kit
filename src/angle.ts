@@ -160,17 +160,20 @@ export class Angle {
         );
     }
 
-    /** Normalizes θ into `[0, 2π)`. */
-    public wrap(): Angle {
-        const twoPi = Angle.TWO_PI.value;
-        return Angle.#of(((this.value % twoPi) + twoPi) % twoPi, this.sin, this.cos);
-    }
-
     /** Normalizes θ into `[-π, π)`. */
-    public wrapSigned(): Angle {
+    public wrap(): Angle;
+    /** Normalizes θ into the given sweep direction: `1` for `[0, 2π)`, `-1` for `(-2π, 0]`. */
+    public wrap(sweep: 1 | -1): Angle;
+    public wrap(sweep?: 1 | -1): Angle {
         const twoPi = Angle.TWO_PI.value;
-        const pi = Angle.PI.value;
-        return Angle.#of((((this.value + pi) % twoPi) + twoPi) % twoPi - pi, this.sin, this.cos);
+        if (sweep === undefined) {
+            const pi = Angle.PI.value;
+            return Angle.#of((((this.value + pi) % twoPi) + twoPi) % twoPi - pi, this.sin, this.cos);
+        }
+        const wrapped = ((this.value % twoPi) + twoPi) % twoPi;
+        if (sweep > 0)
+            return Angle.#of(wrapped, this.sin, this.cos);
+        return Angle.#of(wrapped > 0 ? wrapped - twoPi : wrapped, this.sin, this.cos);
     }
 
     public toDeg() {
