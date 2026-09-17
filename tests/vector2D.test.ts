@@ -35,6 +35,13 @@ describe("Vector2D", () => {
       expect(v.x).toBeCloseTo(10);
       expect(v.y).toBeCloseTo(0);
     });
+    it("normalizes length and angle for a negative radius", () => {
+      const v = Vector2D.polar(-5, 0);
+      expect(v.x).toBeCloseTo(-5);
+      expect(v.y).toBeCloseTo(0);
+      expect(v.length).toBe(5);
+      expect(v.angle.value).toBeCloseTo(Math.PI);
+    });
   });
 
   describe("from", () => {
@@ -75,18 +82,43 @@ describe("Vector2D", () => {
     });
   });
 
-  describe("angleWith / singedAngleWith", () => {
-    it("angleWith returns angle in [0, π]", () => {
+  describe("angleWith", () => {
+    it("returns the signed angle from this vector to the other", () => {
       const a = Vector2D.of(1, 0);
       const b = Vector2D.of(1, 1);
       const angle = a.angleWith(b);
-      expect(angle).toBeCloseTo(Math.PI / 4);
+      expect(angle.value).toBeCloseTo(Math.PI / 4);
     });
-    it("singedAngleWith returns signed angle", () => {
+    it("returns a negative angle when the other vector is clockwise", () => {
+      const a = Vector2D.of(1, 0);
+      const b = Vector2D.of(0, -1);
+      const angle = a.angleWith(b);
+      expect(angle.value).toBeCloseTo(-Math.PI / 2);
+    });
+    it("returns a positive angle when the other vector is counter-clockwise", () => {
       const a = Vector2D.of(1, 0);
       const b = Vector2D.of(0, 1);
-      const angle = a.singedAngleWith(b);
-      expect(angle).toBeCloseTo(Math.PI / 2);
+      const angle = a.angleWith(b);
+      expect(angle.value).toBeCloseTo(Math.PI / 2);
+    });
+    it("sweeps counter-clockwise into [0, 2π) when sweep is 1", () => {
+      const a = Vector2D.of(1, 0);
+      const b = Vector2D.of(0, -1);
+      const angle = a.angleWith(b, 1);
+      expect(angle.value).toBeCloseTo(3 * Math.PI / 2);
+    });
+    it("sweeps clockwise into (-2π, 0] when sweep is -1", () => {
+      const a = Vector2D.of(1, 0);
+      const b = Vector2D.of(0, 1);
+      const angle = a.angleWith(b, -1);
+      expect(angle.value).toBeCloseTo(-3 * Math.PI / 2);
+    });
+    it("leaves an already-agreeing sign unchanged when swept", () => {
+      const a = Vector2D.of(1, 0);
+      const b = Vector2D.of(0, 1);
+      expect(a.angleWith(b, 1).value).toBeCloseTo(Math.PI / 2);
+      const c = Vector2D.of(0, -1);
+      expect(a.angleWith(c, -1).value).toBeCloseTo(-Math.PI / 2);
     });
   });
 
