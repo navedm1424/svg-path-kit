@@ -6,7 +6,7 @@ import {type CubicBezierCurve, fitCubicBezier} from "./cubic-bezier-curve.js";
 import {Vector2D} from "./vector2D.js";
 import {findRoots, round} from "./numbers/index.js";
 
-const roundingOrder = 8;
+const roundingStep = 1e-8;
 
 /**
  * Collect parameter values where a parametric curve has extrema or inflection points.
@@ -14,7 +14,7 @@ const roundingOrder = 8;
 export function findCriticalTs(curve: ParametricCurve2D, tStart: number, tEnd: number) {
     const criticalTs = new Set<number>();
     function addToSet(t: number) {
-        criticalTs.add(round(t, roundingOrder));
+        criticalTs.add(round(t, roundingStep));
     }
     addToSet(tStart);
 

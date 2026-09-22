@@ -4,7 +4,7 @@ import {Point2D} from "./point2D.js";
 import {makePropertiesReadonly} from "./utils/objects.runtime.js";
 
 function coordinates(point: Point2D | Vector2D) {
-    return `${round(point.x, 4)} ${round(point.y, 4)}`;
+    return `${round(point.x, 1e-4)} ${round(point.y, 1e-4)}`;
 }
 
 export abstract class PrimitiveCommand {
@@ -212,7 +212,7 @@ export abstract class EllipticalArcPrimitive extends PrimitiveCommand {
 
     public toString() {
         const ep = coordinates(this.getEndingPoint());
-        return `${this.getKey()} ${round(this.xRadius, 4)} ${round(this.yRadius, 4)} ${round(this.xAxisRotation, 4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
+        return `${this.getKey()} ${round(this.xRadius, 1e-4)} ${round(this.yRadius, 1e-4)} ${round(this.xAxisRotation, 1e-4)} ${this.largeArcFlag} ${this.sweepFlag} ${ep}`;
     }
 }
 

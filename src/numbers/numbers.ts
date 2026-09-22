@@ -13,9 +13,15 @@ export function clamp(
     return v;
 }
 
-export function round(num: number, decimalPlaces: number = 0): number {
-    const factor = Math.pow(10, decimalPlaces);
-    return Math.round(num * factor) / factor;
+export type RoundingStrategy = "round" | "floor" | "ceil" | "trunc";
+
+/**
+ * Round `num` to the nearest multiple of `step` (default `1`, i.e. the nearest integer).
+ * Pass a `step` like `1e-4` to round to the nearest ten-thousandth, or `5` to round to the
+ * nearest multiple of 5. `strategy` selects which `Math` rounding function to snap with.
+ */
+export function round(num: number, step: number = 1, strategy: RoundingStrategy = "round"): number {
+    return Math[strategy](num / step) * step;
 }
 
 const equalityThreshold = 1e-8;

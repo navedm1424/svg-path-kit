@@ -53,14 +53,21 @@ describe("numbers", () => {
 
 describe("math-utils", () => {
   describe("round", () => {
-    it("rounds to specified decimal places", () => {
-      expect(round(1.23456, 2)).toBe(1.23);
-      expect(round(1.23456, 0)).toBe(1);
-      expect(round(1.235, 2)).toBe(1.24);
-      expect(round(1.234, 4)).toBe(1.234);
+    it("rounds to the nearest multiple of step", () => {
+      expect(round(1.23456, 0.01)).toBeCloseTo(1.23);
+      expect(round(1.23456)).toBe(1);
+      expect(round(1.235, 0.01)).toBeCloseTo(1.24);
+      expect(round(1.234, 0.0001)).toBeCloseTo(1.234);
+      expect(round(7, 5)).toBe(5);
+      expect(round(8, 5)).toBe(10);
     });
     it("handles negative numbers", () => {
-      expect(round(-1.23456, 2)).toBe(-1.23);
+      expect(round(-1.23456, 0.01)).toBeCloseTo(-1.23);
+    });
+    it("supports floor/ceil/trunc strategies", () => {
+      expect(round(1.29, 0.1, "floor")).toBeCloseTo(1.2);
+      expect(round(1.21, 0.1, "ceil")).toBeCloseTo(1.3);
+      expect(round(-1.29, 0.1, "trunc")).toBeCloseTo(-1.2);
     });
   });
 
