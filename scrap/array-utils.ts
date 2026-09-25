@@ -7,17 +7,17 @@ type TupleIndex<T extends readonly unknown[]> =
 
 type Pick<
   T extends readonly any[],
-  I extends readonly number[]
+  I extends readonly (keyof T)[]
 > = { [K in keyof I]: T[I[K]] };
 
 /**
  * Type-safe helper to grab selected indices from a tuple-like array.
  */
 export function pick<
-    T extends readonly [any?, ...any[]],
-    I extends readonly TupleIndex<T>[]
+    const T extends readonly any[],
+    const I extends readonly TupleIndex<T>[]
 >(
     array: T, ...indices: I
 ): Pick<T, I> {
     return indices.map(i => array[i]) as Pick<T, I>;
-};
+}

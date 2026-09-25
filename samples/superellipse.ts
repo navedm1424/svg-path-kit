@@ -1,6 +1,6 @@
-import {PathBuilder, Point2D} from "../src/index";
-import {fitSplineAtParams} from "../src/spline-fitting";
-import {Superellipse} from "../src/curves/superellipse";
+import {PathBuilder, Point2D} from "../src/index.js";
+import {fitSplineAtParams} from "../src/spline-fitting.js";
+import {Superellipse} from "../src/curves/superellipse.js";
 
 const superellipse = new Superellipse(5, 5, 2);
 
@@ -11,10 +11,10 @@ const length = ts.length;
 for (let i = 1; i < 4; i++) {
     for (let j = 0; j < length; j++) {
         const sourceIndex = j + (i - 1) * length;
-        ts[sourceIndex + length] = ts[sourceIndex] + Math.PI / 2;
+        ts[sourceIndex + length] = ts[sourceIndex]! + Math.PI / 2;
     }
 }
 ts.push(2 * Math.PI);
-fitSplineAtParams(pb, superellipse, ts[0], ts[1], ...ts.slice(2));
+fitSplineAtParams(pb, superellipse, ts[0]!, ts[1]!, ...ts.slice(2));
 
 console.log(pb.toSVGPathString());
