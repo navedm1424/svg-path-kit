@@ -47,7 +47,7 @@ describe("Main index exports", () => {
 
 describe("Numbers subpath exports", () => {
   it("exports round, clamp, findRoots", () => {
-    expect(round(1.234, 0.01)).toBeCloseTo(1.23);
+    expect(round(1.234, 0.01)).toBe(1.23);
     expect(clamp(5, 0, 10)).toBe(5);
     expect(findRoots((t) => t - 0.5, 0, 1).length).toBeGreaterThanOrEqual(0);
   });

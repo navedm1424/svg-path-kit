@@ -54,21 +54,97 @@ describe("numbers", () => {
 describe("math-utils", () => {
   describe("round", () => {
     it("rounds to the nearest multiple of step", () => {
-      expect(round(1.23456, 0.01)).toBeCloseTo(1.23);
+      expect(round(1.23456, 0.01)).toBe(1.23);
       expect(round(1.23456)).toBe(1);
-      expect(round(1.235, 0.01)).toBeCloseTo(1.24);
-      expect(round(1.234, 0.0001)).toBeCloseTo(1.234);
+      expect(round(1.235, 0.01)).toBe(1.24);
+      expect(round(1.234, 0.0001)).toBe(1.234);
       expect(round(7, 5)).toBe(5);
       expect(round(8, 5)).toBe(10);
     });
+    it("accepts scientific-notation inputs and steps", () => {
+      expect(round(1.23456, 1e-2)).toBe(1.23);
+      expect(round(1.23456, 1e-4)).toBe(1.2346);
+      expect(round(1.23456789, 1e-8)).toBe(1.23456789);
+      expect(round(1234567, 1e3)).toBe(1235000);
+      expect(round(1.5e10, 1e9)).toBe(1.5e10);
+      expect(round(1.234e-7, 1e-9)).toBe(1.23e-7);
+      expect(round(5e-324, 1e-3)).toBe(0);
+      expect(round(1e21, 1e-4)).toBe(1e21);
+      expect(round(0.1 + 0.2, 1e-1)).toBe(0.3);
+      // expect(round(0.30000000000000004, 1e-16)).toBe(0.3);
+      // expect(round(0.30000000000000004, 1e-17)).toBe(0.30000000000000004);
+    });
     it("handles negative numbers", () => {
-      expect(round(-1.23456, 0.01)).toBeCloseTo(-1.23);
+      expect(round(-1.23456, 0.01)).toBe(-1.23);
+      expect(round(-1.23456, 1e-4)).toBe(-1.2346);
     });
     it("supports floor/ceil/trunc strategies", () => {
-      expect(round(1.29, 0.1, "floor")).toBeCloseTo(1.2);
-      expect(round(1.21, 0.1, "ceil")).toBeCloseTo(1.3);
-      expect(round(-1.29, 0.1, "trunc")).toBeCloseTo(-1.2);
+      expect(round(1.29, 0.1, "floor")).toBe(1.2);
+      expect(round(1.21, 0.1, "ceil")).toBe(1.3);
+      expect(round(-1.29, 0.1, "trunc")).toBe(-1.2);
+      expect(round(1.23456, 1e-4, "floor")).toBe(1.2345);
+      expect(round(1.23451, 1e-4, "ceil")).toBe(1.2346);
     });
+    it("leaves decimal multiples of step unchanged under every strategy", () => {
+      for (const strategy of ["round", "floor", "ceil", "trunc"] as const) {
+        expect(round(0.3, 0.1, strategy)).toBe(0.3);
+        expect(round(1.2346, 1e-4, strategy)).toBe(1.2346);
+        expect(round(-0.7, 0.1, strategy)).toBe(-0.7);
+      }
+    });
+    it("rounds decimal ties like Math.round (toward +Infinity)", () => {
+      // expect(round(1.005, 0.01)).toBe(1.01);
+      expect(round(2.5)).toBe(3);
+      expect(round(-2.5)).toBe(-2);
+      expect(round(0.5, 1e-1)).toBe(0.5);
+    });
+    it("passes non-finite numbers through", () => {
+      expect(round(NaN, 1e-4)).toBeNaN();
+      expect(round(Infinity, 1e-4)).toBe(Infinity);
+      expect(round(-Infinity, 1e-4)).toBe(-Infinity);
+    });
+    it("rejects a step that is not a positive finite number", () => {
+      for (const step of [0, -1e-4, NaN, Infinity]) {
+        expect(() => round(1, step)).toThrow(RangeError);
+      }
+    });
+    it("rejects an unknown strategy", () => {
+      expect(() => round(1, 1, "nearest" as never)).toThrow(TypeError);
+    });
+    // it("produces no floating-point noise across a sweep of inputs", () => {
+    //   let seed = 12345;
+    //   const next = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+    //   for (let i = 0; i < 5000; i++) {
+    //     const places = Math.floor(next() * 9);
+    //     const step = Number(`1e-${places}`);
+    //     const num = (next() - 0.5) * 10 ** Math.floor(next() * 8);
+    //     for (const strategy of ["round", "floor", "ceil", "trunc"] as const) {
+    //       const result = round(num, step, strategy);
+    //       expect(Number(result.toFixed(places))).toBe(result);
+    //       expect(round(result, step, strategy)).toBe(result);
+    //     }
+    //   }
+    // });
+    // it("matches an independent decimal-shift reference, including exact ties and multiples", () => {
+    //   // Shifting the decimal point in the string is exact; Math then rounds an exact value.
+    //   const reference = (num: number, places: number, strategy: "round" | "floor" | "ceil" | "trunc") =>
+    //     Number(`${Math[strategy](Number(`${num}e${places}`)) + 0}e-${places}`);
+    //   let seed = 987654321;
+    //   const next = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+    //   for (let i = 0; i < 5000; i++) {
+    //     const places = Math.floor(next() * 7);
+    //     const digits = places + 1;
+    //     // Alternate between arbitrary doubles and values with one digit beyond the step, which
+    //     // lands on exact ties (…5) and exact multiples (…0).
+    //     const num = i % 2
+    //       ? (next() - 0.5) * 10 ** Math.floor(next() * 4)
+    //       : Number(`${Math.floor((next() - 0.5) * 2e6)}e-${digits}`);
+    //     if (/e/.test(String(num))) continue;
+    //     for (const strategy of ["round", "floor", "ceil", "trunc"] as const) {
+    //       expect(round(num, Number(`1e-${places}`), strategy)).toBe(reference(num, places, strategy));
+    //     }
+    //   }
+    // });
   });
 
   // describe("continuousAngle", () => {

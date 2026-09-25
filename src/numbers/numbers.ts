@@ -16,12 +16,27 @@ export function clamp(
 export type RoundingStrategy = "round" | "floor" | "ceil" | "trunc";
 
 /**
- * Round `num` to the nearest multiple of `step` (default `1`, i.e. the nearest integer).
- * Pass a `step` like `1e-4` to round to the nearest ten-thousandth, or `5` to round to the
- * nearest multiple of 5. `strategy` selects which `Math` rounding function to snap with.
+ * Round `num` to a multiple of `step` (default `1`): `round(x, 1e-4)` snaps to the nearest
+ * ten-thousandth, `round(x, 5)` to the nearest multiple of 5. `strategy` picks the `Math`
+ * function used to snap.
  */
 export function round(num: number, step: number = 1, strategy: RoundingStrategy = "round"): number {
-    return Math[strategy](num / step) * step;
+    if (!Number.isFinite(step) || step <= 0)
+        throw new RangeError(`step must be a positive finite number, got ${step}.`);
+    if (!Number.isFinite(num))
+        return num;
+
+    // A fractional step like 1e-4 is inexact in binary, so `k * step` picks up noise
+    // (12346 * 1e-4 = 1.2346000000000001). Dividing by the integer reciprocal is correctly rounded.
+    const inverse = Math.round(1 / step);
+    if (step < 1 && 1 / inverse === step) {
+        const scaled = num * inverse;
+        // Beyond 2^53 every double is already a whole multiple of the step; nothing to round.
+        if (Math.abs(scaled) > Number.MAX_SAFE_INTEGER)
+            return num;
+        return Math[strategy](scaled) / inverse + (0); // `+ 0` normalizes -0
+    }
+    return Math[strategy](num / step) * step + (0);
 }
 
 const equalityThreshold = 1e-8;
