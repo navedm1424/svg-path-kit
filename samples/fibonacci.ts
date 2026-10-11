@@ -1,4 +1,4 @@
-import {PathBuilder, Point2D} from "../src/index";
+import {PathBuilder, Point2D} from "../src/index.js";
 
 const pb = PathBuilder.m(Point2D.ORIGIN);
 const limit = 13;

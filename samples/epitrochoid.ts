@@ -1,6 +1,6 @@
-import {PathBuilder, Point2D, Vector2D} from "../src/index";
-import {ParametricCurve2D} from "../src/parametric-curve-2D";
-import {fitSplineTo} from "../src/spline-fitting";
+import {PathBuilder, Point2D, Vector2D} from "../src/index.js";
+import {ParametricCurve2D} from "../src/parametric-curve-2D.js";
+import {fitSplineTo} from "../src/spline-fitting.js";
 
 class Epitrochoid extends ParametricCurve2D {
     constructor(

@@ -1,175 +1,195 @@
-import { Point2D } from "./point2D";
-import {Angle} from "./angle";
+import {Point2D} from "./point2D.js";
+import {Angle} from "./angle.js";
+import {makePropertiesReadonly} from "./utils/objects.runtime.js";
+
+/** Unforgeable capability token that gates direct construction of {@link Vector2D}. */
+const VECTOR2D_CONSTRUCTION_LICENSE = Symbol('Vector2DConstructionLicense');
 
 /**
  * Mutable 2D vector with geometric helpers and conversion utilities.
+ *
+ * > Note: SVG uses a top-left origin with a downward-increasing y-axis, which inverts sweep semantics compared to the conventional mathematical Cartesian system.
+ * In the conventional Cartesian system, a positive sweep would correspond to counter-clockwise and a negative sweep would correspond to clockwise.
  */
 export class Vector2D {
-    private _magnitude: number;
+    #x: number;
+    #y: number;
+    #length: number;
+    #angle: Angle;
 
-    /** Shared null vector instance. */
-    static readonly NULL_VECTOR = new Vector2D(0, 0);
+    public static readonly NULL_VECTOR = Vector2D.#of(0, 0, 0, Angle.ZERO);
 
-    /**
-     * Create a vector with the provided coordinates.
-     */
-    constructor(private _x: number, private _y: number) {
-        this._magnitude = Math.hypot(_x, _y);
+    private constructor(
+        x: number, y: number,
+        length: number = Math.hypot(x, y),
+        angle: Angle = Angle.of(Math.atan2(y, x)),
+        license?: typeof VECTOR2D_CONSTRUCTION_LICENSE
+    ) {
+        if (license !== VECTOR2D_CONSTRUCTION_LICENSE)
+            throw new Error('Illegal constructor: use the factory method.');
+
+        this.#x = x;
+        this.#y = y;
+        this.#length = length;
+        this.#angle = angle;
     }
 
-    /** X component. */
+    static #of(x: number, y: number, length?: number, angle?: Angle) {
+        return new Vector2D(x, y, length, angle, VECTOR2D_CONSTRUCTION_LICENSE);
+    }
+
     get x() {
-        return this._x;
+        return this.#x;
     }
-    /** Y component. */
     get y() {
-        return this._y;
+        return this.#y;
     }
-    /** Euclidean length. */
-    get magnitude() {
-        return this._magnitude;
+    get length() {
+        return this.#length;
     }
-    /** Slope y/x. */
     get slope() {
-        return this._y / this._x;
+        return this.#y / this.#x;
     }
-    /** Polar angle in radians. */
     get angle() {
-        return Math.atan2(this._y, this._x);
+        return this.#angle;
     }
 
-    /**
-     * Create a vector with the provided coordinates.
-     */
-    public static of(x: number, y: number): Vector2D {
-        return new Vector2D(x, y);
+    public static of(x: number, y: number = x): Vector2D {
+        return Vector2D.#of(x, y);
     }
 
-    /**
-     * Create a vector from polar coordinates—`radius` and `angle`.
-     */
+    /** Vector from polar coordinates—`radius` and `angle` */
     public static polar(radius: number, angle: number | Angle): Vector2D {
-        if (angle instanceof Angle)
-            return new Vector2D(radius * angle.cosine, radius * angle.sine);
-        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
+        const effectiveAngle = angle instanceof Angle ? angle : Angle.of(angle);
+        return Vector2D.#of(
+            radius * effectiveAngle.cos,
+            radius * effectiveAngle.sin,
+            Math.abs(radius),
+            radius < 0 ? effectiveAngle.plusPi() : effectiveAngle
+        );
     }
 
-    /**
-     * Construct a vector from `initialPoint` to `terminalPoint`.
-     */
-    public static from(initialPoint: Point2D, terminalPoint: Point2D): Vector2D {
-        return new Vector2D(terminalPoint.x - initialPoint.x, terminalPoint.y - initialPoint.y);
-    }
+    /** Chord vector on a circle from `initialAngle` to `terminalAngle`. */
+    public static chord(
+        radius: number,
+        initialAngle: number | Angle,
+        terminalAngle: number | Angle
+    ): Vector2D {
+        const a = initialAngle instanceof Angle ? initialAngle : Angle.of(initialAngle);
+        const b = terminalAngle instanceof Angle ? terminalAngle : Angle.of(terminalAngle);
 
-    /**
-     * Add another vector and return the sum as a new instance.
-     */
-    public add(vector: Vector2D) {
-        return new Vector2D(this.x + vector.x, this.y + vector.y);
-    }
+        const x = radius * (b.cos - a.cos);
+        const y = radius * (b.sin - a.sin);
+        const length = Math.hypot(x, y);
 
-    /**
-     * Subtract another vector and return the difference as a new instance.
-     */
-    public subtract(vector: Vector2D) {
-        return new Vector2D(this.x - vector.x, this.y - vector.y);
-    }
-
-    /**
-     * Compute the unsigned angle with another vector
-     */
-    public angleWith(vector: Vector2D): number {
-        return Math.acos(this.dotProduct(vector) / (this._magnitude * vector._magnitude));
-    }
-
-    /**
-     * Compute the singed angle with another vector
-     */
-    public singedAngleWith(vector: Vector2D): number {
-        return Math.atan2(this.crossProduct(vector), this.dotProduct(vector));
-    }
-
-    /**
-     * Dot product with another vector.
-     */
-    public dotProduct(vector: Vector2D) {
-        return this.x * vector.x + this.y * vector.y;
-    }
-
-    /**
-     * Scalar cross product with another vector.
-     */
-    public crossProduct(vector: Vector2D): number {
-        return this.x * vector.y - this.y * vector.x;
-    }
-
-    /**
-     * Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0.
-     */
-    public normalize(): Vector2D {
-        if (this._magnitude === 0)
+        if (length === 0)
             return Vector2D.NULL_VECTOR;
-        return new Vector2D(this.x / this._magnitude, this.y / this._magnitude);
+
+        const midpoint = a.map(aValue => (b.value + aValue) / 2).wrap();
+
+        // Picks whichever of the two perpendicular candidates actually points along (x, y);
+        // self-correcting even if `midpoint` landed on the opposite side of the wrap (i.e. off by π),
+        // since {midpoint + π/2, midpoint - π/2} is invariant under midpoint -> midpoint + π.
+        const angle = (x * -midpoint.sin + y * midpoint.cos) > 0
+            ? midpoint.plusHalfPi()
+            : midpoint.minusHalfPi();
+
+        return Vector2D.#of(x, y, length, angle);
+    }
+
+    /** Vector from `initialPoint` to `terminalPoint` */
+    public static from(initialPoint: Point2D, terminalPoint: Point2D): Vector2D {
+        return Vector2D.#of(terminalPoint.x - initialPoint.x, terminalPoint.y - initialPoint.y);
+    }
+
+    public add(vector: Vector2D) {
+        return Vector2D.#of(this.#x + vector.#x, this.#y + vector.#y);
+    }
+
+    public subtract(vector: Vector2D) {
+        return Vector2D.#of(this.#x - vector.#x, this.#y - vector.#y);
+    }
+
+    /** Signed angle in `(-π, π]` radians from this vector to `other`, positive clockwise and negative counter-clockwise. */
+    public angleWith(other: Vector2D): Angle;
+    /** Signed angle from this vector to `other`, swept in the given direction: `1` for clockwise (range `[0, 2π)`), `-1` for counter-clockwise (range `(-2π, 0]`). */
+    public angleWith(other: Vector2D, sweep: 1 | -1): Angle;
+    public angleWith(other: Vector2D, sweep?: 1 | -1): Angle {
+        const angle = Angle.of(Math.atan2(this.crossProduct(other), this.dotProduct(other)));
+        if (sweep === undefined)
+            return angle;
+        if (sweep > 0)
+            return angle.value < 0 ? angle.plusTwoPi() : angle;
+        return angle.value > 0 ? angle.minusTwoPi() : angle;
+    }
+
+    public dotProduct(vector: Vector2D) {
+        return this.#x * vector.#x + this.#y * vector.#y;
+    }
+
+    /** Scalar cross product with another vector. */
+    public crossProduct(vector: Vector2D): number {
+        return this.#x * vector.#y - this.#y * vector.#x;
+    }
+
+    /** Return the normalized vector or `Vector2D.NULL_VECTOR` if magnitude is 0. */
+    public normalize(): Vector2D {
+        if (this.#length === 0)
+            return Vector2D.NULL_VECTOR;
+        return Vector2D.#of(this.#x / this.#length, this.#y / this.#length, 1, this.#angle);
     }
 
     /**
-     * Return a perpendicular vector; orientation controls clockwise/counter-clockwise.
+     * Return a perpendicular vector; sweep controls clockwise/counter-clockwise.
      *
-     * `orientation` specifies the orientation of rotation for perpendicular vectors:
+     * `sweep` specifies the sweep direction of rotation for perpendicular vectors:
      * - `1 (default)`—specifying clockwise in SVG's coordinate system.
      * - `-1`—specifying counter-clockwise in SVG's coordinate system.
      *
-     * > Note: SVG uses a top-left origin with a downward-increasing y-axis, which inverts orientation semantics compared to the conventional mathematical Cartesian system.
-     * In the conventional Cartesian system, a positive orientation would correspond to counterclockwise and a negative orientation would correspond to clockwise.
-     * Perpendicular vectors can also be obtained using the `rotate` method with angles of `±Math.PI / 2`.
+     * > Perpendicular vectors can also be obtained using the `rotate` method with angles of `±Math.PI / 2`.
      */
-    public perpendicular(orientation: 1 | -1 = 1): Vector2D {
-        let sign = Math.sign(orientation);
+    public perpendicular(sweep: 1 | -1 = 1): Vector2D {
+        let sign = Math.sign(sweep);
         sign = sign === 0 ? 1 : sign;
-        return new Vector2D(sign * -1 * this.y, sign * this.x);
+        return Vector2D.#of(
+            sign * -1 * this.#y, sign * this.#x,
+            this.#length, sign === 1 ? this.#angle.plusHalfPi() : this.#angle.minusHalfPi()
+        );
     }
 
-    /**
-     * Return the vector pointing in the opposite direction—the negated vector.
-     */
     public opposite(): Vector2D {
-        return new Vector2D(-this.x, -this.y);
+        return Vector2D.#of(-this.#x, -this.#y, this.#length, this.#angle.plusPi());
     }
 
-    /**
-     * Create a copy of this vector.
-     */
     public clone(): Vector2D {
-        return new Vector2D(this.x, this.y);
+        return Vector2D.#of(this.#x, this.#y, this.#length, this.#angle);
     }
 
-    /**
-     * Scale the vector in-place by `scalar`.
-     */
+    /** Scale the vector in-place by `scalar`. */
     public scale(scalar: number): this {
-        this._x *= scalar;
-        this._y *= scalar;
-        this._magnitude = Math.hypot(this.x, this.y);
+        this.#x *= scalar;
+        this.#y *= scalar;
+        this.#length *= Math.abs(scalar);
+        if (scalar < 0)
+            this.#angle = this.#angle.plusPi();
         return this;
     }
 
-    /**
-     * Rotate the vector in-place by `angle` radians.
-     */
+    /** Rotate the vector in-place by `angle` radians. */
     public rotate(angle: number | Angle): this {
-        const sine = angle instanceof Angle ? angle.sine : Math.sin(angle);
-        const cosine = angle instanceof Angle ? angle.cosine : Math.cos(angle);
-        const newX = this._x * cosine - this._y * sine;
-        const newY = this._x * sine + this._y * cosine;
-        this._x = newX;
-        this._y = newY;
+        const sine = angle instanceof Angle ? angle.sin : Math.sin(angle);
+        const cosine = angle instanceof Angle ? angle.cos : Math.cos(angle);
+        const newX = this.#x * cosine - this.#y * sine;
+        const newY = this.#x * sine + this.#y * cosine;
+        this.#x = newX;
+        this.#y = newY;
+        this.#angle = this.#angle.plus(angle);
         return this;
     }
 
-    /**
-     * Convert to a {@link Point2D} with the same coordinates.
-     */
     public toPoint(): Point2D {
-        return new Point2D(this.x, this.y);
+        return new Point2D(this.#x, this.#y);
     }
 }
+
+makePropertiesReadonly(Vector2D, "NULL_VECTOR");

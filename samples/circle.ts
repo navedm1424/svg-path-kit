@@ -1,6 +1,6 @@
-import {PathBuilder, Point2D} from "../src/index";
-import {fitSplineTo} from "../src/spline-fitting";
-import {Circle} from "../src/curves/index";
+import {PathBuilder, Point2D} from "../src/index.js";
+import {fitSplineTo} from "../src/spline-fitting.js";
+import {Circle} from "../src/curves/index.js";
 
 const circle = Circle.of(2);
 

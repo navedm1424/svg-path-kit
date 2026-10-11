@@ -1,3 +1,3 @@
-export * from './circle';
-export * from './ellipse';
-export * from './superellipse';
+export * from './circle.js';
+export * from './ellipse.js';
+export * from './superellipse.js';

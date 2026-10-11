@@ -1,4 +1,4 @@
-import {PathBuilder, Point2D, Vector2D, Angle} from "../src/index";
+import {PathBuilder, Point2D, Vector2D, Angle} from "../src/index.js";
 
 let pb = PathBuilder.m(Point2D.ORIGIN);
 pb.bezierCircularArc(5, -Math.PI, -Math.PI / 2);
